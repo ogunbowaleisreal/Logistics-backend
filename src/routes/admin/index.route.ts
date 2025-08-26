@@ -12,6 +12,7 @@ import bankRoute from "./bank.route";
 import transactionRoute from "./transaction.route";
 import colorRoute from "./color.route";
 import configurationRoute from "./configuration.route";
+import themeRoute from "./theme.route";
 
 const router = Router();
 
@@ -28,5 +29,6 @@ router.use("/notifications", notificationRoute);
 router.use("/banks", bankRoute);
 router.use("/transactions", transactionRoute);
 router.use("/configuration", configurationRoute);
+router.use("/themes", themeRoute);
 
 export default router;
