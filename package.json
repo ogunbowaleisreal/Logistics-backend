@@ -1,0 +1,48 @@
+{
+  "name": "sme-logistics-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "dev": "nodemon --exec ts-node index.ts",
+    "start": "node dist/index.js"
+  },
+  "keywords": [],
+  "author": "Ibrahim Ayandiran(iam-phenomenal)",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/cors": "^2.8.17",
+    "@types/ejs": "^3.1.5",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/morgan": "^1.9.9",
+    "@types/node": "^20.12.7",
+    "@types/uuid": "^9.0.8",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "dependencies": {
+    "axios": "^1.6.8",
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.19.2",
+    "firebase-admin": "^12.0.0",
+    "helmet": "^7.1.0",
+    "imagekit": "^6.0.0",
+    "joi": "^17.13.0",
+    "jsonwebtoken": "^9.0.2",
+    "mailgun.js": "^12.0.1",
+    "mongoose": "^8.3.2",
+    "morgan": "^1.10.0",
+    "redis": "^4.6.13",
+    "uuid": "^11.1.0",
+    "winston": "^3.13.1"
+  }
+}

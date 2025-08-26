@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "outDir": "dist",
+    "strict": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "typeRoots": ["./types"],
+  },
+  "include": ["src/**/*.ts", "index.ts", "../proto2/index.ts"],
+  "exclude": ["node_modules"]
+}

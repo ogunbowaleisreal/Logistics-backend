@@ -1,0 +1,133 @@
+# name: Deployment
+
+# on:
+#   push:
+#     branches:
+#       - staging
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     if: github.event_name == 'push'
+
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v2
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: "20"
+
+#       - name: Install Dependencies
+#         run: npm install
+
+#       - name: Build Project
+#         env:
+#           PORT: ${{ secrets.STAGING_PORT }}
+#           MONGODB_URI: ${{ secrets.STAGING_MONGODB_URI }}
+
+#           SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
+#           SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+#           SUPER_ADMIN_PHONE: ${{ secrets.SUPER_ADMIN_PHONE }}
+#           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+
+#           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+#           ROOT_URL: ${{ secrets.ROOT_URL }}
+#           FRONTEND_URL: ${{ secrets.STAGING_FRONTEND_URL }}
+
+#           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+#           JWT_DURATION: ${{ secrets.JWT_DURATION }}
+#           JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
+#           JWT_DURATION_REFRESH: ${{ secrets.JWT_DURATION_REFRESH }}
+
+#           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+#           MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+#           MAILGUN_SENDER: ${{ secrets.MAILGUN_SENDER }}
+
+#           PAYSTACK_SECRET_KEY: ${{ secrets.STAGING_PAYSTACK_SECRET_KEY }}
+#           PAYSTACK_CALLBACK_URL: ${{ secrets.STAGING_PAYSTACK_CALLBACK_URL }}
+#           PAYSTACK_HASH_TYPE: ${{ secrets.PAYSTACK_HASH_TYPE }}
+
+#           CLIENT_ID: ${{ secrets.CLIENT_ID }}
+#           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+#           REDIRECT_URI: ${{ secrets.REDIRECT_URI }}
+
+#           IMAGE_KIT_PUBLIC_KEY: ${{ secrets.IMAGE_KIT_PUBLIC_KEY }}
+#           IMAGE_KIT_PRIVATE_KEY: ${{ secrets.IMAGE_KIT_PRIVATE_KEY }}
+#           IMAGE_KIT_URL_ENDPOINT: ${{ secrets.IMAGE_KIT_URL_ENDPOINT }}
+#           NODE_ENV: ${{ secrets.STAGING_NODE_ENV }}
+#         run: |
+#           npm run build
+
+#       - name: Deploy to Server
+#         uses: appleboy/scp-action@v0.1.7
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           port: ${{ secrets.SSH_PORT }}
+#           key: ${{ secrets.SSH_KEY }}
+#           source: "./*"
+#           target: ${{ secrets.STAGING_PROJECT_PATH }}
+
+#       - name: Create .env file on server
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: ${{ secrets.SSH_PORT }}
+#           script: |
+#             rm -rf ${{ secrets.STAGING_ENV_PATH }}
+#             echo "PORT=${{ secrets.STAGING_PORT }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "MONGODB_URI=${{ secrets.STAGING_MONGODB_URI }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "ROOT_URL=${{ secrets.ROOT_URL }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "FRONTEND_URL=${{ secrets.STAGING_FRONTEND_URL }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "JWT_DURATION=${{ secrets.JWT_DURATION }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "JWT_DURATION_REFRESH=${{ secrets.JWT_DURATION_REFRESH }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "MAILGUN_DOMAIN=${{ secrets.MAILGUN_DOMAIN }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "MAILGUN_SENDER=${{ secrets.MAILGUN_SENDER }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "PAYSTACK_SECRET_KEY=${{ secrets.STAGING_PAYSTACK_SECRET_KEY }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "PAYSTACK_CALLBACK_URL=${{ secrets.STAGING_PAYSTACK_CALLBACK_URL }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "PAYSTACK_HASH_TYPE=${{ secrets.PAYSTACK_HASH_TYPE }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "CLIENT_ID=${{ secrets.CLIENT_ID }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "CLIENT_SECRET=${{ secrets.CLIENT_SECRET }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "REDIRECT_URI=${{ secrets.REDIRECT_URI }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "IMAGE_KIT_PUBLIC_KEY=${{ secrets.IMAGE_KIT_PUBLIC_KEY }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "IMAGE_KIT_PRIVATE_KEY=${{ secrets.IMAGE_KIT_PRIVATE_KEY }}" >> ${{ secrets.STAGING_ENV_PATH }}
+#             echo "IMAGE_KIT_URL_ENDPOINT=${{ secrets.IMAGE_KIT_URL_ENDPOINT }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "TERMII_API_KEY=${{ secrets.TERMII_API_KEY }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#             echo "NODE_ENV=${{ secrets.STAGING_NODE_ENV }}" >> ${{ secrets.STAGING_ENV_PATH }}
+
+#       - name: Restart Application
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: ${{ secrets.SSH_PORT }}
+#           script: |
+#             export NVM_DIR="$HOME/.nvm"
+#             source $NVM_DIR/nvm.sh
+#             cd ${{ secrets.STAGING_PROJECT_PATH }}
+#             pm2 restart 2
+#             pm2 save
