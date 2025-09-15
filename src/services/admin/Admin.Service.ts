@@ -1,6 +1,4 @@
-import { Account } from "../../models/Account.Model";
 import { Admin } from "../../models/Admin.Model";
-import { Transaction } from "../../models/Transaction.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { Hasher } from "../../utilities/Hasher";
 import { paginateModelWithPopulate } from "../../utilities/Pagination.Helper";
@@ -70,57 +68,6 @@ export class AdminService {
     return await admin.save();
   }
 
-  // public async requestPasswordUpdate(adminID: string) {
-  //   const admin = await Admin.findOne({ _id: adminID });
-  //   if (!admin) {
-  //     throw new AppError(404, "Admin not found");
-  //   }
-
-  //   const otp = await this.getPasswordUpdateOTP(adminID);
-
-  //   await this.emailService.sendPasswordResetOTP({ email: admin.email, otp });
-  //   return;
-  // }
-  // public async verifyPasswordUpdateOTP(adminID: string, payload: any) {
-  //   const { otp } = payload;
-  //   const admin = await Admin.findOne({ _id: adminID });
-  //   if (!admin) {
-  //     throw new AppError(404, "Admin not found");
-  //   }
-  //   let cachedResponse = await this.cacheService.getCachedPasswordUpdateOTP(
-  //     adminID
-  //   );
-  //   let cachedResponseJSON = JSON.parse(cachedResponse);
-  //   if (cachedResponseJSON.otp !== otp) {
-  //     throw new AppError(400, "Invalid OTP");
-  //   }
-  //   cachedResponseJSON.isOTPValid = true;
-  //   await this.cacheService.cachePasswordUpdateOTP(
-  //     adminID,
-  //     JSON.stringify(cachedResponseJSON)
-  //   );
-  //   return admin;
-  // }
-
-  // public async updatePassword(adminID: string, payload: any) {
-  //   const { password } = payload;
-  //   let admin = await Admin.findOne({ _id: adminID });
-  //   if (!admin) {
-  //     throw new AppError(404, "Account not found");
-  //   }
-
-  //   let cachedResponse = await this.cacheService.getCachedPasswordUpdateOTP(
-  //     adminID
-  //   );
-  //   let cachedResponseJSON = JSON.parse(cachedResponse);
-  //   if (cachedResponseJSON.isOTPValid === false) {
-  //     throw new AppError(400, "Expired OTP");
-  //   }
-  //   this.cacheService.deleteCachedPasswordUpdateOTP(adminID);
-  //   admin.password = await this.hasher.hashPassword(password);
-  //   admin = await admin.save();
-  //   return admin;
-  // }
   public async updateAdmin2FA(
     adminID: string,
     twoFactorAuthentication: boolean
@@ -248,61 +195,62 @@ export class AdminService {
 
     // return await JSON.parse(cachedDashboardResponse);
 
-    const users = await this.getTotalUsers();
-    const transactions = await this.getTotalTransactions();
+    // const users = await this.getTotalUsers();
+    // const transactions = await this.getTotalTransactions();
 
-    return { users, transactions };
+    // return { users, transactions };
     // const point = await
+
+    return;
   }
+  //   private async getTotalTransactions() {
+  //     const transaction = await Transaction.aggregate([
+  //       {
+  //         $group: {
+  //           _id: null,
+  //           totalAmount: {
+  //             $sum: {
+  //               $cond: [{ $eq: ["$type", "point-purchase"] }, "$amount", 0],
+  //             },
+  //           },
+  //           totalPointPurchased: {
+  //             $sum: {
+  //               $cond: [{ $eq: ["$type", "point-purchase"] }, "$points", 0],
+  //             },
+  //           },
+  //         },
+  //       },
+  //       { $project: { _id: 0, totalAmount: 1, totalPointPurchased: 1 } },
+  //     ]);
 
-  private async getTotalTransactions() {
-    const transaction = await Transaction.aggregate([
-      {
-        $group: {
-          _id: null,
-          totalAmount: {
-            $sum: {
-              $cond: [{ $eq: ["$type", "point-purchase"] }, "$amount", 0],
-            },
-          },
-          totalPointPurchased: {
-            $sum: {
-              $cond: [{ $eq: ["$type", "point-purchase"] }, "$points", 0],
-            },
-          },
-        },
-      },
-      { $project: { _id: 0, totalAmount: 1, totalPointPurchased: 1 } },
-    ]);
+  //     return transaction[0];
+  //   }
 
-    return transaction[0];
-  }
+  //   private async getTotalUsers() {
+  //     const users = await Account.aggregate([
+  //       { $match: { isDeleted: false } },
+  //       {
+  //         $group: {
+  //           _id: null,
+  //           totalUsers: {
+  //             $sum: 1,
+  //           },
+  //           totalVerifiedUsers: {
+  //             $sum: {
+  //               $cond: [{ $eq: ["$isVerified", true] }, 1, 0],
+  //             },
+  //           },
+  //         },
+  //       },
+  //       {
+  //         $project: {
+  //           _id: 0,
+  //           totalUsers: 1,
+  //           totalVerifiedUsers: 1,
+  //         },
+  //       },
+  //     ]);
 
-  private async getTotalUsers() {
-    const users = await Account.aggregate([
-      { $match: { isDeleted: false } },
-      {
-        $group: {
-          _id: null,
-          totalUsers: {
-            $sum: 1,
-          },
-          totalVerifiedUsers: {
-            $sum: {
-              $cond: [{ $eq: ["$isVerified", true] }, 1, 0],
-            },
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          totalUsers: 1,
-          totalVerifiedUsers: 1,
-        },
-      },
-    ]);
-
-    return users[0];
-  }
+  //     return users[0];
+  //   }
 }

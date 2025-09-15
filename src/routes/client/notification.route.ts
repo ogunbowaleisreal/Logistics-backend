@@ -1,17 +1,17 @@
-import { Router } from "express";
-import { accountVerification } from "../../middlewares/authorization.middleware";
-import {
-  deleteNotification,
-  getNotifications,
-  updateNotification,
-} from "../../controllers/client/notification.controller";
+// import { Router } from "express";
+// import { accountVerification } from "../../middlewares/authorization.middleware";
+// import {
+//   deleteNotification,
+//   getNotifications,
+//   updateNotification,
+// } from "../../controllers/client/notification.controller";
 
-const router = Router();
+// const router = Router();
 
-router
-  .route("")
-  .get(accountVerification, getNotifications)
-  .patch(accountVerification, updateNotification)
-  .delete(accountVerification, deleteNotification);
+// router
+//   .route("")
+//   .get(accountVerification, getNotifications)
+//   .patch(accountVerification, updateNotification)
+//   .delete(accountVerification, deleteNotification);
 
-export default router;
+// export default router;

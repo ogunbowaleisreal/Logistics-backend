@@ -4,6 +4,7 @@ import express, {
   json,
   urlencoded,
   Application,
+  NextFunction,
 } from "express";
 import morgan from "morgan";
 import cors from "cors";
@@ -13,6 +14,8 @@ import cacheConnection from "./config/cache";
 import logger from "../logger/index";
 import clientRoute from "./routes/client/index.route";
 import adminRoute from "./routes/admin/index.route";
+import AppError from "./utilities/ErrorHandler";
+import { v4 as uuidv4 } from "uuid";
 
 class App {
   public app: Application;
@@ -57,6 +60,33 @@ class App {
     });
     this.app.use("/api/client", clientRoute);
     this.app.use("/api/admin", adminRoute);
+    this.app.use(
+      "/api/*",
+      (req: Request, res: Response, next: NextFunction) => {
+        throw new AppError(404, "Page not found");
+      }
+    );
+    this.app.use(
+      (error: any, req: Request, res: Response, next: NextFunction) => {
+        if (error instanceof AppError) {
+          res.status(error.statusCode).json({
+            message: error.message,
+          });
+        } else {
+          logger.error(error.message, {
+            error: error.message,
+            stack: error.stack,
+            url: req.originalUrl,
+            method: req.method,
+            ip: req.ip,
+            userAgent: req.get("User-Agent"),
+          });
+          res.status(500).json({
+            message: error.message,
+          });
+        }
+      }
+    );
   }
 }
 

@@ -1,7 +1,7 @@
 import { ExtendedRequest } from "../utilities/Interfaces";
 import { Request, Response, NextFunction } from "express";
 import { AuthenticationTokenGenerator } from "../services/Unique.Service";
-import { Account } from "../models/Account.Model";
+// import { Account } from "../models/Account.Model";
 import { Admin } from "../models/Admin.Model";
 
 async function tokenAuthentication(
@@ -27,31 +27,31 @@ async function tokenAuthentication(
   }
 }
 
-async function accountVerification(
-  req: ExtendedRequest,
-  res: Response,
-  next: NextFunction
-) {
-  return await tokenAuthentication(req, res, async () => {
-    const { accountID } = req.account!;
-    if (!req.account || !accountID) {
-      return res.status(403).json("Missing Profile: Account not found");
-    }
-    const account = await Account.findOne({ _id: accountID, isDeleted: false });
-    if (!account)
-      return res.status(403).json("Missing Profile: Account not found");
-    const { status } = account;
-    if (status == "suspended") {
-      return res
-        .status(403)
-        .json(
-          "Unauthorized: Your account has been suspended, please contact admin for more information"
-        );
-    }
-    req.account.email = account.email;
-    return next();
-  });
-}
+// async function accountVerification(
+//   req: ExtendedRequest,
+//   res: Response,
+//   next: NextFunction
+// ) {
+//   return await tokenAuthentication(req, res, async () => {
+//     const { accountID } = req.account!;
+//     if (!req.account || !accountID) {
+//       return res.status(403).json("Missing Profile: Account not found");
+//     }
+//     const account = await Account.findOne({ _id: accountID, isDeleted: false });
+//     if (!account)
+//       return res.status(403).json("Missing Profile: Account not found");
+//     const { status } = account;
+//     if (status == "suspended") {
+//       return res
+//         .status(403)
+//         .json(
+//           "Unauthorized: Your account has been suspended, please contact admin for more information"
+//         );
+//     }
+//     req.account.email = account.email;
+//     return next();
+//   });
+// }
 
 //////////////////////////////////// ADMIN AUTHORIZATION /////////////////////////////////
 async function adminTokenAuthentication(
@@ -125,4 +125,4 @@ function roleVerification(requiredPermission: string) {
   };
 }
 
-export { accountVerification, adminVerification, roleVerification };
+export { adminVerification, roleVerification };

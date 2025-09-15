@@ -3,13 +3,13 @@ import AppError from "../../utilities/ErrorHandler";
 
 export class BankService {
   public async getBank() {
-    const bank = await Bank.findOne({
+    const banks = await Bank.find({
       status: "active",
-      isDefault: true,
       isDeleted: false,
     });
-    if (!bank) throw new AppError(500, "Bank not found, please contact admin");
-    return bank;
+    if (banks.length === 0)
+      throw Error("Banks not found, please contact admin");
+    return banks;
   }
 
   public async validateBank(bankID: string) {
