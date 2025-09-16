@@ -1,7 +1,7 @@
 import { Order } from "../../models/Order.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { IOrderPayload } from "../../utilities/Interfaces";
-import { v4 as uuidv4 } from "uuid";
+import ImageKit from "imagekit";
 
 export class OrderService {
   public async createOrder(payload: IOrderPayload) {
@@ -47,6 +47,36 @@ export class OrderService {
       throw new AppError(404, "Order not found");
     }
     return order;
+  }
+
+  public async provideProofOfPayment(payload: {
+    orderID: string;
+    bankID: string;
+    proofOfPayment: string;
+  }) {
+    const { orderID, bankID, proofOfPayment } = payload;
+
+    const order = await Order.findOneAndUpdate(
+      { _id: orderID },
+      { proofOfPayment, bankID },
+      { new: true }
+    );
+    if (!order) {
+      throw new AppError(404, "Order not found");
+    }
+    return order;
+  }
+
+  public async generateImageUploadSignature() {
+    var imagekit = new ImageKit({
+      publicKey: process.env["IMAGE_KIT_PUBLIC_KEY"]!,
+      privateKey: process.env["IMAGE_KIT_PRIVATE_KEY"]!,
+      urlEndpoint: process.env["IMAGE_KIT_URL_ENDPOINT"]!,
+    });
+
+    const signature = imagekit.getAuthenticationParameters();
+
+    return signature;
   }
 
   public async trackOrder(trackingID: string) {

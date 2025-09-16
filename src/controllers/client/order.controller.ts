@@ -42,12 +42,43 @@ export const trackOrder = async (
   const { trackingID } = req.query as { trackingID: string };
   try {
     const response = await orderService.trackOrder(trackingID);
-    return res
-      .status(200)
-      .json({
-        message: "Order tracking information fetched successfully",
-        data: response,
-      });
+    return res.status(200).json({
+      message: "Order tracking information fetched successfully",
+      data: response,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const provideProofOfPayment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const payload = req.body;
+  try {
+    const response = await orderService.provideProofOfPayment(payload);
+    return res.status(200).json({
+      message: "Proof of payment provided successfully",
+      data: response,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const generateImageUploadSignature = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const response = await orderService.generateImageUploadSignature();
+    return res.status(200).json({
+      message: "Image upload signature generated successfully",
+      data: response,
+    });
   } catch (error: any) {
     next(error);
   }

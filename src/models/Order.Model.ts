@@ -33,6 +33,8 @@ interface IOrder extends Document {
   status: string;
   paymentMethod: string;
   paymentStatus: string;
+  bankID?: string;
+  proofOfPayment?: string;
   amount: number;
   __v?: number;
 }
@@ -84,6 +86,8 @@ const OrderSchema = new Schema<IOrder>(
       enum: ["cash", "card", "bank-transfer"],
     },
     amount: { type: Number },
+    bankID: { type: String },
+    proofOfPayment: { type: String },
   },
   {
     timestamps: true,
