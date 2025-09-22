@@ -1,5 +1,6 @@
 import { Order } from "../../models/Order.Model";
 import AppError from "../../utilities/ErrorHandler";
+import { paginateModelWithMultiplePopulates } from "../../utilities/Pagination.Helper";
 
 export class OrderService {
   public async getOrders(payload: any) {
@@ -14,10 +15,44 @@ export class OrderService {
     }
 
     const query: any = {};
-    if(riderID) {
-
+    if (riderID) {
+      query.riderID = riderID;
+    }
+    if (status) {
+      query.status = status;
+    }
+    if (bankID) {
+      query.bankID = bankID;
     }
 
-    // if
+    const orders = await paginateModelWithMultiplePopulates(
+      Order,
+      query,
+      page,
+      limit,
+      [
+        {
+          path: "riderID",
+          select: "name phone",
+        },
+        {
+          path: "bankID",
+          select: "name accountName accountNumber",
+        },
+      ]
+    );
+
+    return orders;
+  }
+
+  public async updateOrderStatus(payload: any) {
+    const { orderID, status } = payload;
+    const order = await Order.findOneAndUpdate(
+      { _id: orderID },
+      { status },
+      { new: true }
+    );
+
+    return order;
   }
 }

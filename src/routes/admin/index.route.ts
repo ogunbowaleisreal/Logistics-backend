@@ -7,6 +7,7 @@ import bannerRoute from "./banner.route";
 import bankRoute from "./bank.route";
 import themeRoute from "./theme.route";
 import riderRoute from "./rider.route";
+import orderRoute from "./order.route";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/banners", bannerRoute);
 router.use("/banks", bankRoute);
 router.use("/themes", themeRoute);
 router.use("/riders", riderRoute);
+router.use("/orders", orderRoute);
 
 export default router;
