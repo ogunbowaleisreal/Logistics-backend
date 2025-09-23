@@ -24,6 +24,38 @@ export class OrderService {
     if (bankID) {
       query.bankID = bankID;
     }
+    if (search) {
+      query.$or = [
+        {
+          "personnelInformation.sender.name": { $regex: search, $options: "i" },
+        },
+        {
+          "personnelInformation.sender.email": {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          "personnelInformation.sender.phone": {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          "personnelInformation.receiver.name": {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        {
+          "personnelInformation.receiver.phone": {
+            $regex: search,
+            $options: "i",
+          },
+        },
+        { trackingID: { $regex: search, $options: "i" } },
+      ];
+    }
 
     const orders = await paginateModelWithMultiplePopulates(
       Order,

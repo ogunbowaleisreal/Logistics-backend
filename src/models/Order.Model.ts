@@ -101,6 +101,4 @@ const OrderSchema = new Schema<IOrder>(
   }
 );
 
-OrderSchema.index({ trackingNumber: 1 }, { unique: true });
-
 export const Order = model<IOrder>("Order", OrderSchema);
