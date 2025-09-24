@@ -80,7 +80,10 @@ export class OrderService {
   }
 
   public async trackOrder(trackingID: string) {
-    console.log(trackingID);
+    const validateTrackingID = trackingID.startsWith("SME-");
+    if (!validateTrackingID) {
+      trackingID = `SME-${trackingID}`;
+    }
     const order = await Order.findOne({
       trackingID: trackingID.toUpperCase(),
     });
