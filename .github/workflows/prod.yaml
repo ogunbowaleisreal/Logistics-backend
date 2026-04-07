@@ -1,119 +1,117 @@
-# name: Deployment
+name: Deployment
 
-# on:
-#   push:
-#     branches:
-#       - main
+on:
+  push:
+    branches:
+      - main
 
-# jobs:
-#   deploy:
-#     runs-on: ubuntu-latest
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
 
-#     if: github.event_name == 'push'
+    if: github.event_name == 'push'
 
-#     steps:
-#       - name: Checkout Repository
-#         uses: actions/checkout@v2
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
 
-#       - name: Setup Node.js
-#         uses: actions/setup-node@v2
-#         with:
-#           node-version: "20"
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "22"
 
-#       - name: Install Dependencies
-#         run: npm ci
+      - name: Install Dependencies
+        run: npm ci
 
-#       - name: Build Project
-#         env:
-#           PORT: ${{ secrets.PORT }}
-#           MONGODB_URI: ${{ secrets.MONGODB_URI }}
-#           REDIS_SERVER_URL: ${{ secrets.REDIS_SERVER_URL }}
+      - name: Build Project
+        env:
+          PORT: ${{ secrets.PORT }}
+          MONGODB_URI: ${{ secrets.MONGODB_URI }}
+          REDIS_SERVER_URL: ${{ secrets.REDIS_SERVER_URL }}
 
-#           SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
-#           SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
-#           SUPER_ADMIN_PHONE: ${{ secrets.SUPER_ADMIN_PHONE }}
+          SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
+          SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+          SUPER_ADMIN_PHONE: ${{ secrets.SUPER_ADMIN_PHONE }}
+          SUPER_ADMIN_FIRSTNAME: ${{ secrets.SUPER_ADMIN_FIRSTNAME }}
+          SUPER_ADMIN_LASTNAME: ${{ secrets.SUPER_ADMIN_LASTNAME }}
 
-#           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
+          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
+          MAILGUN_SENDER: ${{ secrets.MAILGUN_SENDER }}
 
-#           JWT_SECRET: ${{ secrets.JWT_SECRET }}
-#           JWT_DURATION: ${{ secrets.JWT_DURATION }}
-#           JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
-#           JWT_REFRESH_DURATION: ${{ secrets.JWT_REFRESH_DURATION }}
+          IMAGE_KIT_PUBLIC_KEY: ${{ secrets.IMAGE_KIT_PUBLIC_KEY }}
+          IMAGE_KIT_PRIVATE_KEY: ${{ secrets.IMAGE_KIT_PRIVATE_KEY }}
+          IMAGE_KIT_URL_ENDPOINT: ${{ secrets.IMAGE_KIT_URL_ENDPOINT }}
 
-#           MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-#           MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
-#           MAILGUN_SENDER: ${{ secrets.MAILGUN_SENDER }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
 
-#           IMAGE_KIT_PUBLIC_KEY: ${{ secrets.IMAGE_KIT_PUBLIC_KEY }}
-#           IMAGE_KIT_PRIVATE_KEY: ${{ secrets.IMAGE_KIT_PRIVATE_KEY }}
-#           IMAGE_KIT_URL_ENDPOINT: ${{ secrets.IMAGE_KIT_URL_ENDPOINT }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          JWT_DURATION: ${{ secrets.JWT_DURATION }}
+          JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
+          JWT_REFRESH_DURATION: ${{ secrets.JWT_REFRESH_DURATION }}
 
-#           # PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
-#           # PAYSTACK_CALLBACK_URL: ${{ secrets.PAYSTACK_CALLBACK_URL }}
-#           # PAYSTACK_HASH_TYPE: ${{ secrets.PAYSTACK_HASH_TYPE }}
-           
-#           NODE_ENV: ${{ secrets.NODE_ENV }}
-#         run: |
-#           npm run build
+          NODE_ENV: ${{ secrets.NODE_ENV }}
+        run: |
+          npm run build
 
-#       - name: Deploy to Server
-#         uses: appleboy/scp-action@v0.1.7
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USER }}
-#           port: ${{ secrets.SSH_PORT }}
-#           key: ${{ secrets.SSH_KEY }}
-#           source: "./*"
-#           target: ${{ secrets.PROJECT_PATH }}
+      - name: Deploy to Server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          port: ${{ secrets.SSH_PORT }}
+          key: ${{ secrets.SSH_KEY }}
+          source: "./*"
+          target: ${{ secrets.PROJECT_PATH }}
 
-#       - name: Create .env file on server
-#         uses: appleboy/ssh-action@v0.1.10
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USER }}
-#           key: ${{ secrets.SSH_KEY }}
-#           port: ${{ secrets.SSH_PORT }}
-#           script: |
-#             rm -rf ${{ secrets.ENV_PATH }}
-#             echo "PORT=${{ secrets.PORT }}" >> ${{ secrets.ENV_PATH }}
-#             echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> ${{ secrets.ENV_PATH }}
-#             echo "REDIS_SERVER_URL=${{ secrets.REDIS_SERVER_URL }}" >> ${{ secrets.ENV_PATH }}
-            
-#             echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> ${{ secrets.ENV_PATH }}
-#             echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> ${{ secrets.ENV_PATH }}
-#             echo "SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}" >> ${{ secrets.ENV_PATH }}
+      - name: Create .env file on server
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            rm -rf ${{ secrets.ENV_PATH }}
+            echo "PORT=${{ secrets.PORT }}" >> ${{ secrets.ENV_PATH }}
+            echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> ${{ secrets.ENV_PATH }}
+            echo "REDIS_SERVER_URL=${{ secrets.REDIS_SERVER_URL }}" >> ${{ secrets.ENV_PATH }}
 
-#             echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> ${{ secrets.ENV_PATH }}
-            
-#             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ${{ secrets.ENV_PATH }}
-#             echo "JWT_DURATION=${{ secrets.JWT_DURATION }}" >> ${{ secrets.ENV_PATH }}
-#             echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> ${{ secrets.ENV_PATH }}
-#             echo "JWT_REFRESH_DURATION=${{ secrets.JWT_REFRESH_DURATION }}" >> ${{ secrets.ENV_PATH }}
-            
-#             echo "MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}" >> ${{ secrets.ENV_PATH }}
-#             echo "MAILGUN_DOMAIN=${{ secrets.MAILGUN_DOMAIN }}" >> ${{ secrets.ENV_PATH }}
-#             echo "MAILGUN_SENDER=${{ secrets.MAILGUN_SENDER }}" >> ${{ secrets.ENV_PATH }}
-            
-#             # echo "PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
-#             # echo "PAYSTACK_CALLBACK_URL=${{ secrets.PAYSTACK_CALLBACK_URL }}" >> ${{ secrets.ENV_PATH }}
-#             # echo "PAYSTACK_HASH_TYPE=${{ secrets.PAYSTACK_HASH_TYPE }}" >> ${{ secrets.ENV_PATH }}
+            echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> ${{ secrets.ENV_PATH }}
+            echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> ${{ secrets.ENV_PATH }}
+            echo "SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}" >> ${{ secrets.ENV_PATH }}
+            echo "SUPER_ADMIN_FIRSTNAME=${{ secrets.SUPER_ADMIN_FIRSTNAME }}" >> ${{ secrets.ENV_PATH }}
+            echo "SUPER_ADMIN_LASTNAME=${{ secrets.SUPER_ADMIN_LASTNAME }}" >> ${{ secrets.ENV_PATH }}
 
-#             echo "IMAGE_KIT_PUBLIC_KEY=${{ secrets.IMAGE_KIT_PUBLIC_KEY }}" >> ${{ secrets.ENV_PATH }}
-#             echo "IMAGE_KIT_PRIVATE_KEY=${{ secrets.IMAGE_KIT_PRIVATE_KEY }}" >> ${{ secrets.ENV_PATH }}
-#             echo "IMAGE_KIT_URL_ENDPOINT=${{ secrets.IMAGE_KIT_URL_ENDPOINT }}" >> ${{ secrets.ENV_PATH }}
+            echo "MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "MAILGUN_DOMAIN=${{ secrets.MAILGUN_DOMAIN }}" >> ${{ secrets.ENV_PATH }}
+            echo "MAILGUN_SENDER=${{ secrets.MAILGUN_SENDER }}" >> ${{ secrets.ENV_PATH }}
 
-#             echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
+            echo "IMAGE_KIT_PUBLIC_KEY=${{ secrets.IMAGE_KIT_PUBLIC_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "IMAGE_KIT_PRIVATE_KEY=${{ secrets.IMAGE_KIT_PRIVATE_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "IMAGE_KIT_URL_ENDPOINT=${{ secrets.IMAGE_KIT_URL_ENDPOINT }}" >> ${{ secrets.ENV_PATH }}
 
-#       - name: Restart Application
-#         uses: appleboy/ssh-action@v0.1.10
-#         with:
-#           host: ${{ secrets.SSH_HOST }}
-#           username: ${{ secrets.SSH_USER }}
-#           key: ${{ secrets.SSH_KEY }}
-#           port: ${{ secrets.SSH_PORT }}
-#           script: |
-#             export NVM_DIR="$HOME/.nvm"
-#             source $NVM_DIR/nvm.sh
-#             cd ${{ secrets.PROJECT_PATH }}
-#             pm2 restart 0
-#             pm2 save
+            echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> ${{ secrets.ENV_PATH }}
+            echo "PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ${{ secrets.ENV_PATH }}
+            echo "JWT_DURATION=${{ secrets.JWT_DURATION }}" >> ${{ secrets.ENV_PATH }}
+            echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> ${{ secrets.ENV_PATH }}
+            echo "JWT_REFRESH_DURATION=${{ secrets.JWT_REFRESH_DURATION }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
+
+      - name: Restart Application
+        uses: appleboy/ssh-action@v0.1.10
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            export NVM_DIR="$HOME/.nvm"
+            source $NVM_DIR/nvm.sh
+            cd ${{ secrets.PROJECT_PATH }}
+            pm2 start npm --name api-sme -- run start
+            pm2 save
