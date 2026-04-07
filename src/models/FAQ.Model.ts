@@ -16,7 +16,7 @@ const FAQCategorySchema = new Schema<IFAQCategory>(
     toJSON: {
       transform(doc, ret) {
         ret.id = ret._id;
-        delete ret._id;
+        delete (ret as any)._id;
         delete ret.__v;
       },
     },
@@ -47,7 +47,7 @@ const FAQSchema = new Schema<IFAQ>(
     toJSON: {
       transform(doc, ret) {
         ret.id = ret._id;
-        delete ret._id;
+        delete (ret as any)._id;
         delete ret.__v;
       },
     },

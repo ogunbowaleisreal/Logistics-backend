@@ -18,7 +18,7 @@ const NotificationGroupSchema = new Schema<INotificationGroup>(
     toJSON: {
       transform(doc, ret) {
         ret.id = ret._id;
-        delete ret._id;
+        delete (ret as any)._id;
         delete ret.__v;
       },
     },
@@ -58,7 +58,7 @@ const NotificationSchema = new Schema<INotification>(
     toJSON: {
       transform(doc, ret) {
         ret.id = ret._id;
-        delete ret._id;
+        delete (ret as any)._id;
         delete ret.__v;
       },
     },
@@ -90,7 +90,7 @@ const UserInAppNotificationSchema = new Schema<IUserInAppNotification>(
     toJSON: {
       transform(doc, ret) {
         ret.id = ret._id;
-        delete ret._id;
+        delete (ret as any)._id;
         delete ret.__v;
       },
     },
