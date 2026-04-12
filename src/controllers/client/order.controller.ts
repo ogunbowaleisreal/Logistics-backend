@@ -1,15 +1,16 @@
 import { Request, Response, NextFunction } from "express";
 import { OrderService } from "../../services/client/Order.Service";
+import { ExtendedRequest } from "../../utilities/Interfaces";
 
 const orderService = new OrderService();
 
 export const createOrder = async (
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
-    const response = await orderService.createOrder(req.body);
+    const response = await orderService.createOrder(req.businessId!, req.body);
     return res
       .status(200)
       .json({ message: "Order created successfully", data: response });
@@ -19,13 +20,16 @@ export const createOrder = async (
 };
 
 export const getOrderSummary = async (
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { orderID } = req.query as { orderID: string };
   try {
-    const response = await orderService.getOrderSummary(orderID);
+    const response = await orderService.getOrderSummary(
+      req.businessId!,
+      orderID,
+    );
     return res
       .status(200)
       .json({ message: "Order summary fetched successfully", data: response });
@@ -35,13 +39,13 @@ export const getOrderSummary = async (
 };
 
 export const trackOrder = async (
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const { trackingID } = req.query as { trackingID: string };
   try {
-    const response = await orderService.trackOrder(trackingID);
+    const response = await orderService.trackOrder(req.businessId!, trackingID);
     return res.status(200).json({
       message: "Order tracking information fetched successfully",
       data: response,
@@ -52,13 +56,16 @@ export const trackOrder = async (
 };
 
 export const provideProofOfPayment = async (
-  req: Request,
+  req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const payload = req.body;
   try {
-    const response = await orderService.provideProofOfPayment(payload);
+    const response = await orderService.provideProofOfPayment(
+      req.businessId!,
+      payload,
+    );
     return res.status(200).json({
       message: "Proof of payment provided successfully",
       data: response,
@@ -71,7 +78,7 @@ export const provideProofOfPayment = async (
 export const generateImageUploadSignature = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const response = await orderService.generateImageUploadSignature();

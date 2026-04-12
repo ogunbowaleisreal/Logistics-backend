@@ -4,21 +4,22 @@ import {
   paginateModel,
   paginateModelWithPopulate,
 } from "../../utilities/Pagination.Helper";
+import { tenantScope } from "../../utilities/TenantScope";
 
 export class FAQService {
-  public async getFAQCategories(filter: any) {
+  public async getFAQCategories(businessId: string, filter: any) {
     const { categoryID, search, page, limit } = filter;
     if (categoryID) {
       const category = await FAQCategory.findOne({
-        _id: categoryID,
+        ...tenantScope({ _id: categoryID }, businessId),
         status: "active",
       });
       if (!category) {
         throw new AppError(404, "FAQ category not found");
       }
-      return;
+      return category;
     }
-    let query: any = { status: "active" };
+    let query: any = tenantScope({ status: "active" }, businessId);
     if (search) {
       query.name = { $regex: search, $options: "i" };
     }
@@ -26,10 +27,12 @@ export class FAQService {
     const faqCategories = await paginateModel(FAQCategory, query, page, limit);
     return faqCategories;
   }
-  public async getFAQs(filter: any) {
+  public async getFAQs(businessId: string, filter: any) {
     const { faqID, categoryID, search, page, limit } = filter;
     if (faqID) {
-      const faq = await FAQ.findOne({ _id: faqID }).populate({
+      const faq = await FAQ.findOne(
+        tenantScope({ _id: faqID }, businessId),
+      ).populate({
         path: "category",
         select: "name",
       });
@@ -38,7 +41,7 @@ export class FAQService {
       }
       return faq;
     }
-    let query: any = {};
+    let query: any = tenantScope({}, businessId);
     if (categoryID) {
       query.category = categoryID;
     }
@@ -55,7 +58,7 @@ export class FAQService {
       page,
       limit,
       { createdAt: -1 },
-      { path: "category", select: "name" }
+      { path: "category", select: "name" },
     );
     return faqs;
   }

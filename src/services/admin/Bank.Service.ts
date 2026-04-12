@@ -2,6 +2,7 @@ import axios from "axios";
 import { Bank } from "../../models/Bank.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModel } from "../../utilities/Pagination.Helper";
+import { tenantScope } from "../../utilities/TenantScope";
 
 export class BankService {
   public async getBankCodes() {
@@ -41,13 +42,12 @@ export class BankService {
     return response.data.data;
   }
 
-  public async createBank(payload: any) {
-    const bank = await Bank.create(payload);
+  public async createBank(businessId: string, payload: any) {
+    const bank = await Bank.create({ ...payload, businessId });
 
-    const bankCount = await Bank.countDocuments({
-      status: "active",
-      isDeleted: false,
-    });
+    const bankCount = await Bank.countDocuments(
+      tenantScope({ status: "active", isDeleted: false }, businessId),
+    );
     if (bankCount === 1) {
       bank.isDefault = true;
       await bank.save();
@@ -55,10 +55,12 @@ export class BankService {
     return bank;
   }
 
-  public async getBanks(filter: any) {
+  public async getBanks(businessId: string, filter: any) {
     const { bankID, status, page, limit } = filter;
     if (bankID) {
-      const bank = await Bank.findOne({ _id: bankID, isDeleted: false });
+      const bank = await Bank.findOne(
+        tenantScope({ _id: bankID, isDeleted: false }, businessId),
+      );
       if (!bank) throw new AppError(404, "Bank not found");
       return bank;
     }
@@ -66,7 +68,12 @@ export class BankService {
     if (status) {
       query.status = status;
     }
-    const banks = await paginateModel(Bank, query, page, limit);
+    const banks = await paginateModel(
+      Bank,
+      tenantScope(query, businessId),
+      page,
+      limit,
+    );
     return banks;
   }
 
@@ -79,24 +86,24 @@ export class BankService {
   //   return bank;
   // }
 
-  public async deleteBank(bankID: string) {
+  public async deleteBank(businessId: string, bankID: string) {
     const bank = await Bank.findOneAndUpdate(
-      { _id: bankID, isDeleted: false },
-      { isDeleted: true }
+      tenantScope({ _id: bankID, isDeleted: false }, businessId),
+      { isDeleted: true },
     );
     if (!bank) throw new AppError(404, "Bank not found");
     return;
   }
 
-  public async setDefaultBank(bankID: string) {
-    const bank = await Bank.findOneAndUpdate(
-      { isDefault: true, isDeleted: false },
-      { isDefault: false }
+  public async setDefaultBank(businessId: string, bankID: string) {
+    await Bank.findOneAndUpdate(
+      tenantScope({ isDefault: true, isDeleted: false }, businessId),
+      { isDefault: false },
     );
     const updatedBank = await Bank.findOneAndUpdate(
-      { _id: bankID, isDeleted: false },
+      tenantScope({ _id: bankID, isDeleted: false }, businessId),
       { isDefault: true },
-      { new: true }
+      { new: true },
     );
     if (!updatedBank) throw new AppError(404, "Bank not found");
     return updatedBank;

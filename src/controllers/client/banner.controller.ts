@@ -2,12 +2,18 @@ import { Request, Response } from "express";
 import { BannerService } from "../../services/client/Banner.Service";
 import logger from "../../../logger";
 import AppError from "../../utilities/ErrorHandler";
+import { ExtendedRequest } from "../../utilities/Interfaces";
 
 const bannerService = new BannerService();
-export const getDefaultBanners = async (req: Request, res: Response) => {
+export const getDefaultBanners = async (
+  req: ExtendedRequest,
+  res: Response,
+) => {
   const { limit } = req.query as { limit: string };
   try {
-    const banner = await bannerService.getDefaultBanners({ limit });
+    const banner = await bannerService.getDefaultBanners(req.businessId!, {
+      limit,
+    });
     return res
       .status(200)
       .json({ message: "Banner fetched successfully", data: banner });

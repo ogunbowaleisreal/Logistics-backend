@@ -18,6 +18,9 @@ export const Permissions = [
   // Bonus
   { code: "GETCONFIG", name: "GET CONFIGURATION" },
   { code: "UPTCONFIG", name: "UPDATE CONFIGURATION" },
+  { code: "GETBUSINESS", name: "GET BUSINESSES" },
+  { code: "SUSPBUSINESS", name: "SUSPEND BUSINESS" },
+  { code: "DELBUSINESS", name: "DELETE BUSINESS" },
 ];
 
 // Interface for the Role document
@@ -45,7 +48,7 @@ const RoleSchema = new Schema<IRole>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
 export const Role = mongoose.model<IRole>("Roles", RoleSchema);

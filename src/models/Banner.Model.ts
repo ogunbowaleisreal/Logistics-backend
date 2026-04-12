@@ -1,6 +1,7 @@
 import { Document, model, Schema } from "mongoose";
 
 interface IBanner extends Document {
+  businessId: Schema.Types.ObjectId;
   text: string;
   image: string;
   link: string;
@@ -11,6 +12,12 @@ interface IBanner extends Document {
 
 const BannerSchema = new Schema<IBanner>(
   {
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      index: true,
+      required: true,
+    },
     text: { type: String },
     image: { type: String },
     link: { type: String },
@@ -26,7 +33,7 @@ const BannerSchema = new Schema<IBanner>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
 export const Banner = model<IBanner>("Banner", BannerSchema);

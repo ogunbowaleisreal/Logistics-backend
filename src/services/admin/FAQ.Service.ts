@@ -4,17 +4,20 @@ import {
   paginateModel,
   paginateModelWithPopulate,
 } from "../../utilities/Pagination.Helper";
+import { tenantScope } from "../../utilities/TenantScope";
 
 export class FAQCategoryService {
-  public async createFAQCategory(payload: any) {
-    const faqCategory = await FAQCategory.create(payload);
+  public async createFAQCategory(businessId: string, payload: any) {
+    const faqCategory = await FAQCategory.create({ ...payload, businessId });
     return faqCategory;
   }
 
-  public async getFAQCategories(filter: any) {
+  public async getFAQCategories(businessId: string, filter: any) {
     const { categoryID, status, search, page, limit } = filter;
     if (categoryID) {
-      const category = await FAQCategory.findOne({ _id: categoryID });
+      const category = await FAQCategory.findOne(
+        tenantScope({ _id: categoryID }, businessId),
+      );
       if (!category) {
         throw new AppError(404, "FAQ category not found");
       }
@@ -28,19 +31,24 @@ export class FAQCategoryService {
       query.$or = [{ name: { $regex: search, $options: "i" } }];
     }
 
-    const faqCategories = await paginateModel(FAQCategory, query, page, limit);
+    const faqCategories = await paginateModel(
+      FAQCategory,
+      tenantScope(query, businessId),
+      page,
+      limit,
+    );
     return faqCategories;
   }
 
-  public async updateFAQCategory(payload: any) {
+  public async updateFAQCategory(businessId: string, payload: any) {
     const { categoryID, ...rest } = payload;
 
     const faqCategory = await FAQCategory.findOneAndUpdate(
-      { _id: categoryID },
+      tenantScope({ _id: categoryID }, businessId),
       rest,
       {
         new: true,
-      }
+      },
     );
     if (!faqCategory) {
       throw new AppError(404, "FAQ category not found");
@@ -50,20 +58,25 @@ export class FAQCategoryService {
 }
 
 export class FAQService {
-  public async createFAQ(payload: any) {
-    const category = await this.validateFAQCategory(payload.categoryID);
+  public async createFAQ(businessId: string, payload: any) {
+    const category = await this.validateFAQCategory(
+      businessId,
+      payload.categoryID,
+    );
     if (!category) {
       throw new AppError(404, "FAQ category not found");
     }
     payload.category = payload.categoryID;
-    const faq = await FAQ.create(payload);
+    const faq = await FAQ.create({ ...payload, businessId });
     return faq;
   }
 
-  public async getFAQs(filter: any) {
+  public async getFAQs(businessId: string, filter: any) {
     const { faqID, categoryID, search, page, limit } = filter;
     if (faqID) {
-      const faq = await FAQ.findOne({ _id: faqID }).populate({
+      const faq = await FAQ.findOne(
+        tenantScope({ _id: faqID }, businessId),
+      ).populate({
         path: "category",
         select: "name",
       });
@@ -82,25 +95,31 @@ export class FAQService {
         { answer: { $regex: search, $options: "i" } },
       ];
     }
+    const scopedQuery = tenantScope(query, businessId);
     const faqs = await paginateModelWithPopulate(
       FAQ,
-      query,
+      scopedQuery,
       page,
       limit,
       { createdAt: -1 },
-      { path: "category", select: "name" }
+      { path: "category", select: "name" },
     );
     return faqs;
   }
 
-  public async updateFAQ(payload: any) {
+  public async updateFAQ(businessId: string, payload: any) {
     const { faqID, categoryID, question, answer } = payload;
-    const faq = await FAQ.findOneAndUpdate({ _id: faqID });
+    const faq = await FAQ.findOneAndUpdate(
+      tenantScope({ _id: faqID }, businessId),
+    );
     if (!faq) {
       throw new AppError(404, "FAQ not found");
     }
     if (categoryID) {
-      const existingCategory = await this.validateFAQCategory(categoryID);
+      const existingCategory = await this.validateFAQCategory(
+        businessId,
+        categoryID,
+      );
       if (!existingCategory) {
         throw new AppError(404, "FAQ category not found");
       }
@@ -112,16 +131,20 @@ export class FAQService {
     return await faq.save();
   }
 
-  public async deleteFAQ(faqID: string) {
-    const faq = await FAQ.findOneAndDelete({ _id: faqID });
+  public async deleteFAQ(businessId: string, faqID: string) {
+    const faq = await FAQ.findOneAndDelete(
+      tenantScope({ _id: faqID }, businessId),
+    );
     if (!faq) {
       throw new AppError(404, "FAQ not found");
     }
     return faq;
   }
 
-  private async validateFAQCategory(categoryID: string) {
-    const category = await FAQCategory.findOne({ _id: categoryID });
+  private async validateFAQCategory(businessId: string, categoryID: string) {
+    const category = await FAQCategory.findOne(
+      tenantScope({ _id: categoryID }, businessId),
+    );
     if (!category) {
       return;
     }

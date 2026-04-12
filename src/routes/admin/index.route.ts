@@ -9,6 +9,7 @@ import themeRoute from "./theme.route";
 import riderRoute from "./rider.route";
 import orderRoute from "./order.route";
 import configurationRoute from "./configuration.route";
+import businessRoute from "./business.route";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/themes", themeRoute);
 router.use("/riders", riderRoute);
 router.use("/orders", orderRoute);
 router.use("/configuration", configurationRoute);
+router.use("/businesses", businessRoute);
 
 export default router;

@@ -9,7 +9,10 @@ const faqService = new FAQService();
 export const getFAQCategories = async (req: ExtendedRequest, res: Response) => {
   const filter = req.query;
   try {
-    const categories = await faqService.getFAQCategories(filter);
+    const categories = await faqService.getFAQCategories(
+      req.businessId!,
+      filter,
+    );
     return res
       .status(200)
       .json({ message: "Categories fetched successfully", data: categories });
@@ -25,7 +28,7 @@ export const getFAQCategories = async (req: ExtendedRequest, res: Response) => {
 export const getFAQs = async (req: ExtendedRequest, res: Response) => {
   const filter = req.query;
   try {
-    const faq = await faqService.getFAQs(filter);
+    const faq = await faqService.getFAQs(req.businessId!, filter);
     return res
       .status(200)
       .json({ message: "FAQ fetched successfully", data: faq });

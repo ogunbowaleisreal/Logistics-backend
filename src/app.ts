@@ -14,6 +14,7 @@ import cacheConnection from "./config/cache";
 import logger from "../logger/index";
 import clientRoute from "./routes/client/index.route";
 import adminRoute from "./routes/admin/index.route";
+import businessRoute from "./routes/business/index.route";
 import AppError from "./utilities/ErrorHandler";
 import { v4 as uuidv4 } from "uuid";
 
@@ -39,9 +40,9 @@ class App {
   private async setupDB() {
     try {
       await databaseConnection();
-      logger.info("Databasae Connection Successful");
+      logger.info("Database Connection Successful");
     } catch (error: any) {
-      logger.error("Failed to connect to Database", error.messaage);
+      logger.error("Failed to connect to Database", error.message);
     }
   }
 
@@ -50,7 +51,7 @@ class App {
       await cacheConnection();
       logger.info("Redis Cache Connection Successful");
     } catch (error: any) {
-      logger.error("Failed to connect to Cache", error.messaage);
+      logger.error("Failed to connect to Cache", error.message);
     }
   }
 
@@ -60,6 +61,7 @@ class App {
     });
     this.app.use("/api/client", clientRoute);
     this.app.use("/api/admin", adminRoute);
+    this.app.use("/api/business", businessRoute);
     this.app.use(
       "/api/*",
       (req: Request, res: Response, next: NextFunction) => {

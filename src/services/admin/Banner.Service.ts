@@ -1,16 +1,19 @@
 import { Banner } from "../../models/Banner.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModel } from "../../utilities/Pagination.Helper";
+import { tenantScope } from "../../utilities/TenantScope";
 
 export class BannerService {
-  public async createBanner(payload: any) {
-    const banner = await Banner.create(payload);
+  public async createBanner(businessId: string, payload: any) {
+    const banner = await Banner.create({ ...payload, businessId });
     return banner;
   }
-  public async getBanners(payload: any) {
+  public async getBanners(businessId: string, payload: any) {
     const { bannerID, search, isDefault, status, page, limit } = payload;
     if (bannerID) {
-      const banner = await Banner.findOne({ _id: bannerID });
+      const banner = await Banner.findOne(
+        tenantScope({ _id: bannerID }, businessId),
+      );
       if (!banner) {
         throw new AppError(404, "Banner not found");
       }
@@ -29,18 +32,23 @@ export class BannerService {
     if (isDefault === "true" || isDefault === "false") {
       query.isDefault = isDefault === "true" ? true : false;
     }
-    const banners = await paginateModel(Banner, query, page, limit);
+    const banners = await paginateModel(
+      Banner,
+      tenantScope(query, businessId),
+      page,
+      limit,
+    );
     return banners;
   }
 
-  public async updateBanner(payload: any) {
+  public async updateBanner(businessId: string, payload: any) {
     const { bannerID, text, image, link, status } = payload;
     const banner = await Banner.findOneAndUpdate(
-      { _id: bannerID },
+      tenantScope({ _id: bannerID }, businessId),
       { text, image, link, status },
       {
         new: true,
-      }
+      },
     );
     if (!banner) {
       throw new AppError(404, "Banner not found");
@@ -48,13 +56,16 @@ export class BannerService {
     return banner;
   }
 
-  public async setDefaultBanner(bannerID: string) {
+  public async setDefaultBanner(businessId: string, bannerID: string) {
+    await Banner.updateMany(tenantScope({ isDefault: true }, businessId), {
+      isDefault: false,
+    });
     const banner = await Banner.findOneAndUpdate(
-      { _id: bannerID },
+      tenantScope({ _id: bannerID }, businessId),
       { isDefault: true },
       {
         new: true,
-      }
+      },
     );
     if (!banner) {
       throw new AppError(404, "Banner not found");
@@ -63,8 +74,10 @@ export class BannerService {
     return banner;
   }
 
-  public async deleteBanner(bannerID: string) {
-    const banner = await Banner.findOneAndDelete({ _id: bannerID });
+  public async deleteBanner(businessId: string, bannerID: string) {
+    const banner = await Banner.findOneAndDelete(
+      tenantScope({ _id: bannerID }, businessId),
+    );
 
     if (!banner) {
       throw new AppError(404, "Banner not found");

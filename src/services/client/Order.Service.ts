@@ -2,9 +2,10 @@ import { Order } from "../../models/Order.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { IOrderPayload } from "../../utilities/Interfaces";
 import ImageKit from "imagekit";
+import { tenantScope } from "../../utilities/TenantScope";
 
 export class OrderService {
-  public async createOrder(payload: IOrderPayload) {
+  public async createOrder(businessId: string, payload: IOrderPayload) {
     const {
       pickupLocation,
       dropoffLocation,
@@ -16,6 +17,7 @@ export class OrderService {
     } = payload;
 
     const order = await Order.create({
+      businessId,
       orderInformation: {
         pickupLocation,
         dropoffLocation,
@@ -41,25 +43,30 @@ export class OrderService {
     return order;
   }
 
-  public async getOrderSummary(orderID: string) {
-    const order = await Order.findOne({ _id: orderID });
+  public async getOrderSummary(businessId: string, orderID: string) {
+    const order = await Order.findOne(
+      tenantScope({ _id: orderID }, businessId),
+    );
     if (!order) {
       throw new AppError(404, "Order not found");
     }
     return order;
   }
 
-  public async provideProofOfPayment(payload: {
-    orderID: string;
-    bankID: string;
-    proofOfPayment: string;
-  }) {
+  public async provideProofOfPayment(
+    businessId: string,
+    payload: {
+      orderID: string;
+      bankID: string;
+      proofOfPayment: string;
+    },
+  ) {
     const { orderID, bankID, proofOfPayment } = payload;
 
     const order = await Order.findOneAndUpdate(
-      { _id: orderID },
+      tenantScope({ _id: orderID }, businessId),
       { proofOfPayment, bankID },
-      { new: true }
+      { new: true },
     );
     if (!order) {
       throw new AppError(404, "Order not found");
@@ -79,12 +86,13 @@ export class OrderService {
     return signature;
   }
 
-  public async trackOrder(trackingID: string) {
+  public async trackOrder(businessId: string, trackingID: string) {
     const validateTrackingID = trackingID.startsWith("SME-");
     if (!validateTrackingID) {
       trackingID = `SME-${trackingID}`;
     }
     const order = await Order.findOne({
+      ...tenantScope({}, businessId),
       trackingID: trackingID.toUpperCase(),
     });
     if (!order) {

@@ -111,6 +111,96 @@ export class EmailService {
     }
   }
 
+  async sendBusinessEmailVerification(payload: any): Promise<void> {
+    const { email, otp, name } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Verify Your SME Logistics Business Account",
+        html: `Hi ${name},<br><br>Your email verification code is: <strong>${otp}</strong><br><br>This code expires in 5 minutes.`,
+      });
+      logger.info(`Business verification email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Business verification email error: ${error.message}`);
+    }
+  }
+
+  async sendBusinessWelcomeEmail(payload: any): Promise<void> {
+    const { email, name } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Welcome to SME Logistics",
+        html: `Hi ${name},<br><br>Welcome to SME Logistics! Your business account has been successfully verified and is now active.`,
+      });
+      logger.info(`Business welcome email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Business welcome email error: ${error.message}`);
+    }
+  }
+
+  async sendBusinessLoginOTP(payload: any): Promise<void> {
+    const { email, otp } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Important: Business Login 2FA",
+        html: `Your login 2FA code is: <strong>${otp}</strong>`,
+      });
+      logger.info(`Business login OTP email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Business login OTP email error: ${error.message}`);
+    }
+  }
+
+  async sendBusinessPasswordResetOTP(payload: any): Promise<void> {
+    const { email, otp } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Reset Your SME Logistics Business Password",
+        html: `Your password reset code is: <strong>${otp}</strong><br><br>This code expires in 15 minutes.`,
+      });
+      logger.info(`Business password reset email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Business password reset email error: ${error.message}`);
+    }
+  }
+
+  async sendStaffWelcomeEmail(payload: any): Promise<void> {
+    const { email, firstname, password } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Welcome to the Team — SME Logistics",
+        html: `Hi ${firstname},<br><br>Your staff account has been created.<br><br>Email: ${email}<br>Temporary Password: <strong>${password}</strong><br><br>Please log in and change your password.`,
+      });
+      logger.info(`Staff welcome email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Staff welcome email error: ${error.message}`);
+    }
+  }
+
+  async sendStaffPasswordResetOTP(payload: any): Promise<void> {
+    const { email, otp, firstname } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Reset Your SME Logistics Staff Password",
+        html: `Hi ${firstname},<br><br>Your password reset code is: <strong>${otp}</strong><br><br>This code expires in 15 minutes.`,
+      });
+      logger.info(`Staff password reset email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Staff password reset email error: ${error.message}`);
+    }
+  }
+
   // async sendBatchEmail(payload: {
   //   message: string;
   //   subject: string;

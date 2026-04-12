@@ -5,8 +5,11 @@ import bannerRoute from "./banner.route";
 import bankRoute from "./bank.route";
 import orderRoute from "./order.route";
 import configurationRoute from "./configuration.route";
+import { businessContext } from "../../middlewares/authorization.middleware";
 
 const router = Router();
+
+router.use(businessContext);
 
 // router.use("/notification", notificationRoute);
 router.use("/faq", faqRoute);

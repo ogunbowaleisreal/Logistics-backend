@@ -38,8 +38,13 @@ export const verifyBank = async (req: Request, res: Response) => {
 
 export const createBank = async (req: Request, res: Response) => {
   const payload = req.body;
+  const businessId =
+    (req as any).business?.businessId ??
+    (req as any).staff?.businessId ??
+    (req as any).query.businessId ??
+    (req as any).body?.businessId;
   try {
-    const bank = await bankService.createBank(payload);
+    const bank = await bankService.createBank(businessId, payload);
     return res
       .status(201)
       .json({ message: "Bank created successfully", data: bank });
@@ -54,8 +59,13 @@ export const createBank = async (req: Request, res: Response) => {
 
 export const getBanks = async (req: Request, res: Response) => {
   const filter = req.query;
+  const businessId =
+    (req as any).business?.businessId ??
+    (req as any).staff?.businessId ??
+    (req as any).query.businessId ??
+    (req as any).body?.businessId;
   try {
-    const bank = await bankService.getBanks(filter);
+    const bank = await bankService.getBanks(businessId, filter);
     return res
       .status(200)
       .json({ message: "Bank fetched successfully", data: bank });
@@ -86,8 +96,13 @@ export const getBanks = async (req: Request, res: Response) => {
 
 export const deleteBank = async (req: Request, res: Response) => {
   const { bankID } = req.query as { bankID: string };
+  const businessId =
+    (req as any).business?.businessId ??
+    (req as any).staff?.businessId ??
+    (req as any).query.businessId ??
+    (req as any).body?.businessId;
   try {
-    const bank = await bankService.deleteBank(bankID);
+    const bank = await bankService.deleteBank(businessId, bankID);
     return res.status(200).json({ message: "Bank deleted successfully" });
   } catch (error: any) {
     if (error instanceof AppError) {
@@ -100,8 +115,13 @@ export const deleteBank = async (req: Request, res: Response) => {
 
 export const setDefaultBank = async (req: Request, res: Response) => {
   const { bankID } = req.body;
+  const businessId =
+    (req as any).business?.businessId ??
+    (req as any).staff?.businessId ??
+    (req as any).query.businessId ??
+    (req as any).body?.businessId;
   try {
-    const bank = await bankService.setDefaultBank(bankID);
+    const bank = await bankService.setDefaultBank(businessId, bankID);
     return res
       .status(200)
       .json({ message: "Bank updated successfully", data: bank });

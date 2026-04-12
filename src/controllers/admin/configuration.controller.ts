@@ -5,12 +5,18 @@ import { ConfigurationService } from "../../services/admin/Configuration.Service
 const configurationService = new ConfigurationService();
 
 export const getConfiguration = async (
-  req: ExtendedRequest,
+  req: ExtendedRequest | any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const configuration = await configurationService.getConfiguration();
+    const configuration =
+      await configurationService.getConfiguration(businessId);
     return res.status(200).json({
       message: "Configuration fetched successfully",
       data: configuration,
@@ -21,14 +27,20 @@ export const getConfiguration = async (
 };
 
 export const updateConfiguration = async (
-  req: ExtendedRequest,
+  req: ExtendedRequest | any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const payload = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
     const configuration = await configurationService.updateConfiguration(
-      payload
+      businessId,
+      payload,
     );
     return res.status(200).json({
       message: "Configuration updated successfully",

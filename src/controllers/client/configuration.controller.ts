@@ -7,10 +7,12 @@ const configurationService = new ConfigurationService();
 export const getConfiguration = async (
   req: ExtendedRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
-    const configuration = await configurationService.getConfiguration();
+    const configuration = await configurationService.getConfiguration(
+      req.businessId!,
+    );
     return res.status(200).json({
       message: "Configuration fetched successfully",
       data: configuration,

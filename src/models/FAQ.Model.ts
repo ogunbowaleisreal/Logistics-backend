@@ -1,6 +1,7 @@
 import { Document, model, Schema } from "mongoose";
 
 interface IFAQCategory extends Document {
+  businessId: Schema.Types.ObjectId;
   name: string;
   status: string;
   __v?: number;
@@ -8,6 +9,12 @@ interface IFAQCategory extends Document {
 
 const FAQCategorySchema = new Schema<IFAQCategory>(
   {
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      index: true,
+      required: true,
+    },
     name: { type: String, required: true },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
   },
@@ -20,12 +27,13 @@ const FAQCategorySchema = new Schema<IFAQCategory>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
 export const FAQCategory = model("FAQCategory", FAQCategorySchema);
 
 interface IFAQ extends Document {
+  businessId: Schema.Types.ObjectId;
   category: Schema.Types.ObjectId;
   question: string;
   answer: string;
@@ -34,6 +42,12 @@ interface IFAQ extends Document {
 
 const FAQSchema = new Schema<IFAQ>(
   {
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      index: true,
+      required: true,
+    },
     category: {
       type: Schema.Types.ObjectId,
       ref: "FAQCategory",
@@ -51,7 +65,7 @@ const FAQSchema = new Schema<IFAQ>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
 
 export const FAQ = model("FAQ", FAQSchema);

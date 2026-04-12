@@ -1,13 +1,16 @@
 import { Order } from "../../models/Order.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModelWithMultiplePopulates } from "../../utilities/Pagination.Helper";
+import { tenantScope } from "../../utilities/TenantScope";
 
 export class OrderService {
-  public async getOrders(payload: any) {
+  public async getOrders(businessId: string, payload: any) {
     const { orderID, bankID, riderID, status, search, page, limit } = payload;
 
     if (orderID) {
-      const order = await Order.findOne({ _id: orderID });
+      const order = await Order.findOne(
+        tenantScope({ _id: orderID }, businessId),
+      );
       if (!order) {
         throw new AppError(404, "Order not found");
       }
@@ -57,9 +60,11 @@ export class OrderService {
       ];
     }
 
+    const scopedQuery = tenantScope(query, businessId);
+
     const orders = await paginateModelWithMultiplePopulates(
       Order,
-      query,
+      scopedQuery,
       page,
       limit,
       [
@@ -71,18 +76,18 @@ export class OrderService {
           path: "bankID",
           select: "name accountName accountNumber",
         },
-      ]
+      ],
     );
 
     return orders;
   }
 
-  public async updateOrderStatus(payload: any) {
+  public async updateOrderStatus(businessId: string, payload: any) {
     const { orderID, status } = payload;
     const order = await Order.findOneAndUpdate(
-      { _id: orderID },
+      tenantScope({ _id: orderID }, businessId),
       { status },
-      { new: true }
+      { new: true },
     );
 
     return order;

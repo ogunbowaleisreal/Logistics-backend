@@ -1,6 +1,7 @@
 import { Document, model, Schema } from "mongoose";
 
 interface IBank extends Document {
+  businessId: Schema.Types.ObjectId;
   name: string;
   accountName: string;
   accountNumber: string;
@@ -12,6 +13,11 @@ interface IBank extends Document {
 
 const BankSchema = new Schema<IBank>(
   {
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      required: true,
+    },
     name: { type: String, required: true },
     accountName: { type: String, required: true },
     accountNumber: { type: String, required: true },
@@ -29,7 +35,9 @@ const BankSchema = new Schema<IBank>(
         delete ret.isDeleted;
       },
     },
-  }
+  },
 );
+
+BankSchema.index({ businessId: 1, accountNumber: 1 });
 
 export const Bank = model<IBank>("Bank", BankSchema);

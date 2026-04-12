@@ -10,11 +10,30 @@ export interface AccountAuthorizationHeader {
 
 export interface AdminAuthorizationHeader {
   adminID: string;
+  type?: "platform-admin";
+  role?: any;
+}
+
+export interface BusinessAuthorizationHeader {
+  businessId: string;
+  type: "business";
+  status?: string;
+  slug?: string;
+}
+
+export interface StaffAuthorizationHeader {
+  staffId: string;
+  businessId: string;
+  type: "staff";
+  role?: any;
 }
 
 export interface ExtendedRequest extends Request {
   account?: AccountAuthorizationHeader;
   admin?: AdminAuthorizationHeader;
+  business?: BusinessAuthorizationHeader;
+  staff?: StaffAuthorizationHeader;
+  businessId?: string; // set by businessContext middleware on client routes
 }
 
 export interface IOrderPayload {

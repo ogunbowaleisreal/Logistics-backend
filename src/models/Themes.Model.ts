@@ -1,6 +1,7 @@
 import { Document, model, Schema } from "mongoose";
 
 interface ITheme extends Document {
+  businessId: Schema.Types.ObjectId;
   font: string;
   color: string;
   isDeleted?: boolean;
@@ -9,6 +10,12 @@ interface ITheme extends Document {
 
 const ThemeSchema = new Schema<ITheme>(
   {
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      index: true,
+      required: true,
+    },
     font: { type: String, required: true },
     color: { type: String, required: true },
     isDeleted: { type: Boolean, default: false },
@@ -23,7 +30,7 @@ const ThemeSchema = new Schema<ITheme>(
         delete ret.isDeleted;
       },
     },
-  }
+  },
 );
 
 export const Theme = model<ITheme>("Theme", ThemeSchema);

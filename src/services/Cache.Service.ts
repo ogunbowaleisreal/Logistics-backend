@@ -234,5 +234,92 @@ export class CacheService {
     }
   }
 
-  // public async 
+  // public async
+
+  ///////////////////////////////// BUSINESS AUTH /////////////////////////////
+  public async cacheBizEmailVerificationOTP(email: string, otp: string) {
+    try {
+      const key = `biz-email-verification-${email.toLowerCase()}`;
+      await redisClient.setEx(key, 300, JSON.stringify({ otp }));
+      return;
+    } catch (error: any) {
+      throw new AppError(500, `Error Caching Data: ${error.message}`);
+    }
+  }
+
+  public async getCachedBizEmailVerificationOTP(email: string): Promise<string> {
+    const key = `biz-email-verification-${email.toLowerCase()}`;
+    const cacheResponse = await redisClient.get(key);
+    if (!cacheResponse) throw new AppError(404, "Expired OTP");
+    return cacheResponse;
+  }
+
+  public async cacheBizLoginOTP(email: string, otp: string) {
+    try {
+      const key = `biz-login-2FA-${email.toLowerCase()}`;
+      await redisClient.setEx(key, 900, JSON.stringify({ otp }));
+      return;
+    } catch (error: any) {
+      throw new AppError(500, `Error Caching Data: ${error.message}`);
+    }
+  }
+
+  public async getCachedBizLoginOTP(email: string): Promise<string> {
+    const key = `biz-login-2FA-${email.toLowerCase()}`;
+    const cacheResponse = await redisClient.get(key);
+    if (!cacheResponse) throw new AppError(404, "Expired OTP");
+    return cacheResponse;
+  }
+
+  public async cacheBizPasswordResetOTP(email: string, otp: string) {
+    try {
+      const key = `biz-password-reset-${email.toLowerCase()}`;
+      await redisClient.setEx(key, 900, JSON.stringify({ otp }));
+      return;
+    } catch (error: any) {
+      throw new AppError(500, `Error Caching Data: ${error.message}`);
+    }
+  }
+
+  public async getCachedBizPasswordResetOTP(email: string): Promise<string> {
+    const key = `biz-password-reset-${email.toLowerCase()}`;
+    const cacheResponse = await redisClient.get(key);
+    if (!cacheResponse) throw new AppError(404, "Expired OTP");
+    return cacheResponse;
+  }
+
+  ///////////////////////////////// STAFF AUTH /////////////////////////////
+  public async cacheStaffLoginOTP(businessId: string, email: string, otp: string) {
+    try {
+      const key = `staff-login-2FA-${businessId}-${email.toLowerCase()}`;
+      await redisClient.setEx(key, 900, JSON.stringify({ otp }));
+      return;
+    } catch (error: any) {
+      throw new AppError(500, `Error Caching Data: ${error.message}`);
+    }
+  }
+
+  public async getCachedStaffLoginOTP(businessId: string, email: string): Promise<string> {
+    const key = `staff-login-2FA-${businessId}-${email.toLowerCase()}`;
+    const cacheResponse = await redisClient.get(key);
+    if (!cacheResponse) throw new AppError(404, "Expired OTP");
+    return cacheResponse;
+  }
+
+  public async cacheStaffPasswordResetOTP(businessId: string, email: string, otp: string) {
+    try {
+      const key = `staff-password-reset-${businessId}-${email.toLowerCase()}`;
+      await redisClient.setEx(key, 900, JSON.stringify({ otp }));
+      return;
+    } catch (error: any) {
+      throw new AppError(500, `Error Caching Data: ${error.message}`);
+    }
+  }
+
+  public async getCachedStaffPasswordResetOTP(businessId: string, email: string): Promise<string> {
+    const key = `staff-password-reset-${businessId}-${email.toLowerCase()}`;
+    const cacheResponse = await redisClient.get(key);
+    if (!cacheResponse) throw new AppError(404, "Expired OTP");
+    return cacheResponse;
+  }
 }

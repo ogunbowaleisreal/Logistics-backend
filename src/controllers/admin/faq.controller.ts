@@ -11,12 +11,20 @@ const faqCategoryService = new FAQCategoryService();
 const faqService = new FAQService();
 
 export const createFAQCategory = async (
-  req: ExtendedRequest,
-  res: Response
+  req: ExtendedRequest | any,
+  res: Response,
 ) => {
   const payload = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const category = await faqCategoryService.createFAQCategory(payload);
+    const category = await faqCategoryService.createFAQCategory(
+      businessId,
+      payload,
+    );
     return res
       .status(201)
       .json({ message: "Category created successfully", data: category });
@@ -29,10 +37,21 @@ export const createFAQCategory = async (
   }
 };
 
-export const getFAQCategories = async (req: ExtendedRequest, res: Response) => {
+export const getFAQCategories = async (
+  req: ExtendedRequest | any,
+  res: Response,
+) => {
   const filter = req.query;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const categories = await faqCategoryService.getFAQCategories(filter);
+    const categories = await faqCategoryService.getFAQCategories(
+      businessId,
+      filter,
+    );
     return res
       .status(200)
       .json({ message: "Categories fetched successfully", data: categories });
@@ -46,12 +65,20 @@ export const getFAQCategories = async (req: ExtendedRequest, res: Response) => {
 };
 
 export const updateFAQCategory = async (
-  req: ExtendedRequest,
-  res: Response
+  req: ExtendedRequest | any,
+  res: Response,
 ) => {
   const payload = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const category = await faqCategoryService.updateFAQCategory(payload);
+    const category = await faqCategoryService.updateFAQCategory(
+      businessId,
+      payload,
+    );
     return res
       .status(201)
       .json({ message: "FAQ Category created successfully", data: category });
@@ -64,10 +91,15 @@ export const updateFAQCategory = async (
   }
 };
 
-export const createFAQ = async (req: ExtendedRequest, res: Response) => {
+export const createFAQ = async (req: ExtendedRequest | any, res: Response) => {
   const payload = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const faq = await faqService.createFAQ(payload);
+    const faq = await faqService.createFAQ(businessId, payload);
     return res
       .status(201)
       .json({ message: "FAQ created successfully", data: faq });
@@ -80,10 +112,15 @@ export const createFAQ = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
-export const getFAQs = async (req: ExtendedRequest, res: Response) => {
+export const getFAQs = async (req: ExtendedRequest | any, res: Response) => {
   const filter = req.query;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const faq = await faqService.getFAQs(filter);
+    const faq = await faqService.getFAQs(businessId, filter);
     return res
       .status(200)
       .json({ message: "FAQ fetched successfully", data: faq });
@@ -96,10 +133,15 @@ export const getFAQs = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
-export const updateFAQ = async (req: ExtendedRequest, res: Response) => {
+export const updateFAQ = async (req: ExtendedRequest | any, res: Response) => {
   const payload = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const faq = await faqService.updateFAQ(payload);
+    const faq = await faqService.updateFAQ(businessId, payload);
     return res
       .status(201)
       .json({ message: "FAQ updated successfully", data: faq });
@@ -112,10 +154,15 @@ export const updateFAQ = async (req: ExtendedRequest, res: Response) => {
   }
 };
 
-export const deleteFAQ = async (req: ExtendedRequest, res: Response) => {
+export const deleteFAQ = async (req: ExtendedRequest | any, res: Response) => {
   const { faqID } = req.query as { faqID: string };
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const faq = await faqService.deleteFAQ(faqID);
+    const faq = await faqService.deleteFAQ(businessId, faqID);
     return res.status(200).json({ message: "FAQ deleted successfully" });
   } catch (error: any) {
     if (error instanceof AppError) {

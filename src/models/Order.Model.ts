@@ -2,6 +2,7 @@ import { Document, model, Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
 interface IOrder extends Document {
+  businessId: Schema.Types.ObjectId;
   trackingID: string;
   orderInformation: {
     pickupLocation: {
@@ -90,6 +91,11 @@ const OrderSchema = new Schema<IOrder>(
     bankID: { type: Schema.Types.ObjectId, ref: "Bank" },
     riderID: { type: Schema.Types.ObjectId, ref: "Rider" },
     proofOfPayment: { type: String },
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      required: true,
+    },
   },
   {
     timestamps: true,
@@ -98,7 +104,10 @@ const OrderSchema = new Schema<IOrder>(
         delete ret.__v;
       },
     },
-  }
+  },
 );
+
+OrderSchema.index({ businessId: 1, status: 1 });
+OrderSchema.index({ businessId: 1, trackingID: 1 });
 
 export const Order = model<IOrder>("Order", OrderSchema);

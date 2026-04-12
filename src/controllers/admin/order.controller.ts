@@ -4,13 +4,18 @@ import { OrderService } from "../../services/admin/Order.Service";
 const orderService = new OrderService();
 
 export const getOrders = async (
-  req: Request,
+  req: Request | any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const filter = req.query;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const response = await orderService.getOrders(filter);
+    const response = await orderService.getOrders(businessId, filter);
     return res
       .status(200)
       .json({ message: "Orders fetched successfully", data: response });
@@ -20,13 +25,18 @@ export const getOrders = async (
 };
 
 export const updateOrderStatus = async (
-  req: Request,
+  req: Request | any,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const payload = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
   try {
-    const response = await orderService.updateOrderStatus(payload);
+    const response = await orderService.updateOrderStatus(businessId, payload);
     return res.status(200).json({
       message: "Order status updated successfully",
       data: response,
