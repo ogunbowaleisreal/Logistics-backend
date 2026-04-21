@@ -254,16 +254,38 @@ function staffRoleVerification(permission: string) {
     res: Response,
     next: NextFunction,
   ) {
-    return await staffVerification(req, res, async () => {
-      const { role } = req.staff;
-      const { permissions } = role;
-      for (const p of permissions) {
-        if (p === permission) return next();
-      }
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+    if (!token) {
       return res
-        .status(403)
-        .json("Unauthorized: Staff not allowed to perform this action");
-    });
+        .status(401)
+        .json("Unauthenticated. Please login and provide a token");
+    }
+
+    let decoded: any;
+    try {
+      decoded = new AuthenticationTokenGenerator().verifyToken(token);
+    } catch {
+      return res.status(401).json("Unauthenticated: Invalid token");
+    }
+
+    if (decoded.type === "business") {
+      return businessVerification(req, res, next);
+    }
+
+    if (decoded.type === "staff") {
+      return staffVerification(req, res, async () => {
+        const { role } = req.staff;
+        const { permissions } = role;
+        for (const p of permissions) {
+          if (p === permission) return next();
+        }
+        return res
+          .status(403)
+          .json("Unauthorized: Staff not allowed to perform this action");
+      });
+    }
+
+    return res.status(401).json("Unauthenticated: Invalid token type");
   };
 }
 
