@@ -37,20 +37,23 @@ export interface ExtendedRequest extends Request {
 }
 
 export interface IOrderPayload {
-  pickupLocation: {
-    address: string;
-    latitude: number;
-    longitude: number;
+  slug: string;
+  orderInformation: {
+    pickupLocation: {
+      address: string;
+      latitude: number;
+      longitude: number;
+    };
+    dropoffLocation: {
+      address: string;
+      latitude: number;
+      longitude: number;
+    };
+    items: string[];
+    numberOfItems: number;
+    itemWeight: number;
+    value: number;
   };
-  dropoffLocation: {
-    address: string;
-    latitude: number;
-    longitude: number;
-  };
-  items: string[];
-  numberOfItems: number;
-  itemWeight: number;
-  value: number;
   personnelInformation: {
     sender: {
       name: string;
@@ -62,4 +65,5 @@ export interface IOrderPayload {
       phone: string;
     };
   };
+  paymentMethod: "cash" | "card" | "bank-transfer";
 }

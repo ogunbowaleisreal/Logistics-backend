@@ -75,6 +75,43 @@ export const provideProofOfPayment = async (
   }
 };
 
+export const cancelOrder = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const response = await orderService.cancelOrder(req.businessId!, req.body);
+    return res.status(200).json({
+      message: "Order cancelled successfully",
+      data: response,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const getMyOrders = async (
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { phone, page, limit } = req.query;
+    const response = await orderService.getMyOrders(req.businessId!, {
+      phone: String(phone),
+      page: page ? Number(page) : undefined,
+      limit: limit ? Number(limit) : undefined,
+    });
+    return res.status(200).json({
+      message: "Orders fetched successfully",
+      data: response,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const generateImageUploadSignature = async (
   req: Request,
   res: Response,

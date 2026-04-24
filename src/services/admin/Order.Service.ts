@@ -1,7 +1,18 @@
 import { Order } from "../../models/Order.Model";
+import { EmailService } from "../Email.Service";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModelWithMultiplePopulates } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
+
+const emailService = new EmailService();
+
+const ALLOWED_TRANSITIONS: Record<string, string[]> = {
+  pending: ["payment-review", "in-transit", "cancelled"],
+  "payment-review": ["pending", "in-transit", "cancelled"],
+  "in-transit": ["delivered", "cancelled"],
+  delivered: [],
+  cancelled: [],
+};
 
 export class OrderService {
   public async getOrders(businessId: string, payload: any) {
@@ -84,11 +95,42 @@ export class OrderService {
 
   public async updateOrderStatus(businessId: string, payload: any) {
     const { orderID, status } = payload;
+
+    const existingOrder = await Order.findOne(
+      tenantScope({ _id: orderID }, businessId),
+    );
+
+    if (!existingOrder) {
+      throw new AppError(404, "Order not found");
+    }
+
+    const allowedTransitions = ALLOWED_TRANSITIONS[existingOrder.status] ?? [];
+
+    if (!allowedTransitions.includes(status)) {
+      throw new AppError(
+        400,
+        `Invalid status transition: ${existingOrder.status} → ${status}`,
+      );
+    }
+
     const order = await Order.findOneAndUpdate(
       tenantScope({ _id: orderID }, businessId),
       { status },
       { new: true },
     );
+
+    if (!order) {
+      throw new AppError(404, "Order not found");
+    }
+
+    if (order.personnelInformation.sender.email) {
+      void emailService.sendOrderStatusUpdate({
+        email: order.personnelInformation.sender.email,
+        name: order.personnelInformation.sender.name,
+        trackingID: order.trackingID,
+        status: order.status,
+      });
+    }
 
     return order;
   }

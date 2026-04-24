@@ -304,30 +304,90 @@ async function businessContext(
         .json("Business context missing: x-business-slug is required");
     }
 
-    const cacheKey = `slug:${slug.toLowerCase()}`;
-    let businessId = await redisClient.get(cacheKey);
-
-    if (!businessId) {
-      const business = await Business.findOne({
-        slug: slug.toLowerCase(),
-        status: "active",
-        isDeleted: false,
-      });
-
-      if (!business) {
-        return res.status(404).json("Business not found");
-      }
-
-      const resolvedBusinessId = business.id;
-      await redisClient.setEx(cacheKey, 3600, resolvedBusinessId);
-      businessId = resolvedBusinessId;
-    }
+    const businessId = await resolveBusinessIdFromSlug(slug);
 
     req.businessId = businessId;
     return next();
   } catch (error: any) {
     return res
       .status(500)
+      .json(error.message || "Unable to resolve business context");
+  }
+}
+
+async function resolveBusinessIdFromSlug(slug: string): Promise<string> {
+  const normalizedSlug = slug.toLowerCase();
+  const cacheKey = `slug:${normalizedSlug}`;
+  let businessId: string | null = await redisClient.get(cacheKey);
+
+  if (!businessId) {
+    const business = await Business.findOne({
+      slug: normalizedSlug,
+      status: "active",
+      isDeleted: false,
+    });
+
+    if (!business) {
+      throw new Error("Business not found");
+    }
+
+    const resolvedBusinessId = business.id;
+    await redisClient.setEx(cacheKey, 3600, resolvedBusinessId);
+    businessId = resolvedBusinessId;
+  }
+
+  if (!businessId) {
+    throw new Error("Business not found");
+  }
+
+  return businessId;
+}
+
+async function bodyBusinessContext(
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const { slug } = req.body;
+
+    if (!slug || typeof slug !== "string") {
+      return res
+        .status(400)
+        .json("Business context missing: body.slug is required");
+    }
+
+    req.businessId = await resolveBusinessIdFromSlug(slug);
+    return next();
+  } catch (error: any) {
+    const statusCode = error.message === "Business not found" ? 404 : 500;
+    return res
+      .status(statusCode)
+      .json(error.message || "Unable to resolve business context");
+  }
+}
+
+async function queryBusinessContext(
+  req: ExtendedRequest,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const slugValue = req.query.slug;
+    const slug = Array.isArray(slugValue) ? slugValue[0] : slugValue;
+
+    if (!slug || typeof slug !== "string") {
+      return res
+        .status(400)
+        .json("Business context missing: query.slug is required");
+    }
+
+    req.businessId = await resolveBusinessIdFromSlug(slug);
+    return next();
+  } catch (error: any) {
+    const statusCode = error.message === "Business not found" ? 404 : 500;
+    return res
+      .status(statusCode)
       .json(error.message || "Unable to resolve business context");
   }
 }
@@ -341,4 +401,7 @@ export {
   staffVerification,
   staffRoleVerification,
   businessContext,
+  bodyBusinessContext,
+  queryBusinessContext,
+  resolveBusinessIdFromSlug,
 };

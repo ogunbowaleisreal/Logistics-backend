@@ -201,6 +201,51 @@ export class EmailService {
     }
   }
 
+  async sendOrderConfirmation(payload: any): Promise<void> {
+    const { email, name, trackingID, amount } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Your Order Has Been Placed",
+        html: `Hi ${name},<br><br>Your order has been placed successfully.<br><br>Tracking ID: <strong>${trackingID}</strong><br>Amount: <strong>${amount}</strong>`,
+      });
+      logger.info(`Order confirmation email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Order confirmation email error: ${error.message}`);
+    }
+  }
+
+  async sendOrderStatusUpdate(payload: any): Promise<void> {
+    const { email, name, trackingID, status } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Your Order Status Has Been Updated",
+        html: `Hi ${name},<br><br>Your order status has been updated.<br><br>Tracking ID: <strong>${trackingID}</strong><br>Status: <strong>${status}</strong>`,
+      });
+      logger.info(`Order status update email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Order status update email error: ${error.message}`);
+    }
+  }
+
+  async sendPaymentReviewNotification(payload: any): Promise<void> {
+    const { email, name, trackingID } = payload;
+    try {
+      await mg.messages.create(domain, {
+        from: `SME Logistics ${sender}`,
+        to: email,
+        subject: "Proof of Payment Received — Under Review",
+        html: `Hi ${name},<br><br>We have received your proof of payment and it is now under review.<br><br>Tracking ID: <strong>${trackingID}</strong>`,
+      });
+      logger.info(`Payment review email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Payment review email error: ${error.message}`);
+    }
+  }
+
   // async sendBatchEmail(payload: {
   //   message: string;
   //   subject: string;
