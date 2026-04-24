@@ -1,72 +1,8 @@
 import { Request, Response } from "express";
 import AppError from "../../utilities/ErrorHandler";
-import {
-  FAQCategoryService,
-  FAQService,
-} from "../../services/admin/FAQ.Service";
+import { FAQService } from "../../services/business/FAQ.Service";
 
-const faqCategoryService = new FAQCategoryService();
 const faqService = new FAQService();
-
-export const createFAQCategory = async (
-  req: Request | any,
-  res: Response,
-): Promise<Response> => {
-  try {
-    const businessId = req.staff?.businessId ?? req.business?.businessId;
-    const category = await faqCategoryService.createFAQCategory(
-      businessId,
-      req.body,
-    );
-    return res
-      .status(201)
-      .json({ message: "Category created successfully", data: category });
-  } catch (error: any) {
-    if (error instanceof AppError)
-      return res.status(error.statusCode).json({ message: error.message });
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-export const getFAQCategories = async (
-  req: Request | any,
-  res: Response,
-): Promise<Response> => {
-  try {
-    const businessId = req.staff?.businessId ?? req.business?.businessId;
-    const categories = await faqCategoryService.getFAQCategories(
-      businessId,
-      req.query,
-    );
-    return res
-      .status(200)
-      .json({ message: "Categories fetched successfully", data: categories });
-  } catch (error: any) {
-    if (error instanceof AppError)
-      return res.status(error.statusCode).json({ message: error.message });
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-export const updateFAQCategory = async (
-  req: Request | any,
-  res: Response,
-): Promise<Response> => {
-  try {
-    const businessId = req.staff?.businessId ?? req.business?.businessId;
-    const category = await faqCategoryService.updateFAQCategory(
-      businessId,
-      req.body,
-    );
-    return res
-      .status(200)
-      .json({ message: "FAQ Category updated successfully", data: category });
-  } catch (error: any) {
-    if (error instanceof AppError)
-      return res.status(error.statusCode).json({ message: error.message });
-    return res.status(500).json({ message: error.message });
-  }
-};
 
 export const createFAQ = async (
   req: Request | any,

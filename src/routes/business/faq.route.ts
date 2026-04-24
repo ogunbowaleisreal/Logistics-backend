@@ -1,8 +1,5 @@
 import express from "express";
 import {
-  createFAQCategory,
-  getFAQCategories,
-  updateFAQCategory,
   createFAQ,
   getFAQs,
   updateFAQ,
@@ -11,12 +8,6 @@ import {
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
 const router = express.Router();
-
-router
-  .route("/categories")
-  .post(staffRoleVerification("CRTFAQ"), createFAQCategory)
-  .get(staffRoleVerification("GETFAQS"), getFAQCategories)
-  .patch(staffRoleVerification("UPTFAQ"), updateFAQCategory);
 
 router
   .route("/")
