@@ -10,6 +10,7 @@ import bannerRoute from "./banner.route";
 import faqRoute from "./faq.route";
 import configurationRoute from "./configuration.route";
 import themeRoute from "./theme.route";
+import shippingRoute from "./shipping.route";
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.use("/banners", bannerRoute);
 router.use("/faq", faqRoute);
 router.use("/configuration", configurationRoute);
 router.use("/themes", themeRoute);
+router.use("/shipping", shippingRoute);
 
 export default router;

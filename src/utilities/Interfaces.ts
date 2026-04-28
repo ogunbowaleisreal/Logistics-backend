@@ -38,6 +38,7 @@ export interface ExtendedRequest extends Request {
 
 export interface IOrderPayload {
   slug: string;
+  zoneId: string;
   orderInformation: {
     pickupLocation: {
       address: string;

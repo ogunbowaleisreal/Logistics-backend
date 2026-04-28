@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 interface IOrder extends Document {
   businessId: Schema.Types.ObjectId;
+  zoneId?: Schema.Types.ObjectId;
   trackingID: string;
   orderInformation: {
     pickupLocation: {
@@ -101,6 +102,10 @@ const OrderSchema = new Schema<IOrder>(
       type: Schema.Types.ObjectId,
       ref: "Business",
       required: true,
+    },
+    zoneId: {
+      type: Schema.Types.ObjectId,
+      ref: "LocalShippingZone",
     },
   },
   {

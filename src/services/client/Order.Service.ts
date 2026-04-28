@@ -1,4 +1,5 @@
 import { Order } from "../../models/Order.Model";
+import { ShippingService } from "../business/Shipping.Services";
 import AppError from "../../utilities/ErrorHandler";
 import { IOrderPayload } from "../../utilities/Interfaces";
 import ImageKit from "imagekit";
@@ -8,15 +9,23 @@ import { resolveBusinessIdFromSlug } from "../../middlewares/authorization.middl
 import { EmailService } from "../Email.Service";
 
 const emailService = new EmailService();
+const shippingService = new ShippingService();
 
 export class OrderService {
   public async createOrder(_businessId: string, payload: IOrderPayload) {
-    const { slug, orderInformation, personnelInformation, paymentMethod } =
+    const { slug, zoneId, orderInformation, personnelInformation, paymentMethod } =
       payload;
     const businessId = await resolveBusinessIdFromSlug(slug);
 
+    const amount = await shippingService.calculateShippingFee(
+      businessId,
+      zoneId,
+      orderInformation.itemWeight,
+    );
+
     const order = await Order.create({
       businessId,
+      zoneId,
       orderInformation,
       personnelInformation: {
         sender: {
@@ -30,7 +39,7 @@ export class OrderService {
         },
       },
       paymentMethod,
-      amount: await this.computeOrderPrice(payload),
+      amount,
     });
 
     if (order.personnelInformation.sender.email) {
@@ -169,9 +178,4 @@ export class OrderService {
     );
   }
 
-  public async computeOrderPrice(payload: IOrderPayload) {
-    const { numberOfItems, itemWeight, value } = payload.orderInformation;
-    const orderPrice = numberOfItems * itemWeight * value;
-    return orderPrice;
-  }
 }

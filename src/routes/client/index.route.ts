@@ -5,6 +5,7 @@ import bannerRoute from "./banner.route";
 import bankRoute from "./bank.route";
 import orderRoute from "./order.route";
 import configurationRoute from "./configuration.route";
+import shippingRoute from "./shipping.route";
 import { businessContext } from "../../middlewares/authorization.middleware";
 
 const router = Router();
@@ -17,5 +18,6 @@ router.use("/banner", bannerRoute);
 router.use("/bank", bankRoute);
 router.use("/order", orderRoute);
 router.use("/configuration", configurationRoute);
+router.use("/shipping", shippingRoute);
 
 export default router;
