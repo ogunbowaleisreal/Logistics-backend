@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import {
   BusinessShippingRate,
   BusinessShippingZone,
@@ -59,10 +60,13 @@ export class ShippingService {
     const zone = await BusinessShippingZone.findOne({ _id: zoneId, businessId });
     if (!zone) throw new AppError(404, "Zone not found");
 
+    const bId = new Types.ObjectId(businessId);
+    const zId = new Types.ObjectId(zoneId);
+
     const ops = rates.map((rate) => ({
       updateOne: {
-        filter: { businessId, zoneId, key: rate.key },
-        update: { $set: { ...rate, businessId, zoneId } },
+        filter: { businessId: bId, zoneId: zId, key: rate.key },
+        update: { $set: { ...rate, businessId: bId, zoneId: zId } },
         upsert: true,
       },
     }));
