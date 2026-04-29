@@ -1,16 +1,27 @@
 import { Schema, Document, model, Types } from "mongoose";
 
-interface ILocalZone extends Document {
+interface IBusinessShippingZone extends Document {
+  businessId: Types.ObjectId;
   name: string;
   states: string[];
 }
 
-const localZoneSchema = new Schema<ILocalZone>({
-  name: { type: String, required: true, unique: true },
+const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
+  businessId: {
+    type: Schema.Types.ObjectId,
+    ref: "Business",
+    required: true,
+  },
+  name: { type: String, required: true },
   states: [{ type: String }],
 });
 
-export const LocalShippingZone = model("LocalShippingZone", localZoneSchema);
+businessShippingZoneSchema.index({ businessId: 1, name: 1 }, { unique: true });
+
+export const BusinessShippingZone = model(
+  "BusinessShippingZone",
+  businessShippingZoneSchema,
+);
 
 interface IBusinessShippingRate extends Document {
   businessId: Types.ObjectId;
@@ -31,7 +42,7 @@ const businessShippingRateSchema = new Schema<IBusinessShippingRate>(
     },
     zoneId: {
       type: Schema.Types.ObjectId,
-      ref: "LocalShippingZone",
+      ref: "BusinessShippingZone",
       required: true,
     },
     key: { type: String, required: true },

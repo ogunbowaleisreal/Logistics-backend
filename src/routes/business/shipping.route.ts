@@ -1,10 +1,10 @@
 import { Router } from "express";
+import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 import {
-  businessVerification,
-  staffRoleVerification,
-} from "../../middlewares/authorization.middleware";
-import {
+  createZone,
   getZones,
+  updateZone,
+  deleteZone,
   upsertRates,
   getRates,
   updateRate,
@@ -13,7 +13,15 @@ import {
 
 const router = Router();
 
-router.route("/zones").get(businessVerification, getZones);
+router
+  .route("/zones")
+  .post(staffRoleVerification("shipping"), createZone)
+  .get(staffRoleVerification("shipping"), getZones);
+
+router
+  .route("/zones/:zoneId")
+  .put(staffRoleVerification("shipping"), updateZone)
+  .delete(staffRoleVerification("shipping"), deleteZone);
 
 router
   .route("/rates")

@@ -1,6 +1,6 @@
 import {
   BusinessShippingRate,
-  LocalShippingZone,
+  BusinessShippingZone,
 } from "../../models/Shippings.model";
 import AppError from "../../utilities/ErrorHandler";
 
@@ -12,8 +12,42 @@ interface IRateInput {
 }
 
 export class ShippingService {
-  public async getZones() {
-    return await LocalShippingZone.find().sort({ name: 1 });
+  public async createZone(
+    businessId: string,
+    payload: { name: string; states: string[] },
+  ) {
+    const exists = await BusinessShippingZone.findOne({
+      businessId,
+      name: payload.name,
+    });
+    if (exists) throw new AppError(400, "Zone with this name already exists");
+    return await BusinessShippingZone.create({ ...payload, businessId });
+  }
+
+  public async getZones(businessId: string) {
+    return await BusinessShippingZone.find({ businessId }).sort({ name: 1 });
+  }
+
+  public async updateZone(
+    businessId: string,
+    zoneId: string,
+    payload: { name?: string; states?: string[] },
+  ) {
+    const zone = await BusinessShippingZone.findOne({ _id: zoneId, businessId });
+    if (!zone) throw new AppError(404, "Zone not found");
+    if (payload.name !== undefined) zone.name = payload.name;
+    if (payload.states !== undefined) zone.states = payload.states;
+    return await zone.save();
+  }
+
+  public async deleteZone(businessId: string, zoneId: string) {
+    const zone = await BusinessShippingZone.findOneAndDelete({
+      _id: zoneId,
+      businessId,
+    });
+    if (!zone) throw new AppError(404, "Zone not found");
+    await BusinessShippingRate.deleteMany({ businessId, zoneId });
+    return zone;
   }
 
   public async upsertRates(
@@ -22,7 +56,7 @@ export class ShippingService {
   ) {
     const { zoneId, rates } = payload;
 
-    const zone = await LocalShippingZone.findById(zoneId);
+    const zone = await BusinessShippingZone.findOne({ _id: zoneId, businessId });
     if (!zone) throw new AppError(404, "Zone not found");
 
     const ops = rates.map((rate) => ({
@@ -51,7 +85,12 @@ export class ShippingService {
   public async updateRate(
     businessId: string,
     rateId: string,
-    payload: { key?: string; lowerBound?: number; upperBound?: number; amount?: number },
+    payload: {
+      key?: string;
+      lowerBound?: number;
+      upperBound?: number;
+      amount?: number;
+    },
   ) {
     const rate = await BusinessShippingRate.findOne({
       _id: rateId,

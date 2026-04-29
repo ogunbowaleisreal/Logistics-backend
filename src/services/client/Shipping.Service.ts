@@ -1,4 +1,7 @@
-import { BusinessShippingRate, LocalShippingZone } from "../../models/Shippings.model";
+import {
+  BusinessShippingRate,
+  BusinessShippingZone,
+} from "../../models/Shippings.model";
 
 export class ShippingService {
   public async getBusinessZones(businessId: string, state?: string) {
@@ -8,12 +11,12 @@ export class ShippingService {
 
     const zoneIds = [...new Set(rates.map((r) => r.zoneId.toString()))];
 
-    const zoneQuery: any = { _id: { $in: zoneIds } };
+    const zoneQuery: any = { _id: { $in: zoneIds }, businessId };
     if (state) {
       zoneQuery.states = { $regex: new RegExp(`^${state}$`, "i") };
     }
 
-    const zones = await LocalShippingZone.find(zoneQuery).lean();
+    const zones = await BusinessShippingZone.find(zoneQuery).lean();
 
     return zones.map((zone) => ({
       ...zone,

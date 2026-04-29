@@ -105,7 +105,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     zoneId: {
       type: Schema.Types.ObjectId,
-      ref: "LocalShippingZone",
+      ref: "BusinessShippingZone",
     },
   },
   {
