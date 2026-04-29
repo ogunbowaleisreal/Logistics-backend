@@ -4,6 +4,7 @@ interface ITheme extends Document {
   businessId: Schema.Types.ObjectId;
   font: string;
   color: string;
+  logo: string;
   isDeleted?: boolean;
   __v?: number;
 }
@@ -18,6 +19,7 @@ const ThemeSchema = new Schema<ITheme>(
     },
     font: { type: String, required: true },
     color: { type: String, required: true },
+    logo: { type: String },
     isDeleted: { type: Boolean, default: false },
   },
   {

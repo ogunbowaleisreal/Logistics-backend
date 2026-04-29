@@ -9,6 +9,7 @@ export class ThemeService {
     payload: {
       font: string;
       color: string;
+      logo?: string;
       status?: string;
     },
   ) {
