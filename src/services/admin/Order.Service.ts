@@ -7,8 +7,7 @@ import { tenantScope } from "../../utilities/TenantScope";
 const emailService = new EmailService();
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending: ["payment-review", "in-transit", "cancelled"],
-  "payment-review": ["pending", "in-transit", "cancelled"],
+  pending: ["in-transit", "cancelled"],
   "in-transit": ["delivered", "cancelled"],
   delivered: [],
   cancelled: [],

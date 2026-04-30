@@ -5,7 +5,6 @@ import {
   getOrderSummary,
   getMyOrders,
   generateImageUploadSignature,
-  provideProofOfPayment,
   trackOrder,
 } from "../../controllers/client/order.controller";
 import {
@@ -18,7 +17,6 @@ import {
   createOrderSchema,
   getMyOrdersSchema,
   getOrderSummarySchema,
-  proofOfPaymentSchema,
   trackOrderSchema,
 } from "../../validators/order.validator";
 
@@ -54,11 +52,6 @@ router
     queryBusinessContext,
     validate(getOrderSummarySchema, "query"),
     getOrderSummary,
-  )
-  .patch(
-    bodyBusinessContext,
-    validate(proofOfPaymentSchema, "body"),
-    provideProofOfPayment,
   );
 
 export default router;

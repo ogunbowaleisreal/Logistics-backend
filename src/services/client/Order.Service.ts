@@ -20,7 +20,6 @@ export class OrderService {
     const amount = await shippingService.calculateShippingFee(
       businessId,
       zoneId,
-      orderInformation.itemWeight,
     );
 
     const order = await Order.create({
@@ -61,52 +60,6 @@ export class OrderService {
     if (!order) {
       throw new AppError(404, "Order not found");
     }
-    return order;
-  }
-
-  public async provideProofOfPayment(
-    businessId: string,
-    payload: {
-      orderID: string;
-      bankID: string;
-      proofOfPayment: string;
-    },
-  ) {
-    const { orderID, bankID, proofOfPayment } = payload;
-
-    const existingOrder = await Order.findOne(
-      tenantScope({ _id: orderID }, businessId),
-    );
-
-    if (!existingOrder) {
-      throw new AppError(404, "Order not found");
-    }
-
-    if (existingOrder.status !== "pending") {
-      throw new AppError(
-        400,
-        "Proof of payment can only be submitted for pending orders",
-      );
-    }
-
-    const order = await Order.findOneAndUpdate(
-      tenantScope({ _id: orderID }, businessId),
-      { proofOfPayment, bankID, status: "payment-review" },
-      { new: true },
-    );
-
-    if (!order) {
-      throw new AppError(404, "Order not found");
-    }
-
-    if (order.personnelInformation.sender.email) {
-      void emailService.sendPaymentReviewNotification({
-        email: order.personnelInformation.sender.email,
-        name: order.personnelInformation.sender.name,
-        trackingID: order.trackingID,
-      });
-    }
-
     return order;
   }
 

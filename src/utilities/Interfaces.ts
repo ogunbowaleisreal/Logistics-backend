@@ -66,5 +66,5 @@ export interface IOrderPayload {
       phone: string;
     };
   };
-  paymentMethod: "cash" | "card" | "bank-transfer";
+  paymentMethod: "cash" | "card";
 }

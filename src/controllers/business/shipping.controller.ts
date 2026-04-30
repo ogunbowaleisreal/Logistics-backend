@@ -74,69 +74,70 @@ export const deleteZone = async (
   }
 };
 
-export const upsertRates = async (
-  req: ExtendedRequest | any,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const rates = await shippingService.upsertRates(getBusinessId(req), req.body);
-    return res
-      .status(200)
-      .json({ message: "Shipping rates saved successfully", data: rates });
-  } catch (error: any) {
-    next(error);
-  }
-};
+// Weight-based rate controllers removed — shipping fee is now a flat amount per zone.
+// export const upsertRates = async (
+//   req: ExtendedRequest | any,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const rates = await shippingService.upsertRates(getBusinessId(req), req.body);
+//     return res
+//       .status(200)
+//       .json({ message: "Shipping rates saved successfully", data: rates });
+//   } catch (error: any) {
+//     next(error);
+//   }
+// };
 
-export const getRates = async (
-  req: ExtendedRequest | any,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const rates = await shippingService.getRates(getBusinessId(req), req.query);
-    return res
-      .status(200)
-      .json({ message: "Shipping rates fetched successfully", data: rates });
-  } catch (error: any) {
-    next(error);
-  }
-};
+// export const getRates = async (
+//   req: ExtendedRequest | any,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const rates = await shippingService.getRates(getBusinessId(req), req.query);
+//     return res
+//       .status(200)
+//       .json({ message: "Shipping rates fetched successfully", data: rates });
+//   } catch (error: any) {
+//     next(error);
+//   }
+// };
 
-export const updateRate = async (
-  req: ExtendedRequest | any,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const rate = await shippingService.updateRate(
-      getBusinessId(req),
-      req.params.rateId,
-      req.body,
-    );
-    return res
-      .status(200)
-      .json({ message: "Shipping rate updated successfully", data: rate });
-  } catch (error: any) {
-    next(error);
-  }
-};
+// export const updateRate = async (
+//   req: ExtendedRequest | any,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const rate = await shippingService.updateRate(
+//       getBusinessId(req),
+//       req.params.rateId,
+//       req.body,
+//     );
+//     return res
+//       .status(200)
+//       .json({ message: "Shipping rate updated successfully", data: rate });
+//   } catch (error: any) {
+//     next(error);
+//   }
+// };
 
-export const deleteRate = async (
-  req: ExtendedRequest | any,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const rate = await shippingService.deleteRate(
-      getBusinessId(req),
-      req.params.rateId,
-    );
-    return res
-      .status(200)
-      .json({ message: "Shipping rate deleted successfully", data: rate });
-  } catch (error: any) {
-    next(error);
-  }
-};
+// export const deleteRate = async (
+//   req: ExtendedRequest | any,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const rate = await shippingService.deleteRate(
+//       getBusinessId(req),
+//       req.params.rateId,
+//     );
+//     return res
+//       .status(200)
+//       .json({ message: "Shipping rate deleted successfully", data: rate });
+//   } catch (error: any) {
+//     next(error);
+//   }
+// };

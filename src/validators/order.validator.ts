@@ -31,14 +31,7 @@ export const createOrderSchema = Joi.object({
     sender: senderSchema,
     receiver: receiverSchema,
   }).required(),
-  paymentMethod: Joi.string().valid("cash", "card", "bank-transfer").required(),
-});
-
-export const proofOfPaymentSchema = Joi.object({
-  slug: Joi.string().trim().required(),
-  orderID: Joi.string().trim().required(),
-  bankID: Joi.string().trim().required(),
-  proofOfPayment: Joi.string().trim().required(),
+  paymentMethod: Joi.string().valid("cash", "card").required(),
 });
 
 export const cancelOrderSchema = Joi.object({

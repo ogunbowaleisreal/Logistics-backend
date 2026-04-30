@@ -83,7 +83,6 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
       enum: [
         "pending",
-        "payment-review",
         "in-transit",
         "delivered",
         "cancelled",
@@ -92,7 +91,7 @@ const OrderSchema = new Schema<IOrder>(
     },
     paymentMethod: {
       type: String,
-      enum: ["cash", "card", "bank-transfer"],
+      enum: ["cash", "card"],
     },
     amount: { type: Number },
     bankID: { type: Schema.Types.ObjectId, ref: "Bank" },

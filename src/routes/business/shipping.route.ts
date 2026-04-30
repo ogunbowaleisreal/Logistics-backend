@@ -5,10 +5,10 @@ import {
   getZones,
   updateZone,
   deleteZone,
-  upsertRates,
-  getRates,
-  updateRate,
-  deleteRate,
+  // upsertRates,  // Removed: weight-based rates replaced by flat zone amount
+  // getRates,
+  // updateRate,
+  // deleteRate,
 } from "../../controllers/business/shipping.controller";
 
 const router = Router();
@@ -23,14 +23,14 @@ router
   .put(staffRoleVerification("shipping"), updateZone)
   .delete(staffRoleVerification("shipping"), deleteZone);
 
-router
-  .route("/rates")
-  .post(staffRoleVerification("shipping"), upsertRates)
-  .get(staffRoleVerification("shipping"), getRates);
+// router
+//   .route("/rates")
+//   .post(staffRoleVerification("shipping"), upsertRates)
+//   .get(staffRoleVerification("shipping"), getRates);
 
-router
-  .route("/rates/:rateId")
-  .put(staffRoleVerification("shipping"), updateRate)
-  .delete(staffRoleVerification("shipping"), deleteRate);
+// router
+//   .route("/rates/:rateId")
+//   .put(staffRoleVerification("shipping"), updateRate)
+//   .delete(staffRoleVerification("shipping"), deleteRate);
 
 export default router;

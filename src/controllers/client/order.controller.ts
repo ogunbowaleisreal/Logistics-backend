@@ -55,26 +55,6 @@ export const trackOrder = async (
   }
 };
 
-export const provideProofOfPayment = async (
-  req: ExtendedRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  const payload = req.body;
-  try {
-    const response = await orderService.provideProofOfPayment(
-      req.businessId!,
-      payload,
-    );
-    return res.status(200).json({
-      message: "Proof of payment provided successfully",
-      data: response,
-    });
-  } catch (error: any) {
-    next(error);
-  }
-};
-
 export const cancelOrder = async (
   req: ExtendedRequest,
   res: Response,

@@ -4,6 +4,7 @@ interface IBusinessShippingZone extends Document {
   businessId: Types.ObjectId;
   name: string;
   states: string[];
+  amount: number;
 }
 
 const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
@@ -14,6 +15,7 @@ const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
   },
   name: { type: String, required: true },
   states: [{ type: String }],
+  amount: { type: Number, required: true },
 });
 
 businessShippingZoneSchema.index({ businessId: 1, name: 1 }, { unique: true });
@@ -23,43 +25,44 @@ export const BusinessShippingZone = model(
   businessShippingZoneSchema,
 );
 
-interface IBusinessShippingRate extends Document {
-  businessId: Types.ObjectId;
-  zoneId: Types.ObjectId;
-  key: string;
-  lowerBound: number;
-  upperBound: number;
-  amount: number;
-  currency: string;
-}
+// Weight-based shipping rates removed — shipping fee is now a flat amount per zone.
+// interface IBusinessShippingRate extends Document {
+//   businessId: Types.ObjectId;
+//   zoneId: Types.ObjectId;
+//   key: string;
+//   lowerBound: number;
+//   upperBound: number;
+//   amount: number;
+//   currency: string;
+// }
 
-const businessShippingRateSchema = new Schema<IBusinessShippingRate>(
-  {
-    businessId: {
-      type: Schema.Types.ObjectId,
-      ref: "Business",
-      required: true,
-    },
-    zoneId: {
-      type: Schema.Types.ObjectId,
-      ref: "BusinessShippingZone",
-      required: true,
-    },
-    key: { type: String, required: true },
-    lowerBound: { type: Number, required: true },
-    upperBound: { type: Number, required: true },
-    amount: { type: Number, required: true },
-    currency: { type: String, default: "NGN" },
-  },
-  { timestamps: true },
-);
+// const businessShippingRateSchema = new Schema<IBusinessShippingRate>(
+//   {
+//     businessId: {
+//       type: Schema.Types.ObjectId,
+//       ref: "Business",
+//       required: true,
+//     },
+//     zoneId: {
+//       type: Schema.Types.ObjectId,
+//       ref: "BusinessShippingZone",
+//       required: true,
+//     },
+//     key: { type: String, required: true },
+//     lowerBound: { type: Number, required: true },
+//     upperBound: { type: Number, required: true },
+//     amount: { type: Number, required: true },
+//     currency: { type: String, default: "NGN" },
+//   },
+//   { timestamps: true },
+// );
 
-businessShippingRateSchema.index(
-  { businessId: 1, zoneId: 1, key: 1 },
-  { unique: true },
-);
+// businessShippingRateSchema.index(
+//   { businessId: 1, zoneId: 1, key: 1 },
+//   { unique: true },
+// );
 
-export const BusinessShippingRate = model(
-  "BusinessShippingRate",
-  businessShippingRateSchema,
-);
+// export const BusinessShippingRate = model(
+//   "BusinessShippingRate",
+//   businessShippingRateSchema,
+// );
