@@ -19,6 +19,7 @@ const receiverSchema = Joi.object({
 
 export const createOrderSchema = Joi.object({
   slug: Joi.string().trim().required(),
+  zoneId: Joi.string().trim().required(),
   orderInformation: Joi.object({
     pickupLocation: locationSchema,
     dropoffLocation: locationSchema,

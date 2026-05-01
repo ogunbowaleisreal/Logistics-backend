@@ -13,9 +13,15 @@ const shippingService = new ShippingService();
 
 export class OrderService {
   public async createOrder(_businessId: string, payload: IOrderPayload) {
-    const { slug, zoneId, orderInformation, personnelInformation, paymentMethod } =
-      payload;
+    const {
+      slug,
+      zoneId,
+      orderInformation,
+      personnelInformation,
+      paymentMethod,
+    } = payload;
     const businessId = await resolveBusinessIdFromSlug(slug);
+
 
     const amount = await shippingService.calculateShippingFee(
       businessId,
@@ -130,5 +136,4 @@ export class OrderService {
       limit,
     );
   }
-
 }

@@ -33,7 +33,10 @@ export class ShippingService {
     zoneId: string,
     payload: { name?: string; states?: string[]; amount?: number },
   ) {
-    const zone = await BusinessShippingZone.findOne({ _id: zoneId, businessId });
+    const zone = await BusinessShippingZone.findOne({
+      _id: zoneId,
+      businessId,
+    });
     if (!zone) throw new AppError(404, "Zone not found");
     if (payload.name !== undefined) zone.name = payload.name;
     if (payload.states !== undefined) zone.states = payload.states;
@@ -103,7 +106,10 @@ export class ShippingService {
     businessId: string,
     zoneId: string,
   ): Promise<number> {
-    const zone = await BusinessShippingZone.findOne({ _id: zoneId, businessId });
+    const zone = await BusinessShippingZone.findOne({
+      _id: zoneId,
+      businessId,
+    });
     if (!zone) {
       throw new AppError(400, "No shipping zone found");
     }
