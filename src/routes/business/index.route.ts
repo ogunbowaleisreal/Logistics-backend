@@ -11,6 +11,7 @@ import faqRoute from "./faq.route";
 import configurationRoute from "./configuration.route";
 import themeRoute from "./theme.route";
 import shippingRoute from "./shipping.route";
+import kycRoute from "./kyc.route";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/faq", faqRoute);
 router.use("/configuration", configurationRoute);
 router.use("/themes", themeRoute);
 router.use("/shipping", shippingRoute);
+router.use("/kyc", kycRoute);
 
 export default router;

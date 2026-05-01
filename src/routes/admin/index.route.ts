@@ -11,6 +11,7 @@ import orderRoute from "./order.route";
 import configurationRoute from "./configuration.route";
 import businessRoute from "./business.route";
 import shippingRoute from "./shipping.route";
+import kycRoute from "./kyc.route";
 
 const router = Router();
 
@@ -26,5 +27,6 @@ router.use("/orders", orderRoute);
 router.use("/configuration", configurationRoute);
 router.use("/businesses", businessRoute);
 router.use("/shipping", shippingRoute);
+router.use("/kyc", kycRoute);
 
 export default router;

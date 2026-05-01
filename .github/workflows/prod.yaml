@@ -51,6 +51,8 @@ jobs:
           JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
           JWT_REFRESH_DURATION: ${{ secrets.JWT_REFRESH_DURATION }}
 
+          ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+
           NODE_ENV: ${{ secrets.NODE_ENV }}
         run: |
           npm run build
@@ -99,6 +101,8 @@ jobs:
             echo "JWT_DURATION=${{ secrets.JWT_DURATION }}" >> ${{ secrets.ENV_PATH }}
             echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> ${{ secrets.ENV_PATH }}
             echo "JWT_REFRESH_DURATION=${{ secrets.JWT_REFRESH_DURATION }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
 
             echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
 

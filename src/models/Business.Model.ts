@@ -11,6 +11,7 @@ export interface IBusiness extends Document {
   plan: "free" | "starter" | "growth" | "enterprise";
   isEmailVerified: boolean;
   twoFactorAuthentication: boolean;
+  kycStatus?: "not-submitted" | "pending" | "verified" | "rejected";
   isDeleted: boolean;
   __v?: number;
 }
@@ -35,6 +36,11 @@ const BusinessSchema = new Schema<IBusiness>(
     },
     isEmailVerified: { type: Boolean, default: false },
     twoFactorAuthentication: { type: Boolean, default: false },
+    kycStatus: {
+      type: String,
+      enum: ["not-submitted", "pending", "verified", "rejected"],
+      default: "not-submitted",
+    },
     isDeleted: { type: Boolean, default: false },
   },
   {
@@ -48,7 +54,7 @@ const BusinessSchema = new Schema<IBusiness>(
         delete (ret as any).isDeleted;
       },
     },
-  }
+  },
 );
 
 export const Business = model<IBusiness>("Business", BusinessSchema);
