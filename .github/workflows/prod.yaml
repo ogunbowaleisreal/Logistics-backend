@@ -51,6 +51,14 @@ jobs:
           JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
           JWT_REFRESH_DURATION: ${{ secrets.JWT_REFRESH_DURATION }}
 
+          SAFEHAVEN_BASE_URL: ${{ secrets.SAFEHAVEN_BASE_URL }}
+          SAFEHAVEN_CLIENT_ID: ${{ secrets.SAFEHAVEN_CLIENT_ID }}
+          SAFEHAVEN_CLIENT_ASSERTION: ${{ secrets.SAFEHAVEN_CLIENT_ASSERTION }}
+          SAFEHAVEN_CALLBACK_URL: ${{ secrets.SAFEHAVEN_CALLBACK_URL }}
+          SAFEHAVEN_SETTLEMENT_BANK_CODE: ${{ secrets.SAFEHAVEN_SETTLEMENT_BANK_CODE }}
+          SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER: ${{ secrets.SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER }}
+          SAFEHAVEN_BANK_NAME: ${{ secrets.SAFEHAVEN_BANK_NAME }}
+
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
 
           NODE_ENV: ${{ secrets.NODE_ENV }}
@@ -101,6 +109,14 @@ jobs:
             echo "JWT_DURATION=${{ secrets.JWT_DURATION }}" >> ${{ secrets.ENV_PATH }}
             echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> ${{ secrets.ENV_PATH }}
             echo "JWT_REFRESH_DURATION=${{ secrets.JWT_REFRESH_DURATION }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "SAFEHAVEN_BASE_URL=${{ secrets.SAFEHAVEN_BASE_URL }}" >> ${{ secrets.ENV_PATH }}
+            echo "SAFEHAVEN_CLIENT_ID=${{ secrets.SAFEHAVEN_CLIENT_ID }}" >> ${{ secrets.ENV_PATH }}
+            echo "SAFEHAVEN_CLIENT_ASSERTION=${{ secrets.SAFEHAVEN_CLIENT_ASSERTION }}" >> ${{ secrets.ENV_PATH }}
+            echo "SAFEHAVEN_CALLBACK_URL=${{ secrets.SAFEHAVEN_CALLBACK_URL }}" >> ${{ secrets.ENV_PATH }}
+            echo "SAFEHAVEN_SETTLEMENT_BANK_CODE=${{ secrets.SAFEHAVEN_SETTLEMENT_BANK_CODE }}" >> ${{ secrets.ENV_PATH }}
+            echo "SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER=${{ secrets.SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER }}" >> ${{ secrets.ENV_PATH }}
+            echo "SAFEHAVEN_BANK_NAME=${{ secrets.SAFEHAVEN_BANK_NAME }}" >> ${{ secrets.ENV_PATH }}
 
             echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
 

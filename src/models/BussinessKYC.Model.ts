@@ -16,7 +16,7 @@ export interface IBusinessKYC extends Document {
     rejectionReason?: string;
   };
   bvn: {
-    /** Encrypted BVN number string */
+    identityId?: string;
     document: string;
     status: "pending" | "verified" | "rejected";
   };
@@ -53,6 +53,7 @@ const BusinessKYCSchema = new Schema<IBusinessKYC>(
       rejectionReason: { type: String },
     },
     bvn: {
+      identityId: { type: String },
       document: { type: String },
       status: { type: String, enum: ["pending", "verified", "rejected"] },
     },
