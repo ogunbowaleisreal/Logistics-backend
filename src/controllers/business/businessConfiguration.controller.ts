@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import AppError from "../../utilities/ErrorHandler";
-import { ConfigurationService } from "../../services/admin/Configuration.Service";
+import { BusinessConfigurationService } from "../../services/business/BusinessConfiguration.Service";
 
-const configurationService = new ConfigurationService();
+const businessConfigurationService = new BusinessConfigurationService();
 
 export const getConfiguration = async (
   req: Request | any,
@@ -11,13 +11,11 @@ export const getConfiguration = async (
   try {
     const businessId = req.staff?.businessId ?? req.business?.businessId;
     const configuration =
-      await configurationService.getConfiguration(businessId);
-    return res
-      .status(200)
-      .json({
-        message: "Configuration fetched successfully",
-        data: configuration,
-      });
+      await businessConfigurationService.getConfiguration(businessId);
+    return res.status(200).json({
+      message: "Configuration fetched successfully",
+      data: configuration,
+    });
   } catch (error: any) {
     if (error instanceof AppError)
       return res.status(error.statusCode).json({ message: error.message });
@@ -31,16 +29,15 @@ export const updateConfiguration = async (
 ): Promise<Response> => {
   try {
     const businessId = req.staff?.businessId ?? req.business?.businessId;
-    const configuration = await configurationService.updateConfiguration(
-      businessId,
-      req.body,
-    );
-    return res
-      .status(200)
-      .json({
-        message: "Configuration updated successfully",
-        data: configuration,
-      });
+    const configuration =
+      await businessConfigurationService.updateConfiguration(
+        businessId,
+        req.body,
+      );
+    return res.status(200).json({
+      message: "Configuration updated successfully",
+      data: configuration,
+    });
   } catch (error: any) {
     if (error instanceof AppError)
       return res.status(error.statusCode).json({ message: error.message });

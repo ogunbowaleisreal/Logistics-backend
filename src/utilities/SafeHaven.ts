@@ -13,10 +13,16 @@ export class SafeHaven {
   constructor() {
     this.headers = {
       accept: "application/json",
-      ClientID: process.env["SAFEHAVEN_CLIENT_ID"] || "",
+      ClientID: process.env["SAFEHAVEN_CLIENT_ID"]!,
       "content-type": "application/json",
     };
-    this.baseURL = process.env["SAFEHAVEN_BASE_URL"] || "";
+    this.baseURL = SafeHaven.ensureTrailingSlash(
+      process.env["SAFEHAVEN_BASE_URL"]!,
+    );
+  }
+
+  private static ensureTrailingSlash(url: string): string {
+    return url.endsWith("/") ? url : `${url}/`;
   }
 
   private async getAccessToken(): Promise<string> {
@@ -62,7 +68,7 @@ export class SafeHaven {
   }
 
   public async getBankList(): Promise<any> {
-    const url = `${this.baseURL}/transfers/banks`;
+    const url = `${this.baseURL}transfers/banks`;
     return this.makeRequest("get", url);
   }
 
@@ -70,8 +76,47 @@ export class SafeHaven {
     bankCode: string;
     accountNumber: string;
   }) {
-    const url = process.env["SAFEHAVEN_BASE_URL"] + "transfers/name-enquiry";
+    const url = `${this.baseURL}transfers/name-enquiry`;
 
+    const response: any = await this.makeRequest("post", url, payload);
+
+    if (response.statusCode !== 200) {
+      throw new AppError(response.statusCode, response.message);
+    }
+    return response.data;
+  }
+
+  public async createVirtualAccount(payload: {
+    amount: number;
+    reference: string;
+  }): Promise<any> {
+    const { amount, reference: externalReference } = payload;
+    const url = `${this.baseURL}virtual-accounts`;
+
+    const bankCode = process.env["SAFEHAVEN_SETTLEMENT_BANK_CODE"];
+    const accountNumber = process.env["SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER"];
+
+    const virtualAccountPayload = {
+      validFor: parseInt(process.env["SAFEHAVEN_VIRTUAL_ACCOUNT_VALIDITY"]!),
+      settlementAccount: { bankCode, accountNumber },
+      amountControl: "Fixed",
+      amount,
+      callbackUrl: `${process.env["SAFEHAVEN_FUNDING_WEBHOOK_URL"]}/${externalReference}`,
+      externalReference,
+    };
+
+    const response: any = await this.makeRequest(
+      "post",
+      url,
+      virtualAccountPayload,
+    );
+
+    return response.data;
+  }
+
+  public async verifyPayment(sessionID: string): Promise<any> {
+    const url = `${this.baseURL}virtual-accounts/status`;
+    const payload = { sessionId: sessionID };
     const response: any = await this.makeRequest("post", url, payload);
 
     if (response.statusCode !== 200) {
@@ -89,7 +134,7 @@ export class SafeHaven {
       nameEnquiryReference,
     } = payload;
 
-    const url = `${this.baseURL}/transfers`;
+    const url = `${this.baseURL}transfers`;
     const transferPayload = {
       saveBeneficiary: false,
       nameEnquiryReference,
@@ -98,31 +143,20 @@ export class SafeHaven {
       beneficiaryBankCode,
       amount,
       paymentReference: externalReference,
-      narration: "Daily Etegram business payment",
+      narration: "Daily SME business payment",
     };
 
     return this.makeRequest("post", url, transferPayload);
   }
 
   public async makeNameEnquiry(payload: any): Promise<string> {
-    const url = `${this.baseURL}/transfers/name-enquiry`;
+    const url = `${this.baseURL}transfers/name-enquiry`;
     const response: any = await this.makeRequest("post", url, payload);
     return response.data.sessionId;
   }
 
-  public async verifyPayment(sessionID: string): Promise<any> {
-    const url = `${this.baseURL}/virtual-accounts/status`;
-    const payload = { sessionId: sessionID };
-    const response: any = await this.makeRequest("post", url, payload);
-
-    if (response.statusCode !== 200) {
-      throw new AppError(response.statusCode, response.message);
-    }
-    return response.data;
-  }
-
   public async initiateVerification(BVN: string): Promise<any> {
-    const url = `${this.baseURL}/identity/v2`;
+    const url = `${this.baseURL}identity/v2`;
     const payload = {
       type: "BVN",
       async: false,
@@ -138,7 +172,7 @@ export class SafeHaven {
     otp: string;
   }): Promise<any> {
     const { identityId, otp } = payload;
-    const url = `${this.baseURL}/identity/v2/validate`;
+    const url = `${this.baseURL}identity/v2/validate`;
 
     return this.makeRequest("post", url, {
       identityId,
@@ -170,7 +204,7 @@ export class SafeHaven {
     const config: AxiosRequestConfig = {
       method: "post",
       maxBodyLength: Infinity,
-      url: `${process.env["SAFEHAVEN_BASE_URL"]}/oauth2/token`,
+      url: `${this.baseURL}oauth2/token`,
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },

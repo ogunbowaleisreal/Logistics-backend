@@ -2,7 +2,7 @@ import express from "express";
 import {
   getConfiguration,
   updateConfiguration,
-} from "../../controllers/business/configuration.controller";
+} from "../../controllers/business/businessConfiguration.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
 const router = express.Router();

@@ -9,14 +9,8 @@ export const getConfiguration = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const businessId =
-    req.business?.businessId ??
-    req.staff?.businessId ??
-    req.query.businessId ??
-    req.body?.businessId;
   try {
-    const configuration =
-      await configurationService.getConfiguration(businessId);
+    const configuration = await configurationService.getConfiguration();
     return res.status(200).json({
       message: "Configuration fetched successfully",
       data: configuration,
@@ -32,16 +26,9 @@ export const updateConfiguration = async (
   next: NextFunction,
 ) => {
   const payload = req.body;
-  const businessId =
-    req.business?.businessId ??
-    req.staff?.businessId ??
-    req.query.businessId ??
-    req.body?.businessId;
   try {
-    const configuration = await configurationService.updateConfiguration(
-      businessId,
-      payload,
-    );
+    const configuration =
+      await configurationService.updateConfiguration(payload);
     return res.status(200).json({
       message: "Configuration updated successfully",
       data: configuration,

@@ -1,21 +1,35 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, Schema, model } from "mongoose";
 
 export interface IConfiguration extends Document {
-  businessId: Schema.Types.ObjectId;
-  pricePerKm?: number;
-  minimumCharge?: number;
+  serviceFee: {
+    type: string;
+    value: number;
+  };
+  VAT: {
+    type: string;
+    value: number;
+  };
   __v?: number;
 }
 
 const ConfigurationSchema = new Schema<IConfiguration>(
   {
-    businessId: {
-      type: Schema.Types.ObjectId,
-      ref: "Business",
-      required: true,
+    serviceFee: {
+      type: {
+        type: String,
+        enum: ["percentage", "fixed"],
+        default: "percentage",
+      },
+      value: { type: Number, default: 10 },
     },
-    pricePerKm: { type: Number, default: 500 },
-    minimumCharge: { type: Number, default: 2000 },
+    VAT: {
+      type: {
+        type: String,
+        enum: ["percentage", "fixed"],
+        default: "percentage",
+      },
+      value: { type: Number, default: 7.5 },
+    },
   },
   {
     timestamps: true,
@@ -26,9 +40,6 @@ const ConfigurationSchema = new Schema<IConfiguration>(
     },
   },
 );
-
-// One config per business
-ConfigurationSchema.index({ businessId: 1 }, { unique: true, sparse: true });
 
 export const Configuration = model<IConfiguration>(
   "Configuration",

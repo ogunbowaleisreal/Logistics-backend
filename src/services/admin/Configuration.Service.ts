@@ -1,22 +1,22 @@
-import { Configuration } from "../../models/Configuration.Model";
-import { tenantScope } from "../../utilities/TenantScope";
+import {
+  Configuration,
+  IConfiguration,
+} from "../../models/Configuration.Model";
 
 export class ConfigurationService {
-  public async getConfiguration(businessId: string) {
-    let configuration = await Configuration.findOne(
-      tenantScope({}, businessId),
-    );
+  public async getConfiguration() {
+    let configuration = await Configuration.findOne();
     if (!configuration) {
-      configuration = await Configuration.create({ businessId });
+      configuration = await Configuration.create({});
     }
     return configuration;
   }
 
-  public async updateConfiguration(businessId: string, payload: any) {
-    const { pricePerKm, minimumCharge } = payload;
+  public async updateConfiguration(payload: IConfiguration) {
+    const { serviceFee, VAT } = payload;
     const configuration = await Configuration.findOneAndUpdate(
-      tenantScope({}, businessId),
-      { pricePerKm, minimumCharge },
+      {},
+      { serviceFee, VAT },
       { new: true, upsert: true },
     );
     return configuration;

@@ -12,6 +12,7 @@ export interface IBusiness extends Document {
   isEmailVerified: boolean;
   twoFactorAuthentication: boolean;
   kycStatus?: "not-submitted" | "pending" | "verified" | "rejected";
+  wallet: number;
   isDeleted: boolean;
   __v?: number;
 }
@@ -41,6 +42,7 @@ const BusinessSchema = new Schema<IBusiness>(
       enum: ["not-submitted", "pending", "verified", "rejected"],
       default: "not-submitted",
     },
+    wallet: { type: Number, default: 0, min: 0 },
     isDeleted: { type: Boolean, default: false },
   },
   {

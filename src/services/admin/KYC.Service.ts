@@ -1,5 +1,5 @@
 import { Business } from "../../models/Business.Model";
-import { BusinessKYC, IBusinessKYC } from "../../models/BussinessKYC.Model";
+import { BusinessKYC, IBusinessKYC } from "../../models/BusinessKYC.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { Encryption } from "../../utilities/Encryption";
 import { paginateModelWithPopulate } from "../../utilities/Pagination.Helper";

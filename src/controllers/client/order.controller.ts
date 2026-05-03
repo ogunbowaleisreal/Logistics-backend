@@ -19,20 +19,33 @@ export const createOrder = async (
   }
 };
 
-export const getOrderSummary = async (
+export const checkoutOrder = async (
   req: ExtendedRequest,
   res: Response,
   next: NextFunction,
 ) => {
-  const { orderID } = req.query as { orderID: string };
   try {
-    const response = await orderService.getOrderSummary(
+    const response = await orderService.checkoutOrder(
       req.businessId!,
-      orderID,
+      req.body,
     );
     return res
       .status(200)
-      .json({ message: "Order summary fetched successfully", data: response });
+      .json({ message: "Order checked out successfully", data: response });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const verifySafehavenPaymentViaWebhook = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { orderID } = req.params;
+    await orderService.verifySafehavenPaymentViaWebhook(orderID, req.body);
+    return res.status(200).json({ message: "Webhook processed successfully" });
   } catch (error: any) {
     next(error);
   }
@@ -63,7 +76,7 @@ export const cancelOrder = async (
   try {
     const response = await orderService.cancelOrder(req.businessId!, req.body);
     return res.status(200).json({
-      message: "Order cancelled successfully",
+      message: "Order canceled successfully",
       data: response,
     });
   } catch (error: any) {

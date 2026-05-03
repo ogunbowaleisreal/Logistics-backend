@@ -1,3 +1,4 @@
+import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
 import {
   // BusinessShippingRate, // Removed: weight-based rates replaced by flat zone amount
   BusinessShippingZone,
@@ -102,7 +103,7 @@ export class ShippingService {
   //   return rate;
   // }
 
-  public async calculateShippingFee(
+  public async calculateShippingFeeWithZoneId(
     businessId: string,
     zoneId: string,
   ): Promise<number> {
@@ -114,5 +115,23 @@ export class ShippingService {
       throw new AppError(400, "No shipping zone found");
     }
     return zone.amount;
+  }
+
+  public async calculateShippingFeeWithDistance(
+    businessId: string,
+    distanceInKM: number,
+  ): Promise<number> {
+    const businessConfiguration = await BusinessConfiguration.findOne({
+      businessId,
+    }).lean();
+    if (!businessConfiguration) {
+      throw new AppError(400, "Business shipping settings not found");
+    }
+
+    const pricePerKm = businessConfiguration.pricePerKm || 500; // default to 500 if not set
+    const minimumCharge = businessConfiguration.minimumCharge || 2000; // default to 2000 if not set
+
+    const calculatedFee = distanceInKM * pricePerKm;
+    return calculatedFee < minimumCharge ? minimumCharge : calculatedFee;
   }
 }

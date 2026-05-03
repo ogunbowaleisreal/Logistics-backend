@@ -1,9 +1,11 @@
-import { Configuration } from "../../models/Configuration.Model";
+import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
 import { tenantScope } from "../../utilities/TenantScope";
 
-export class ConfigurationService {
+export class BusinessConfigurationService {
   public async getConfiguration(businessId: string) {
-    const config = await Configuration.findOne(tenantScope({}, businessId));
+    const config = await BusinessConfiguration.findOne(
+      tenantScope({}, businessId),
+    );
     if (!config) {
       throw new Error("Configuration not found, please contact support");
     }

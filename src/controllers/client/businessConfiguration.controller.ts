@@ -1,8 +1,8 @@
 import { NextFunction, Response } from "express";
 import { ExtendedRequest } from "../../utilities/Interfaces";
-import { ConfigurationService } from "../../services/client/Configuration.Service";
+import { BusinessConfigurationService } from "../../services/client/BusinessConfiguration.Service";
 
-const configurationService = new ConfigurationService();
+const businessConfigurationService = new BusinessConfigurationService();
 
 export const getConfiguration = async (
   req: ExtendedRequest,
@@ -16,7 +16,7 @@ export const getConfiguration = async (
   }
   try {
     const configuration =
-      await configurationService.getConfiguration(businessId);
+      await businessConfigurationService.getConfiguration(businessId);
     return res.status(200).json({
       message: "Configuration fetched successfully",
       data: configuration,

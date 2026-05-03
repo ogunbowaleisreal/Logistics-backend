@@ -19,7 +19,8 @@ const receiverSchema = Joi.object({
 
 export const createOrderSchema = Joi.object({
   slug: Joi.string().trim().required(),
-  zoneId: Joi.string().trim().required(),
+  zoneId: Joi.string().trim().optional(),
+  distanceInKM: Joi.number().positive().optional(),
   orderInformation: Joi.object({
     pickupLocation: locationSchema,
     dropoffLocation: locationSchema,
@@ -32,7 +33,11 @@ export const createOrderSchema = Joi.object({
     sender: senderSchema,
     receiver: receiverSchema,
   }).required(),
-  paymentMethod: Joi.string().valid("cash", "card").required(),
+});
+
+export const checkoutOrderSchema = Joi.object({
+  orderID: Joi.string().trim().required(),
+  paymentMethod: Joi.string().valid("safehaven").required(), // Extend with more methods as needed
 });
 
 export const cancelOrderSchema = Joi.object({

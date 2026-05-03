@@ -2,10 +2,11 @@ import { Router } from "express";
 import {
   createOrder,
   cancelOrder,
-  getOrderSummary,
   getMyOrders,
   generateImageUploadSignature,
   trackOrder,
+  verifySafehavenPaymentViaWebhook,
+  checkoutOrder,
 } from "../../controllers/client/order.controller";
 import {
   bodyBusinessContext,
@@ -14,9 +15,9 @@ import {
 import { validate } from "../../middlewares/validation.middleware";
 import {
   cancelOrderSchema,
+  checkoutOrderSchema,
   createOrderSchema,
   getMyOrdersSchema,
-  getOrderSummarySchema,
   trackOrderSchema,
 } from "../../validators/order.validator";
 
@@ -43,15 +44,22 @@ router.patch(
   cancelOrder,
 );
 
-router.get("/image-signature", generateImageUploadSignature);
-
 router
   .route("")
-  .post(bodyBusinessContext, validate(createOrderSchema, "body"), createOrder)
-  .get(
-    queryBusinessContext,
-    validate(getOrderSummarySchema, "query"),
-    getOrderSummary,
+  .post(bodyBusinessContext, validate(createOrderSchema, "body"), createOrder);
+
+router
+  .route("/checkout")
+  .post(
+    bodyBusinessContext,
+    validate(checkoutOrderSchema, "body"),
+    checkoutOrder,
   );
+
+router
+  .route("/safehaven/webhook/:orderID")
+  .post(verifySafehavenPaymentViaWebhook);
+
+router.get("/image-signature", generateImageUploadSignature);
 
 export default router;

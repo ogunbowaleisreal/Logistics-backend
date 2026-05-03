@@ -4,6 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 interface IOrder extends Document {
   businessId: Schema.Types.ObjectId;
   zoneId?: Schema.Types.ObjectId;
+  distanceInKM?: number;
   trackingID: string;
   orderInformation: {
     pickupLocation: {
@@ -22,28 +23,34 @@ interface IOrder extends Document {
     value: number;
   };
   personnelInformation: {
-    sender: {
-      name: string;
-      email?: string;
-      phone: string;
-    };
-    receiver: {
-      name: string;
-      phone: string;
-    };
+    sender: { name: string; email?: string; phone: string };
+    receiver: { name: string; phone: string };
   };
   status: string;
   paymentMethod: string;
-  paymentStatus: string;
-  bankID?: string;
-  proofOfPayment?: string;
   riderID?: string;
   amount: number;
+  serviceFee?: number;
+  VAT?: number;
+  totalAmount: number;
+  virtualAccountData?: {
+    accountNumber?: string;
+    accountName?: string;
+    bankName?: string;
+    expiryDate?: string;
+    sessionId?: string;
+    callbackURL?: string;
+  };
   __v?: number;
 }
 
 const OrderSchema = new Schema<IOrder>(
   {
+    businessId: {
+      type: Schema.Types.ObjectId,
+      ref: "Business",
+      required: true,
+    },
     trackingID: {
       type: String,
       unique: true,
@@ -79,32 +86,26 @@ const OrderSchema = new Schema<IOrder>(
         phone: { type: String },
       },
     },
+    riderID: { type: Schema.Types.ObjectId, ref: "Rider" },
+    distanceInKM: { type: Number },
+    zoneId: { type: Schema.Types.ObjectId, ref: "BusinessShippingZone" },
     status: {
       type: String,
-      enum: [
-        "pending",
-        "in-transit",
-        "delivered",
-        "cancelled",
-      ],
+      enum: ["pending", "paid", "in-transit", "delivered", "canceled"],
       default: "pending",
     },
-    paymentMethod: {
-      type: String,
-      enum: ["cash", "card"],
-    },
-    amount: { type: Number },
-    bankID: { type: Schema.Types.ObjectId, ref: "Bank" },
-    riderID: { type: Schema.Types.ObjectId, ref: "Rider" },
-    proofOfPayment: { type: String },
-    businessId: {
-      type: Schema.Types.ObjectId,
-      ref: "Business",
-      required: true,
-    },
-    zoneId: {
-      type: Schema.Types.ObjectId,
-      ref: "BusinessShippingZone",
+    paymentMethod: { type: String, enum: ["safehaven", "monnify"] },
+    amount: { type: Number, min: 0, required: true },
+    serviceFee: { type: Number, min: 0 },
+    VAT: { type: Number, min: 0 },
+    totalAmount: { type: Number, min: 0, required: true },
+    virtualAccountData: {
+      accountNumber: { type: String },
+      accountName: { type: String },
+      bankName: { type: String },
+      expiryDate: { type: String },
+      sessionId: { type: String },
+      callbackURL: { type: String },
     },
   },
   {

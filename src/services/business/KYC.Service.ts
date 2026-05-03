@@ -1,6 +1,6 @@
 import axios from "axios";
 import { Business } from "../../models/Business.Model";
-import { BusinessKYC, IBusinessKYC } from "../../models/BussinessKYC.Model";
+import { BusinessKYC, IBusinessKYC } from "../../models/BusinessKYC.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { Encryption } from "../../utilities/Encryption";
 import { SafeHaven } from "../../utilities/SafeHaven";
@@ -253,53 +253,53 @@ export class KYCService {
     await Business.findByIdAndUpdate(businessId, { kycStatus: status });
   }
 
-  private async verifyBvnWithProvider(
-    plainBvn: string,
-  ): Promise<Extract<KycFieldStatus, "verified" | "rejected">> {
-    const verificationUrl = process.env["PAYSTACK_BVN_VERIFICATION_URL"];
-    const secretKey = process.env["PAYSTACK_SECRET_KEY"];
+  // private async verifyBvnWithProvider(
+  //   plainBvn: string,
+  // ): Promise<Extract<KycFieldStatus, "verified" | "rejected">> {
+  //   const verificationUrl = process.env["PAYSTACK_BVN_VERIFICATION_URL"];
+  //   const secretKey = process.env["PAYSTACK_SECRET_KEY"];
 
-    if (!verificationUrl || !secretKey) {
-      throw new Error("BVN verification provider is not configured");
-    }
+  //   if (!verificationUrl || !secretKey) {
+  //     throw new Error("BVN verification provider is not configured");
+  //   }
 
-    const response = await axios.post(
-      verificationUrl,
-      { bvn: plainBvn },
-      {
-        headers: {
-          Authorization: `Bearer ${secretKey}`,
-          "Content-Type": "application/json",
-        },
-      },
-    );
+  //   const response = await axios.post(
+  //     verificationUrl,
+  //     { bvn: plainBvn },
+  //     {
+  //       headers: {
+  //         Authorization: `Bearer ${secretKey}`,
+  //         "Content-Type": "application/json",
+  //       },
+  //     },
+  //   );
 
-    const payload = response.data?.data ?? response.data;
-    const statusValue =
-      payload?.status ??
-      payload?.verificationStatus ??
-      payload?.verification_status;
+  //   const payload = response.data?.data ?? response.data;
+  //   const statusValue =
+  //     payload?.status ??
+  //     payload?.verificationStatus ??
+  //     payload?.verification_status;
 
-    if (typeof statusValue === "string") {
-      const normalizedStatus = statusValue.toLowerCase();
+  //   if (typeof statusValue === "string") {
+  //     const normalizedStatus = statusValue.toLowerCase();
 
-      if (
-        ["verified", "success", "successful", "match", "matched"].includes(
-          normalizedStatus,
-        )
-      ) {
-        return "verified";
-      }
-    }
+  //     if (
+  //       ["verified", "success", "successful", "match", "matched"].includes(
+  //         normalizedStatus,
+  //       )
+  //     ) {
+  //       return "verified";
+  //     }
+  //   }
 
-    if (typeof payload?.verified === "boolean") {
-      return payload.verified ? "verified" : "rejected";
-    }
+  //   if (typeof payload?.verified === "boolean") {
+  //     return payload.verified ? "verified" : "rejected";
+  //   }
 
-    if (response.data?.status === true) {
-      return "verified";
-    }
+  //   if (response.data?.status === true) {
+  //     return "verified";
+  //   }
 
-    return "rejected";
-  }
+  //   return "rejected";
+  // }
 }
