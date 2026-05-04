@@ -1,4 +1,5 @@
 import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
+import { Theme } from "../../models/Themes.Model";
 import { tenantScope } from "../../utilities/TenantScope";
 
 export class BusinessConfigurationService {
@@ -10,5 +11,13 @@ export class BusinessConfigurationService {
       throw new Error("Configuration not found, please contact support");
     }
     return config;
+  }
+
+  public async getBusinessTheme(businessId: string) {
+    const theme = await Theme.findOne(tenantScope({}, businessId));
+    if (!theme) {
+      throw new Error("Theme not found, please contact support");
+    }
+    return theme;
   }
 }
