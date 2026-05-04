@@ -1,22 +1,25 @@
 import { Order } from "../../models/Order.Model";
 import { EmailService } from "../Email.Service";
 import AppError from "../../utilities/ErrorHandler";
-import { paginateModelWithMultiplePopulates } from "../../utilities/Pagination.Helper";
+import { paginateModelWithPopulate } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
+import { startSession } from "mongoose";
+import { Business } from "../../models/Business.Model";
 
 const emailService = new EmailService();
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending: ["paid", "in-transit", "canceled"],
+  pending: ["paid", "in-transit", "canceled", "failed"],
   paid: ["in-transit", "canceled"],
   "in-transit": ["delivered", "canceled"],
   delivered: [],
   canceled: [],
+  failed: [],
 };
 
 export class OrderService {
   public async getOrders(businessId: string, payload: any) {
-    const { orderID, bankID, riderID, status, search, page, limit } = payload;
+    const { orderID, riderID, status, search, page, limit } = payload;
 
     if (orderID) {
       const order = await Order.findOne(
@@ -34,9 +37,6 @@ export class OrderService {
     }
     if (status) {
       query.status = status;
-    }
-    if (bankID) {
-      query.bankID = bankID;
     }
     if (search) {
       query.$or = [
@@ -73,19 +73,16 @@ export class OrderService {
 
     const scopedQuery = tenantScope(query, businessId);
 
-    const orders = await paginateModelWithMultiplePopulates(
+    const orders = await paginateModelWithPopulate(
       Order,
       scopedQuery,
       page,
       limit,
+      { createdAt: -1 },
       [
         {
           path: "riderID",
           select: "name phone",
-        },
-        {
-          path: "bankID",
-          select: "name accountName accountNumber",
         },
       ],
     );
@@ -113,15 +110,35 @@ export class OrderService {
       );
     }
 
-    const order = await Order.findOneAndUpdate(
-      tenantScope({ _id: orderID }, businessId),
-      { status },
-      { new: true },
-    );
+    const session = await startSession();
 
-    if (!order) {
-      throw new AppError(404, "Order not found");
-    }
+    const order = await session.withTransaction(async () => {
+      const order = await Order.findOneAndUpdate(
+        tenantScope({ _id: orderID }, businessId),
+        { status },
+        { new: true, session },
+      );
+
+      if (!order) {
+        throw new AppError(404, "Order not found");
+      }
+
+      if (status === "paid") {
+        const business = await Business.findOneAndUpdate(
+          { _id: order.businessId, isDeleted: false },
+          { $inc: { "wallet.naira": order.amount } },
+          { session },
+        );
+
+        if (!business) {
+          throw new AppError(404, "Account not found");
+        }
+      }
+
+      return order;
+    });
+
+    await session.endSession();
 
     if (order.personnelInformation.sender.email) {
       void emailService.sendOrderStatusUpdate({

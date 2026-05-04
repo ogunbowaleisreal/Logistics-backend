@@ -1,7 +1,7 @@
 import { Order } from "../../models/Order.Model";
 import { EmailService } from "../Email.Service";
 import AppError from "../../utilities/ErrorHandler";
-import { paginateModelWithMultiplePopulates } from "../../utilities/Pagination.Helper";
+import { paginateModelWithPopulate } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
 
 const emailService = new EmailService();
@@ -18,9 +18,7 @@ export class OrderService {
     const { orderID, bankID, riderID, status, search, page, limit } = payload;
 
     if (orderID) {
-      const order = await Order.findOne(
-        tenantScope({ _id: orderID }, businessId),
-      );
+      const order = await Order.findOne({ _id: orderID });
       if (!order) {
         throw new AppError(404, "Order not found");
       }
@@ -28,6 +26,9 @@ export class OrderService {
     }
 
     const query: any = {};
+    if (businessId) {
+      query.businessId = businessId;
+    }
     if (riderID) {
       query.riderID = riderID;
     }
@@ -70,21 +71,18 @@ export class OrderService {
       ];
     }
 
-    const scopedQuery = tenantScope(query, businessId);
+    // const scopedQuery = tenantScope(query, businessId);
 
-    const orders = await paginateModelWithMultiplePopulates(
+    const orders = await paginateModelWithPopulate(
       Order,
-      scopedQuery,
+      query,
       page,
       limit,
+      { createdAt: -1 },
       [
         {
           path: "riderID",
           select: "name phone",
-        },
-        {
-          path: "bankID",
-          select: "name accountName accountNumber",
         },
       ],
     );
@@ -95,9 +93,7 @@ export class OrderService {
   public async updateOrderStatus(businessId: string, payload: any) {
     const { orderID, status } = payload;
 
-    const existingOrder = await Order.findOne(
-      tenantScope({ _id: orderID }, businessId),
-    );
+    const existingOrder = await Order.findOne({ _id: orderID });
 
     if (!existingOrder) {
       throw new AppError(404, "Order not found");
@@ -113,7 +109,7 @@ export class OrderService {
     }
 
     const order = await Order.findOneAndUpdate(
-      tenantScope({ _id: orderID }, businessId),
+      { _id: orderID },
       { status },
       { new: true },
     );

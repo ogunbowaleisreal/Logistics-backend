@@ -147,7 +147,7 @@ export class OrderService {
             "virtualAccountData.accountNumber": data.destinationAccountNumber,
           },
           {
-            status: verifiedStatus === "Completed" ? "paid" : "canceled",
+            status: verifiedStatus === "Completed" ? "paid" : "failed",
             totalAmount: verifiedAmount,
             "virtualAccountData.sessionId": sessionId,
           },

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import AppError from "../../utilities/ErrorHandler";
-import { OrderService } from "../../services/admin/Order.Service";
+import { OrderService } from "../../services/business/Order.Service";
 
 const orderService = new OrderService();
 

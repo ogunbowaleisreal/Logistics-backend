@@ -91,7 +91,7 @@ const OrderSchema = new Schema<IOrder>(
     zoneId: { type: Schema.Types.ObjectId, ref: "BusinessShippingZone" },
     status: {
       type: String,
-      enum: ["pending", "paid", "in-transit", "delivered", "canceled"],
+      enum: ["pending", "paid", "in-transit", "delivered", "canceled", "failed"],
       default: "pending",
     },
     paymentMethod: { type: String, enum: ["safehaven", "monnify"] },
