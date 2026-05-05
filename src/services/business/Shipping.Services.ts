@@ -103,35 +103,46 @@ export class ShippingService {
   //   return rate;
   // }
 
-  public async calculateShippingFeeWithZoneId(
+  public async calculateShippingFee(
     businessId: string,
-    zoneId: string,
+    filter: { distanceInKM?: number; zoneId?: string },
   ): Promise<number> {
-    const zone = await BusinessShippingZone.findOne({
-      _id: zoneId,
-      businessId,
-    });
-    if (!zone) {
-      throw new AppError(400, "No shipping zone found");
-    }
-    return zone.amount;
-  }
-
-  public async calculateShippingFeeWithDistance(
-    businessId: string,
-    distanceInKM: number,
-  ): Promise<number> {
-    const businessConfiguration = await BusinessConfiguration.findOne({
-      businessId,
-    }).lean();
-    if (!businessConfiguration) {
+    const { distanceInKM, zoneId } = filter;
+    const config = await BusinessConfiguration.findOne(
+      { businessId },
+      { pricePerKm: 1, minimumCharge: 1, shippingSettings: 1 },
+    ).lean();
+    if (!config) {
       throw new AppError(400, "Business shipping settings not found");
     }
 
-    const pricePerKm = businessConfiguration.pricePerKm || 500; // default to 500 if not set
-    const minimumCharge = businessConfiguration.minimumCharge || 2000; // default to 2000 if not set
+    const { pricePerKm, minimumCharge, shippingSettings } = config;
 
-    const calculatedFee = distanceInKM * pricePerKm;
-    return calculatedFee < minimumCharge ? minimumCharge : calculatedFee;
+    if (shippingSettings === "distance-based") {
+      if (!distanceInKM) {
+        throw new AppError(
+          400,
+          "distanceInKM must be provided for distance-based shipping settings",
+        );
+      }
+      return Math.max(distanceInKM * pricePerKm!, minimumCharge!);
+    }
+
+    if (shippingSettings === "zone-based") {
+      if (!zoneId) {
+        throw new AppError(
+          400,
+          "zoneId must be provided for zone-based shipping settings",
+        );
+      }
+      const zone = await BusinessShippingZone.findOne(
+        { _id: zoneId, businessId },
+        { amount: 1 },
+      );
+      if (!zone) throw new AppError(400, "No shipping zone found");
+      return zone.amount;
+    }
+
+    throw new AppError(400, "Invalid shipping settings for this business");
   }
 }

@@ -30,17 +30,15 @@ export class OrderService {
 
     let calculatedShippingFee: number;
     if (distanceInKM) {
-      calculatedShippingFee =
-        await shippingService.calculateShippingFeeWithDistance(
-          businessId,
-          distanceInKM,
-        );
+      calculatedShippingFee = await shippingService.calculateShippingFee(
+        businessId,
+        { distanceInKM },
+      );
     } else if (zoneId) {
-      calculatedShippingFee =
-        await shippingService.calculateShippingFeeWithZoneId(
-          businessId,
-          zoneId,
-        );
+      calculatedShippingFee = await shippingService.calculateShippingFee(
+        businessId,
+        { zoneId },
+      );
     } else {
       throw new AppError(400, "Either distanceInKM or zoneId must be provided");
     }

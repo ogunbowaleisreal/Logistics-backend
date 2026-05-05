@@ -4,6 +4,7 @@ export interface IBusinessConfiguration extends Document {
   businessId: Schema.Types.ObjectId;
   pricePerKm?: number;
   minimumCharge?: number;
+  shippingSettings?: string;
   __v?: number;
 }
 
@@ -16,6 +17,11 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
     },
     pricePerKm: { type: Number, default: 500 },
     minimumCharge: { type: Number, default: 2000 },
+    shippingSettings: {
+      type: String,
+      enum: ["distance-based", "zone-based"],
+      default: "distance-based",
+    },
   },
   {
     timestamps: true,
