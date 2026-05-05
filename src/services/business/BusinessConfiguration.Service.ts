@@ -13,10 +13,10 @@ export class BusinessConfigurationService {
   }
 
   public async updateConfiguration(businessId: string, payload: any) {
-    const { pricePerKm, minimumCharge } = payload;
+    const { pricePerKm, minimumCharge, shippingSettings } = payload;
     const configuration = await BusinessConfiguration.findOneAndUpdate(
       tenantScope({}, businessId),
-      { pricePerKm, minimumCharge },
+      { pricePerKm, minimumCharge, shippingSettings },
       { new: true, upsert: true },
     );
     return configuration;

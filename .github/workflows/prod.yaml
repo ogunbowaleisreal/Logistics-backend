@@ -35,9 +35,8 @@ jobs:
           SUPER_ADMIN_FIRSTNAME: ${{ secrets.SUPER_ADMIN_FIRSTNAME }}
           SUPER_ADMIN_LASTNAME: ${{ secrets.SUPER_ADMIN_LASTNAME }}
 
-          MAILGUN_API_KEY: ${{ secrets.MAILGUN_API_KEY }}
-          MAILGUN_DOMAIN: ${{ secrets.MAILGUN_DOMAIN }}
-          MAILGUN_SENDER: ${{ secrets.MAILGUN_SENDER }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_SENDER: ${{ secrets.RESEND_SENDER }}
 
           IMAGE_KIT_PUBLIC_KEY: ${{ secrets.IMAGE_KIT_PUBLIC_KEY }}
           IMAGE_KIT_PRIVATE_KEY: ${{ secrets.IMAGE_KIT_PRIVATE_KEY }}
@@ -95,9 +94,8 @@ jobs:
             echo "SUPER_ADMIN_FIRSTNAME=${{ secrets.SUPER_ADMIN_FIRSTNAME }}" >> ${{ secrets.ENV_PATH }}
             echo "SUPER_ADMIN_LASTNAME=${{ secrets.SUPER_ADMIN_LASTNAME }}" >> ${{ secrets.ENV_PATH }}
 
-            echo "MAILGUN_API_KEY=${{ secrets.MAILGUN_API_KEY }}" >> ${{ secrets.ENV_PATH }}
-            echo "MAILGUN_DOMAIN=${{ secrets.MAILGUN_DOMAIN }}" >> ${{ secrets.ENV_PATH }}
-            echo "MAILGUN_SENDER=${{ secrets.MAILGUN_SENDER }}" >> ${{ secrets.ENV_PATH }}
+            echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "RESEND_SENDER=${{ secrets.RESEND_SENDER }}" >> ${{ secrets.ENV_PATH }}
 
             echo "IMAGE_KIT_PUBLIC_KEY=${{ secrets.IMAGE_KIT_PUBLIC_KEY }}" >> ${{ secrets.ENV_PATH }}
             echo "IMAGE_KIT_PRIVATE_KEY=${{ secrets.IMAGE_KIT_PRIVATE_KEY }}" >> ${{ secrets.ENV_PATH }}

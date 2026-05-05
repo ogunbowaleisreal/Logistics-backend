@@ -70,14 +70,14 @@ export class OrderService {
       totalAmount,
     });
 
-    // if (order.personnelInformation.sender.email) {
-    //   void emailService.sendOrderConfirmation({
-    //     email: order.personnelInformation.sender.email,
-    //     name: order.personnelInformation.sender.name,
-    //     trackingID: order.trackingID,
-    //     amount: order.amount,
-    //   });
-    // }
+    if (order.personnelInformation.sender.email) {
+      void emailService.sendOrderConfirmation({
+        email: order.personnelInformation.sender.email,
+        name: order.personnelInformation.sender.name,
+        trackingID: order.trackingID,
+        amount: order.amount,
+      });
+    }
 
     return order;
   }
