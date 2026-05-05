@@ -1,7 +1,7 @@
 import { Document, model, Schema } from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-interface IOrder extends Document {
+export interface IOrder extends Document {
   businessId: Schema.Types.ObjectId;
   zoneId?: Schema.Types.ObjectId;
   distanceInKM?: number;
@@ -91,7 +91,15 @@ const OrderSchema = new Schema<IOrder>(
     zoneId: { type: Schema.Types.ObjectId, ref: "BusinessShippingZone" },
     status: {
       type: String,
-      enum: ["pending", "paid", "in-transit", "delivered", "canceled", "failed"],
+      enum: [
+        "pending",
+        "paid",
+        "in-transit",
+        "delivered",
+        "canceled",
+        "failed",
+        "received",
+      ],
       default: "pending",
     },
     paymentMethod: { type: String, enum: ["safehaven", "monnify"] },

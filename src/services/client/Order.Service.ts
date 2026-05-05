@@ -11,6 +11,7 @@ import { ConfigurationService } from "../Configuration.Service";
 import { SafeHaven } from "../../utilities/SafeHaven";
 import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
+import { riderAssignmentService } from "../RiderAssignment.Service";
 
 const emailService = new EmailService();
 const shippingService = new ShippingService();
@@ -169,6 +170,12 @@ export class OrderService {
           if (!business) {
             throw new AppError(404, "Account not found");
           }
+
+          await riderAssignmentService.assignRider(
+            updatedOrder.businessId.toString(),
+            updatedOrder,
+            session,
+          );
         }
 
         return updatedOrder;

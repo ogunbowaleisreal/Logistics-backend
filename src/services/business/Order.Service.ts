@@ -5,6 +5,11 @@ import { paginateModelWithPopulate } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
 import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
+import { Rider } from "../../models/Rider.Model";
+import { riderAssignmentService } from "../RiderAssignment.Service";
+import { redisClient } from "../../config/cache";
+import { termiiService } from "../../utilities/Termii";
+import logger from "../../../logger";
 
 const emailService = new EmailService();
 
@@ -16,6 +21,13 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   canceled: [],
   failed: [],
 };
+
+const LOCKED_RIDER_CHANGE_STATUSES = [
+  "in-transit",
+  "delivered",
+  "canceled",
+  "failed",
+];
 
 export class OrderService {
   public async getOrders(businessId: string, payload: any) {
@@ -133,6 +145,12 @@ export class OrderService {
         if (!business) {
           throw new AppError(404, "Account not found");
         }
+
+        await riderAssignmentService.assignRider(
+          order.businessId.toString(),
+          order,
+          session,
+        );
       }
 
       return order;
@@ -150,5 +168,106 @@ export class OrderService {
     }
 
     return order;
+  }
+
+  public async changeRider(
+    businessId: string,
+    orderId: string,
+    newRiderId: string,
+  ) {
+    if (!newRiderId) {
+      throw new AppError(400, "Rider ID is required");
+    }
+
+    const order = await Order.findOne(
+      tenantScope({ _id: orderId }, businessId),
+    );
+
+    if (!order) {
+      throw new AppError(404, "Order not found");
+    }
+
+    if (LOCKED_RIDER_CHANGE_STATUSES.includes(order.status)) {
+      throw new AppError(
+        400,
+        "Rider cannot be changed once the order is in-transit or completed",
+      );
+    }
+
+    const newRider = await Rider.findOne(
+      tenantScope(
+        { _id: newRiderId, isDeleted: false, status: "active" },
+        businessId,
+      ),
+    );
+
+    if (!newRider) {
+      throw new AppError(404, "Rider not found");
+    }
+
+    if ((newRider.todaysRideCount ?? 0) >= newRider.dailyCapacity) {
+      throw new AppError(400, "Rider has reached their daily capacity");
+    }
+
+    const currentRiderId = order.riderID?.toString();
+
+    if (currentRiderId === newRiderId) {
+      return order;
+    }
+
+    const session = await startSession();
+
+    try {
+      const updatedOrder = await session.withTransaction(async () => {
+        if (currentRiderId) {
+          await Rider.findByIdAndUpdate(
+            currentRiderId,
+            { $inc: { todaysRideCount: -1 } },
+            { session },
+          );
+        }
+
+        const updatedOrder = await Order.findByIdAndUpdate(
+          orderId,
+          { riderID: newRiderId },
+          { new: true, session },
+        );
+
+        if (!updatedOrder) {
+          throw new AppError(404, "Order not found");
+        }
+
+        await Rider.findByIdAndUpdate(
+          newRiderId,
+          { $inc: { todaysRideCount: 1 } },
+          { session },
+        );
+
+        return updatedOrder;
+      });
+
+      void termiiService.sendRiderPickupNotification(
+        newRider.phone,
+        order.trackingID,
+      );
+
+      if (currentRiderId) {
+        void redisClient
+          .del(`rider-stats:${currentRiderId}`)
+          .catch((error: any) =>
+            logger.warn(error?.message || "Redis delete failed"),
+          );
+      }
+
+      void redisClient
+        .del(`rider-stats:${newRiderId}`)
+        .catch((error: any) =>
+          logger.warn(error?.message || "Redis delete failed"),
+        );
+
+      return updatedOrder;
+    } finally {
+      await session.endSession();
+    }
   }
 }

@@ -5,7 +5,7 @@ import {
   deleteRider,
   getRiders,
   updateRider,
-} from "../../controllers/admin/rider.controller";
+} from "../../controllers/business/rider.controller";
 
 const router = Router();
 

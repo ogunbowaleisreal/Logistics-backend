@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  changeRider,
   getOrders,
   updateOrderStatus,
 } from "../../controllers/business/order.controller";
@@ -11,5 +12,7 @@ router
   .route("/")
   .get(staffRoleVerification("GETORDERS"), getOrders)
   .patch(staffRoleVerification("UPTORDER"), updateOrderStatus);
+
+router.patch("/:orderId/rider", staffRoleVerification("UPTORDER"), changeRider);
 
 export default router;

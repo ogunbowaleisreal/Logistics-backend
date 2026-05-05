@@ -14,7 +14,9 @@ export class BusinessConfigurationService {
   }
 
   public async getBusinessTheme(businessId: string) {
-    const theme = await Theme.findOne(tenantScope({}, businessId));
+    const theme = await Theme.findOne(
+      tenantScope({ isDeleted: false }, businessId),
+    );
     if (!theme) {
       throw new Error("Theme not found, please contact support");
     }

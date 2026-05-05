@@ -4,6 +4,7 @@ import { AuthenticationTokenGenerator } from "../services/Unique.Service";
 // import { Account } from "../models/Account.Model";
 import { Admin } from "../models/Admin.Model";
 import { Business } from "../models/Business.Model";
+import { Rider } from "../models/Rider.Model";
 import { Staff } from "../models/Staff.Model";
 import { redisClient } from "../config/cache";
 
@@ -248,6 +249,68 @@ async function staffVerification(
   });
 }
 
+/////////////////////////////////// RIDER AUTHORIZATION /////////////////////////////////
+async function riderTokenAuthentication(
+  req: Request | any,
+  res: Response,
+  next: NextFunction,
+) {
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+
+  if (!token) {
+    return res
+      .status(401)
+      .json("Unauthenticated. Please login and provide a token");
+  }
+
+  try {
+    const decoded = new AuthenticationTokenGenerator().verifyToken(
+      token,
+    ) as any;
+    if (decoded.type !== "rider") {
+      return res.status(401).json("Unauthenticated: Invalid token type");
+    }
+
+    req.rider = decoded;
+    return next();
+  } catch (error: any) {
+    return res.status(401).json("Unauthenticated: Invalid token");
+  }
+}
+
+async function riderVerification(
+  req: Request | any,
+  res: Response,
+  next: NextFunction,
+) {
+  return await riderTokenAuthentication(req, res, async () => {
+    const { riderId, businessId } = req.rider;
+
+    if (!riderId || !businessId) {
+      return res.status(403).json("Unauthorized: Rider not found");
+    }
+
+    const rider = await Rider.findOne({
+      _id: riderId,
+      businessId,
+      isDeleted: false,
+    });
+
+    if (!rider) {
+      return res.status(401).json("Unauthorized: Rider record not found");
+    }
+
+    if (rider.status === "suspended") {
+      return res
+        .status(403)
+        .json("Unauthorized: Your account has been suspended");
+    }
+
+    req.rider = { riderId, businessId, type: "rider" };
+    return next();
+  });
+}
+
 function staffRoleVerification(permission: string) {
   return async function staffTokenVerification(
     req: Request | any,
@@ -399,6 +462,7 @@ export {
   businessVerification,
   staffTokenAuthentication,
   staffVerification,
+  riderVerification,
   staffRoleVerification,
   businessContext,
   bodyBusinessContext,

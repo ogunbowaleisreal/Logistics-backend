@@ -28,11 +28,18 @@ export interface StaffAuthorizationHeader {
   role?: any;
 }
 
+export interface RiderAuthorizationHeader {
+  riderId: string;
+  businessId: string;
+  type: "rider";
+}
+
 export interface ExtendedRequest extends Request {
   account?: AccountAuthorizationHeader;
   admin?: AdminAuthorizationHeader;
   business?: BusinessAuthorizationHeader;
   staff?: StaffAuthorizationHeader;
+  rider?: RiderAuthorizationHeader;
   businessId?: string; // set by businessContext middleware on client routes
 }
 

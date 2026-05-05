@@ -15,8 +15,10 @@ import logger from "../logger/index";
 import clientRoute from "./routes/client/index.route";
 import adminRoute from "./routes/admin/index.route";
 import businessRoute from "./routes/business/index.route";
+import riderRoute from "./routes/rider/index.route";
 import AppError from "./utilities/ErrorHandler";
 import { v4 as uuidv4 } from "uuid";
+import { startRiderResetJob } from "./jobs/RiderReset.Job";
 
 class App {
   public app: Application;
@@ -26,6 +28,7 @@ class App {
     this.config();
     this.setupDB();
     this.setupCache();
+    startRiderResetJob();
     this.setupRoutes();
   }
 
@@ -62,11 +65,12 @@ class App {
     this.app.use("/api/client", clientRoute);
     this.app.use("/api/admin", adminRoute);
     this.app.use("/api/business", businessRoute);
+    this.app.use("/api/rider", riderRoute);
     this.app.use(
       "/api/*",
       (req: Request, res: Response, next: NextFunction) => {
         throw new AppError(404, "Page not found");
-      }
+      },
     );
     this.app.use(
       (error: any, req: Request, res: Response, next: NextFunction) => {
@@ -87,7 +91,7 @@ class App {
             message: error.message,
           });
         }
-      }
+      },
     );
   }
 }
