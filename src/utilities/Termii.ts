@@ -17,7 +17,7 @@ class TermiiService {
         TERMII_SMS_URL,
         {
           to,
-          from: "SME",
+          from: "BillPadi",
           sms: message,
           type: "plain",
           api_key: apiKey,

@@ -61,6 +61,8 @@ jobs:
 
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
 
+          TERMII_API_KEY: ${{ secrets.TERMII_API_KEY }}
+
           NODE_ENV: ${{ secrets.NODE_ENV }}
         run: |
           npm run build
@@ -119,6 +121,8 @@ jobs:
             echo "SAFEHAVEN_BANK_NAME=${{ secrets.SAFEHAVEN_BANK_NAME }}" >> ${{ secrets.ENV_PATH }}
 
             echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "TERMII_API_KEY=${{ secrets.TERMII_API_KEY }}" >> ${{ secrets.ENV_PATH }}
 
             echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
 

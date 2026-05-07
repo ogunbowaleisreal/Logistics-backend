@@ -39,22 +39,22 @@ export class RiderAuthenticationService {
       throw new AppError(404, "Rider not found");
     }
 
-    if (otp != "123456") {
-      throw new AppError(400, "Invalid OTP");
-    }
-
-    // const cacheKey = `rider-otp:${rider.id}`;
-    // const cachedOTP = await redisClient.get(cacheKey);
-
-    // if (!cachedOTP) {
-    //   throw new AppError(400, "OTP expired or not requested");
-    // }
-
-    // if (cachedOTP !== otp) {
+    // if (otp != "123456") {
     //   throw new AppError(400, "Invalid OTP");
     // }
 
-    // await redisClient.del(cacheKey);
+    const cacheKey = `rider-otp:${rider.id}`;
+    const cachedOTP = await redisClient.get(cacheKey);
+
+    if (!cachedOTP) {
+      throw new AppError(400, "OTP expired or not requested");
+    }
+
+    if (cachedOTP !== otp) {
+      throw new AppError(400, "Invalid OTP");
+    }
+
+    await redisClient.del(cacheKey);
 
     const accessToken = this.authenticationTokenGenerator.generateToken({
       riderId: rider._id,
