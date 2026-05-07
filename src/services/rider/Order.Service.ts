@@ -4,10 +4,12 @@ import AppError from "../../utilities/ErrorHandler";
 import { paginateModel } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
 import { redisClient } from "../../config/cache";
+import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
 
 const RIDER_ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  paid: ["in-transit"],
-  "in-transit": ["delivered"],
+  paid: ["processing"],
+  processing: ["in-transit"],
+  "in-transit": ["processing", "delivered"],
 };
 
 export class OrderService {
@@ -68,6 +70,12 @@ export class OrderService {
         redisClient.del(`rider-stats:${riderId}`),
       ]);
     }
+
+    orderStatusUpdateEventEmitter.emit("rider-update-order-status", {
+      riderId,
+      orderStatus: status,
+      orderTrackingID: order.trackingID,
+    });
 
     return order;
   }

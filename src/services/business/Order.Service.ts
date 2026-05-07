@@ -10,17 +10,19 @@ import { riderAssignmentService } from "../RiderAssignment.Service";
 import { redisClient } from "../../config/cache";
 import { termiiService } from "../../utilities/Termii";
 import logger from "../../../logger";
+import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
 
 const emailService = new EmailService();
 
-const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  pending: ["paid", "in-transit", "canceled", "failed"],
-  paid: ["in-transit", "canceled"],
-  "in-transit": ["delivered", "canceled"],
-  delivered: [],
-  canceled: [],
-  failed: [],
-};
+const VALID_STATUSES: string[] = [
+  "pending",
+  "paid",
+  "processing",
+  "in-transit",
+  "delivered",
+  "canceled",
+  "failed",
+];
 
 const LOCKED_RIDER_CHANGE_STATUSES = [
   "in-transit",
@@ -105,69 +107,88 @@ export class OrderService {
   public async updateOrderStatus(businessId: string, payload: any) {
     const { orderID, status } = payload;
 
-    const existingOrder = await Order.findOne(
-      tenantScope({ _id: orderID }, businessId),
-    );
-
-    if (!existingOrder) {
-      throw new AppError(404, "Order not found");
-    }
-
-    const allowedTransitions = ALLOWED_TRANSITIONS[existingOrder.status] ?? [];
-
-    if (!allowedTransitions.includes(status)) {
-      throw new AppError(
-        400,
-        `Invalid status transition: ${existingOrder.status} → ${status}`,
-      );
-    }
-
     const session = await startSession();
 
-    const order = await session.withTransaction(async () => {
-      const order = await Order.findOneAndUpdate(
-        tenantScope({ _id: orderID }, businessId),
-        { status },
-        { new: true, session },
-      );
+    try {
+      const order = await session.withTransaction(async () => {
+        const existingOrder = await Order.findOne(
+          tenantScope({ _id: orderID }, businessId),
+        ).session(session);
 
-      if (!order) {
-        throw new AppError(404, "Order not found");
-      }
-
-      if (status === "paid") {
-        const business = await Business.findOneAndUpdate(
-          { _id: order.businessId, isDeleted: false },
-          { $inc: { "wallet.naira": order.amount } },
-          { session },
-        );
-
-        if (!business) {
-          throw new AppError(404, "Account not found");
+        if (!existingOrder) {
+          throw new AppError(404, "Order not found");
         }
 
-        await riderAssignmentService.assignRider(
-          order.businessId.toString(),
-          order,
-          session,
+        const { status: currentStatus } = existingOrder;
+
+        if (currentStatus === status) {
+          return existingOrder;
+        }
+
+        if (!VALID_STATUSES.includes(status)) {
+          throw new AppError(400, "Invalid order status");
+        }
+
+        const order = await Order.findOneAndUpdate(
+          tenantScope({ _id: orderID }, businessId),
+          { status },
+          { new: true, session },
         );
+
+        if (!order) {
+          throw new AppError(404, "Order not found");
+        }
+
+        if (status === "paid") {
+          const business = await Business.findOneAndUpdate(
+            { _id: order.businessId, isDeleted: false },
+            { $inc: { "wallet.naira": order.amount } },
+            { session },
+          );
+
+          if (!business) {
+            throw new AppError(404, "Account not found");
+          }
+
+          await riderAssignmentService.assignRider(
+            order.businessId.toString(),
+            order,
+            session,
+          );
+        }
+
+        await order.save({ session });
+
+        return order;
+      });
+
+      orderStatusUpdateEventEmitter.emit("business-update-order-status", {
+        businessId: businessId,
+        orderStatus: order.status,
+        orderTrackingID: order.trackingID,
+      });
+
+      if (order.personnelInformation.sender.email) {
+        void emailService.sendOrderStatusUpdate({
+          email: order.personnelInformation.sender.email,
+          name: order.personnelInformation.sender.name,
+          trackingID: order.trackingID,
+          status: order.status,
+        });
+      }
+
+      if ((status === "delivered" || status === "canceled") && order.riderID) {
+        void redisClient
+          .del(`rider-stats:${order.riderID}`)
+          .catch((error: any) =>
+            logger.warn(error?.message || "Redis delete failed"),
+          );
       }
 
       return order;
-    });
-
-    await session.endSession();
-
-    if (order.personnelInformation.sender.email) {
-      void emailService.sendOrderStatusUpdate({
-        email: order.personnelInformation.sender.email,
-        name: order.personnelInformation.sender.name,
-        trackingID: order.trackingID,
-        status: order.status,
-      });
+    } finally {
+      await session.endSession();
     }
-
-    return order;
   }
 
   public async changeRider(

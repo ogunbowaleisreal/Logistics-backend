@@ -41,6 +41,10 @@ export interface IOrder extends Document {
     sessionId?: string;
     callbackURL?: string;
   };
+  history?: {
+    status: string;
+    timestamp: Date;
+  }[];
   __v?: number;
 }
 
@@ -94,11 +98,11 @@ const OrderSchema = new Schema<IOrder>(
       enum: [
         "pending",
         "paid",
+        "processing",
         "in-transit",
         "delivered",
         "canceled",
         "failed",
-        "received",
       ],
       default: "pending",
     },
@@ -115,6 +119,12 @@ const OrderSchema = new Schema<IOrder>(
       sessionId: { type: String },
       callbackURL: { type: String },
     },
+    history: [
+      {
+        status: { type: String },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
   },
   {
     timestamps: true,
