@@ -118,12 +118,6 @@ export class ShippingService {
 
     const { pricePerKm, minimumCharge, shippingSettings } = config;
 
-    console.log("Shipping config:", {
-      pricePerKm,
-      minimumCharge,
-      shippingSettings,
-    });
-
     if (shippingSettings === "distance-based") {
       if (!distanceInKM) {
         throw new AppError(
