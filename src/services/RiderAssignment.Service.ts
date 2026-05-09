@@ -15,18 +15,23 @@ export class RiderAssignmentService {
         return;
       }
 
-      const rider = await Rider.findOne({
+      const riderQuery: any = {
         businessId,
         status: "active",
         isDeleted: false,
         $expr: { $lt: ["$todaysRideCount", "$dailyCapacity"] },
-      })
+      };
+      if (order.rideType) {
+        riderQuery.rideType = order.rideType;
+      }
+
+      const rider = await Rider.findOne(riderQuery)
         .sort({ todaysRideCount: 1 })
         .session(session ?? null);
 
       if (!rider) {
         logger.warn(
-          `No available rider found for paid order ${order.trackingID} in business ${businessId}`,
+          `No available rider found for order ${order.trackingID} in business ${businessId} (rideType: ${order.rideType ?? "any"})`,
         );
         return;
       }

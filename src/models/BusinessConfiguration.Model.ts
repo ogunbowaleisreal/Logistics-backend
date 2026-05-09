@@ -5,6 +5,13 @@ export interface IBusinessConfiguration extends Document {
   pricePerKm?: number;
   minimumCharge?: number;
   shippingSettings?: string;
+  rideTypeConfig?: {
+    type: "bike" | "bus_car" | "pickup" | "truck";
+    isEnabled: boolean;
+    pricePerKm: number;
+    baseAmount: number;
+  }[];
+  shippingRegion?: string;
   __v?: number;
 }
 
@@ -21,6 +28,23 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
       type: String,
       enum: ["distance-based", "zone-based"],
       default: "distance-based",
+    },
+    rideTypeConfig: [
+      {
+        type: {
+          type: String,
+          enum: ["bike", "bus_car", "pickup", "truck"],
+          required: true,
+        },
+        isEnabled: { type: Boolean, default: false },
+        pricePerKm: { type: Number, default: 0 },
+        baseAmount: { type: Number, default: 0 },
+      },
+    ],
+    shippingRegion: {
+      type: String,
+      enum: ["local", "inter-state", "international"],
+      default: "local",
     },
   },
   {

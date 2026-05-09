@@ -11,13 +11,15 @@ import {
   businessVerification,
   staffRoleVerification,
 } from "../../middlewares/authorization.middleware";
+import { validate } from "../../middlewares/validation.middleware";
+import { updateConfigurationSchema } from "../../validators/businessConfiguration.validator";
 
 const router = express.Router();
 
 router
   .route("/")
   .get(staffRoleVerification("GETCFG"), getConfiguration)
-  .put(staffRoleVerification("UPTCFG"), updateConfiguration);
+  .put(staffRoleVerification("UPTCFG"), validate(updateConfigurationSchema, "body"), updateConfiguration);
 
 router.patch("/social-links", businessVerification, updateSocialLinks);
 router.patch("/support", businessVerification, updateSupport);

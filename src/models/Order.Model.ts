@@ -5,6 +5,8 @@ export interface IOrder extends Document {
   businessId: Schema.Types.ObjectId;
   zoneId?: Schema.Types.ObjectId;
   distanceInKM?: number;
+  rideType?: 'bike' | 'bus_car' | 'pickup' | 'truck';
+  shippingType?: 'local' | 'inter-state' | 'international';
   trackingID: string;
   orderInformation: {
     pickupLocation: {
@@ -16,6 +18,9 @@ export interface IOrder extends Document {
       address: string;
       latitude: number;
       longitude: number;
+      state?: string;
+      country?: string;
+      city?: string;
     };
     items: string[];
     numberOfItems: number;
@@ -73,6 +78,9 @@ const OrderSchema = new Schema<IOrder>(
         address: { type: String },
         latitude: { type: Number },
         longitude: { type: Number },
+        state: { type: String },
+        country: { type: String },
+        city: { type: String },
       },
       items: [{ type: String }],
       numberOfItems: { type: Number },
@@ -93,6 +101,12 @@ const OrderSchema = new Schema<IOrder>(
     riderID: { type: Schema.Types.ObjectId, ref: "Rider" },
     distanceInKM: { type: Number },
     zoneId: { type: Schema.Types.ObjectId, ref: "BusinessShippingZone" },
+    rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"] },
+    shippingType: {
+      type: String,
+      enum: ["local", "inter-state", "international"],
+      default: "local",
+    },
     status: {
       type: String,
       enum: [

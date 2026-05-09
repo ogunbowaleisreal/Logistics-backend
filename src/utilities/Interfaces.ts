@@ -47,6 +47,9 @@ export interface IOrderPayload {
   slug: string;
   zoneId?: string;
   distanceInKM?: number;
+  rideType?: 'bike' | 'bus_car' | 'pickup' | 'truck';
+  shippingType?: 'local' | 'inter-state' | 'international';
+  originState?: string;
   orderInformation: {
     pickupLocation: {
       address: string;
@@ -57,6 +60,9 @@ export interface IOrderPayload {
       address: string;
       latitude: number;
       longitude: number;
+      state?: string;
+      country?: string;
+      city?: string;
     };
     items: string[];
     numberOfItems: number;

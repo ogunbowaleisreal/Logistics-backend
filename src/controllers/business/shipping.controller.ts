@@ -28,7 +28,8 @@ export const getZones = async (
   next: NextFunction,
 ) => {
   try {
-    const zones = await shippingService.getZones(getBusinessId(req));
+    const { shippingType } = req.query as { shippingType?: string };
+    const zones = await shippingService.getZones(getBusinessId(req), { shippingType });
     return res
       .status(200)
       .json({ message: "Zones fetched successfully", data: zones });

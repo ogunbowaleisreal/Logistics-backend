@@ -13,10 +13,16 @@ export class BusinessConfigurationService {
   }
 
   public async updateConfiguration(businessId: string, payload: any) {
-    const { pricePerKm, minimumCharge, shippingSettings } = payload;
+    const { pricePerKm, minimumCharge, shippingSettings, rideTypeConfig, shippingRegion } = payload;
+    const update: any = {};
+    if (pricePerKm !== undefined) update.pricePerKm = pricePerKm;
+    if (minimumCharge !== undefined) update.minimumCharge = minimumCharge;
+    if (shippingSettings !== undefined) update.shippingSettings = shippingSettings;
+    if (rideTypeConfig !== undefined) update.rideTypeConfig = rideTypeConfig;
+    if (shippingRegion !== undefined) update.shippingRegion = shippingRegion;
     const configuration = await BusinessConfiguration.findOneAndUpdate(
       tenantScope({}, businessId),
-      { pricePerKm, minimumCharge, shippingSettings },
+      update,
       { new: true, upsert: true },
     );
     return configuration;

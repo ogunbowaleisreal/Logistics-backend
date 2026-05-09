@@ -5,22 +5,20 @@ import {
   getZones,
   updateZone,
   deleteZone,
-  // upsertRates,  // Removed: weight-based rates replaced by flat zone amount
-  // getRates,
-  // updateRate,
-  // deleteRate,
 } from "../../controllers/business/shipping.controller";
+import { validate } from "../../middlewares/validation.middleware";
+import { createZoneSchema, updateZoneSchema } from "../../validators/shipping.validator";
 
 const router = Router();
 
 router
   .route("/zones")
-  .post(staffRoleVerification("shipping"), createZone)
+  .post(staffRoleVerification("shipping"), validate(createZoneSchema, "body"), createZone)
   .get(staffRoleVerification("shipping"), getZones);
 
 router
   .route("/zones/:zoneId")
-  .put(staffRoleVerification("shipping"), updateZone)
+  .put(staffRoleVerification("shipping"), validate(updateZoneSchema, "body"), updateZone)
   .delete(staffRoleVerification("shipping"), deleteZone);
 
 // router

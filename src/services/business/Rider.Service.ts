@@ -5,13 +5,14 @@ import { tenantScope } from "../../utilities/TenantScope";
 
 export class RiderService {
   public async createRider(businessId: string, payload: any) {
-    const { name, phone, dailyCapacity } = payload;
+    const { name, phone, dailyCapacity, rideType } = payload;
 
     const rider = await Rider.create({
       businessId,
       name,
       phone,
       dailyCapacity,
+      rideType,
     });
 
     return rider;
@@ -52,7 +53,7 @@ export class RiderService {
   }
 
   public async updateRider(businessId: string, payload: any) {
-    const { riderID, name, phone, dailyCapacity, status } = payload;
+    const { riderID, name, phone, dailyCapacity, status, rideType } = payload;
 
     const rider = await Rider.findOne(
       tenantScope({ _id: riderID, isDeleted: false }, businessId),
@@ -65,6 +66,7 @@ export class RiderService {
     if (phone) rider.phone = phone;
     if (dailyCapacity) rider.dailyCapacity = dailyCapacity;
     if (status) rider.status = status;
+    if (rideType) rider.rideType = rideType;
 
     return await rider.save();
   }

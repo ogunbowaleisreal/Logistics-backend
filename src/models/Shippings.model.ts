@@ -3,8 +3,16 @@ import { Schema, Document, model, Types } from "mongoose";
 interface IBusinessShippingZone extends Document {
   businessId: Types.ObjectId;
   name: string;
+  shippingType: 'local' | 'inter-state' | 'international';
   states: string[];
-  amount: number;
+  pricing: {
+    rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+    amount: number;
+  }[];
+  amount?: number;
+  destinationStates?: string[];
+  countries?: string[];
+  cities?: string[];
 }
 
 const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
@@ -14,8 +22,22 @@ const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
     required: true,
   },
   name: { type: String, required: true },
+  shippingType: {
+    type: String,
+    enum: ["local", "inter-state", "international"],
+    default: "local",
+  },
   states: [{ type: String }],
-  amount: { type: Number, required: true },
+  pricing: [
+    {
+      rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"], required: true },
+      amount: { type: Number, required: true },
+    },
+  ],
+  amount: { type: Number },
+  destinationStates: [{ type: String }],
+  countries: [{ type: String }],
+  cities: [{ type: String }],
 });
 
 businessShippingZoneSchema.index({ businessId: 1, name: 1 }, { unique: true });

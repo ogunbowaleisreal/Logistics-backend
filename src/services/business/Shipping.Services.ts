@@ -15,7 +15,15 @@ import AppError from "../../utilities/ErrorHandler";
 export class ShippingService {
   public async createZone(
     businessId: string,
-    payload: { name: string; states: string[]; amount: number },
+    payload: {
+      name: string;
+      states: string[];
+      shippingType?: 'local' | 'inter-state' | 'international';
+      pricing: { rideType: 'bike' | 'bus_car' | 'pickup' | 'truck'; amount: number }[];
+      destinationStates?: string[];
+      countries?: string[];
+      cities?: string[];
+    },
   ) {
     const exists = await BusinessShippingZone.findOne({
       businessId,
@@ -25,14 +33,24 @@ export class ShippingService {
     return await BusinessShippingZone.create({ ...payload, businessId });
   }
 
-  public async getZones(businessId: string) {
-    return await BusinessShippingZone.find({ businessId }).sort({ name: 1 });
+  public async getZones(businessId: string, filter: { shippingType?: string } = {}) {
+    const query: any = { businessId };
+    if (filter.shippingType) query.shippingType = filter.shippingType;
+    return await BusinessShippingZone.find(query).sort({ name: 1 });
   }
 
   public async updateZone(
     businessId: string,
     zoneId: string,
-    payload: { name?: string; states?: string[]; amount?: number },
+    payload: {
+      name?: string;
+      states?: string[];
+      shippingType?: 'local' | 'inter-state' | 'international';
+      pricing?: { rideType: 'bike' | 'bus_car' | 'pickup' | 'truck'; amount: number }[];
+      destinationStates?: string[];
+      countries?: string[];
+      cities?: string[];
+    },
   ) {
     const zone = await BusinessShippingZone.findOne({
       _id: zoneId,
@@ -41,7 +59,11 @@ export class ShippingService {
     if (!zone) throw new AppError(404, "Zone not found");
     if (payload.name !== undefined) zone.name = payload.name;
     if (payload.states !== undefined) zone.states = payload.states;
-    if (payload.amount !== undefined) zone.amount = payload.amount;
+    if (payload.shippingType !== undefined) zone.shippingType = payload.shippingType;
+    if (payload.pricing !== undefined) zone.pricing = payload.pricing;
+    if (payload.destinationStates !== undefined) zone.destinationStates = payload.destinationStates;
+    if (payload.countries !== undefined) zone.countries = payload.countries;
+    if (payload.cities !== undefined) zone.cities = payload.cities;
     return await zone.save();
   }
 
@@ -103,46 +125,89 @@ export class ShippingService {
   //   return rate;
   // }
 
-  public async calculateShippingFee(
+  public async calculateFee(
     businessId: string,
-    filter: { distanceInKM?: number; zoneId?: string },
+    params: {
+      shippingType: 'local' | 'inter-state' | 'international';
+      rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+      zoneId?: string;
+      distanceInKM?: number;
+      originState?: string;
+      destinationState?: string;
+      country?: string;
+      city?: string;
+    },
   ): Promise<number> {
-    const { distanceInKM, zoneId } = filter;
-    const config = await BusinessConfiguration.findOne(
-      { businessId },
-      { pricePerKm: 1, minimumCharge: 1, shippingSettings: 1 },
-    ).lean();
-    if (!config) {
-      throw new AppError(400, "Business shipping settings not found");
-    }
+    const { shippingType, rideType, zoneId, distanceInKM, originState, destinationState, country, city } = params;
 
-    const { pricePerKm, minimumCharge, shippingSettings } = config;
-
-    if (shippingSettings === "distance-based") {
-      if (!distanceInKM) {
-        throw new AppError(
-          400,
-          "distanceInKM must be provided for distance-based shipping settings",
-        );
+    if (shippingType === 'local') {
+      if (zoneId) {
+        const zone = await BusinessShippingZone.findOne({
+          _id: zoneId,
+          businessId,
+          shippingType: 'local',
+        });
+        if (!zone) throw new AppError(400, "No local shipping zone found");
+        const entry = zone.pricing.find((p) => p.rideType === rideType);
+        if (!entry) throw new AppError(400, `No pricing for ride type '${rideType}' in this zone`);
+        return entry.amount;
       }
-      return Math.max(distanceInKM * pricePerKm!, minimumCharge!);
-    }
 
-    if (shippingSettings === "zone-based") {
-      if (!zoneId) {
-        throw new AppError(
-          400,
-          "zoneId must be provided for zone-based shipping settings",
-        );
+      if (distanceInKM) {
+        const config = await BusinessConfiguration.findOne(
+          { businessId },
+          { pricePerKm: 1, minimumCharge: 1, rideTypeConfig: 1 },
+        ).lean();
+        if (!config) throw new AppError(400, "Business shipping settings not found");
+
+        const rideTypeConfig = config.rideTypeConfig?.find((r) => r.type === rideType && r.isEnabled);
+        if (rideTypeConfig) {
+          return Math.max(distanceInKM * rideTypeConfig.pricePerKm, rideTypeConfig.baseAmount);
+        }
+        return Math.max(distanceInKM * config.pricePerKm!, config.minimumCharge!);
       }
-      const zone = await BusinessShippingZone.findOne(
-        { _id: zoneId, businessId },
-        { amount: 1 },
-      );
-      if (!zone) throw new AppError(400, "No shipping zone found");
-      return zone.amount;
+
+      throw new AppError(400, "Either zoneId or distanceInKM must be provided for local shipping");
     }
 
-    throw new AppError(400, "Invalid shipping settings for this business");
+    if (shippingType === 'inter-state') {
+      if (!originState || !destinationState) {
+        throw new AppError(400, "originState and destinationState are required for inter-state shipping");
+      }
+      const zone = await BusinessShippingZone.findOne({
+        businessId,
+        shippingType: 'inter-state',
+        states: { $regex: new RegExp(`^${originState}$`, 'i') },
+        destinationStates: { $regex: new RegExp(`^${destinationState}$`, 'i') },
+      });
+      if (!zone) throw new AppError(400, "No inter-state zone found for this route");
+      const entry = zone.pricing.find((p) => p.rideType === rideType);
+      if (!entry) throw new AppError(400, `No pricing for ride type '${rideType}' in this inter-state zone`);
+      return entry.amount;
+    }
+
+    if (shippingType === 'international') {
+      if (!country) {
+        throw new AppError(400, "country is required for international shipping");
+      }
+      const zoneQuery: any = {
+        businessId,
+        shippingType: 'international',
+        countries: { $regex: new RegExp(`^${country}$`, 'i') },
+      };
+      if (city) {
+        zoneQuery.$or = [
+          { cities: { $size: 0 } },
+          { cities: { $regex: new RegExp(`^${city}$`, 'i') } },
+        ];
+      }
+      const zone = await BusinessShippingZone.findOne(zoneQuery);
+      if (!zone) throw new AppError(400, "No international zone found for this destination");
+      const entry = zone.pricing.find((p) => p.rideType === rideType);
+      if (!entry) throw new AppError(400, `No pricing for ride type '${rideType}' in this international zone`);
+      return entry.amount;
+    }
+
+    throw new AppError(400, "Invalid shipping type");
   }
 }

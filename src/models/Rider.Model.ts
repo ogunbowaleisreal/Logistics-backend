@@ -7,6 +7,7 @@ interface IRider extends Document {
   dailyCapacity: number;
   totalDeliveries?: number;
   todaysRideCount?: number;
+  rideType?: 'bike' | 'bus_car' | 'pickup' | 'truck';
   status?: string;
   isDeleted?: boolean;
   __v?: number;
@@ -24,6 +25,7 @@ const RiderSchema = new Schema<IRider>(
     dailyCapacity: { type: Number, required: true, min: 0 },
     totalDeliveries: { type: Number, default: 0 },
     todaysRideCount: { type: Number, default: 0, min: 0 },
+    rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"] },
     status: { type: String, enum: ["active", "suspended"], default: "active" },
     isDeleted: { type: Boolean, default: false },
   },

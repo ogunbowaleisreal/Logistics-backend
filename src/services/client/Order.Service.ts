@@ -1,5 +1,6 @@
 import { Order } from "../../models/Order.Model";
 import { ShippingService } from "../business/Shipping.Services";
+import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { IOrderPayload } from "../../utilities/Interfaces";
 import ImageKit from "imagekit";
@@ -24,25 +25,42 @@ export class OrderService {
       slug,
       zoneId,
       distanceInKM,
+      rideType,
+      shippingType = 'local',
+      originState,
       orderInformation,
       personnelInformation,
     } = payload;
     const businessId = await resolveBusinessIdFromSlug(slug);
 
-    let calculatedShippingFee: number;
-    if (distanceInKM) {
-      calculatedShippingFee = await shippingService.calculateShippingFee(
-        businessId,
-        { distanceInKM },
-      );
-    } else if (zoneId) {
-      calculatedShippingFee = await shippingService.calculateShippingFee(
-        businessId,
-        { zoneId },
-      );
-    } else {
-      throw new AppError(400, "Either distanceInKM or zoneId must be provided");
+    const config = await BusinessConfiguration.findOne(
+      { businessId },
+      { shippingRegion: 1 },
+    ).lean();
+
+    const region = config?.shippingRegion ?? 'local';
+
+    if (shippingType === 'inter-state' && region === 'local') {
+      throw new AppError(400, "Inter-state shipping is not enabled for this business");
     }
+    if (shippingType === 'international' && region !== 'international') {
+      throw new AppError(400, "International shipping is not enabled for this business");
+    }
+
+    if (!rideType) {
+      throw new AppError(400, "rideType is required");
+    }
+
+    const calculatedShippingFee = await shippingService.calculateFee(businessId, {
+      shippingType,
+      rideType,
+      zoneId,
+      distanceInKM,
+      originState,
+      destinationState: orderInformation.dropoffLocation.state,
+      country: orderInformation.dropoffLocation.country,
+      city: orderInformation.dropoffLocation.city,
+    });
 
     const { amount, serviceFee, VAT, totalAmount } =
       await this.computeOrderFees({
@@ -53,6 +71,8 @@ export class OrderService {
       businessId,
       zoneId,
       distanceInKM,
+      rideType,
+      shippingType,
       orderInformation,
       personnelInformation: {
         sender: {

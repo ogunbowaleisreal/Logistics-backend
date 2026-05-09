@@ -1,9 +1,18 @@
 import Joi from "joi";
 
-const locationSchema = Joi.object({
+const pickupLocationSchema = Joi.object({
   address: Joi.string().trim().required(),
   latitude: Joi.number().required(),
   longitude: Joi.number().required(),
+}).required();
+
+const dropoffLocationSchema = Joi.object({
+  address: Joi.string().trim().required(),
+  latitude: Joi.number().required(),
+  longitude: Joi.number().required(),
+  state: Joi.string().optional(),
+  country: Joi.string().optional(),
+  city: Joi.string().optional(),
 }).required();
 
 const senderSchema = Joi.object({
@@ -21,9 +30,20 @@ export const createOrderSchema = Joi.object({
   slug: Joi.string().trim().required(),
   zoneId: Joi.string().trim().optional(),
   distanceInKM: Joi.number().positive().optional(),
+  rideType: Joi.string()
+    .valid("bike", "bus_car", "pickup", "truck")
+    .required(),
+  shippingType: Joi.string()
+    .valid("local", "inter-state", "international")
+    .default("local"),
+  originState: Joi.when("shippingType", {
+    is: "inter-state",
+    then: Joi.string().trim().required(),
+    otherwise: Joi.string().trim().optional(),
+  }),
   orderInformation: Joi.object({
-    pickupLocation: locationSchema,
-    dropoffLocation: locationSchema,
+    pickupLocation: pickupLocationSchema,
+    dropoffLocation: dropoffLocationSchema,
     items: Joi.array().items(Joi.string().trim().required()).min(1).required(),
     numberOfItems: Joi.number().required(),
     itemWeight: Joi.number().required(),
@@ -33,6 +53,28 @@ export const createOrderSchema = Joi.object({
     sender: senderSchema,
     receiver: receiverSchema,
   }).required(),
+}).custom((value, helpers) => {
+  const { shippingType } = value;
+  const { dropoffLocation } = value.orderInformation ?? {};
+
+  if (shippingType === "inter-state" && !dropoffLocation?.state) {
+    return helpers.error("any.invalid", {
+      message: "dropoffLocation.state is required for inter-state orders",
+    });
+  }
+  if (shippingType === "international") {
+    if (!dropoffLocation?.country) {
+      return helpers.error("any.invalid", {
+        message: "dropoffLocation.country is required for international orders",
+      });
+    }
+    if (!dropoffLocation?.city) {
+      return helpers.error("any.invalid", {
+        message: "dropoffLocation.city is required for international orders",
+      });
+    }
+  }
+  return value;
 });
 
 export const checkoutOrderSchema = Joi.object({
