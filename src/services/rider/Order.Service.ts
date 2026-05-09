@@ -5,6 +5,7 @@ import { paginateModel } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
 import { redisClient } from "../../config/cache";
 import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
+import { sendOrderStatusSMS } from "../../utilities/OrderStatusSMS";
 
 const RIDER_ALLOWED_TRANSITIONS: Record<string, string[]> = {
   paid: ["processing"],
@@ -76,6 +77,8 @@ export class OrderService {
       orderStatus: status,
       orderTrackingID: order.trackingID,
     });
+
+    void sendOrderStatusSMS(order, status);
 
     return order;
   }

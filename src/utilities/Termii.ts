@@ -78,6 +78,77 @@ class TermiiService {
     );
   }
 
+  public sendOrderPending(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Your SME order #${orderNumber} has been received and is awaiting confirmation. We'll update you shortly!`,
+    );
+  }
+
+  public sendOrderPaid(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Payment confirmed for SME order #${orderNumber}! We're getting your order ready.`,
+    );
+  }
+
+  public sendOrderCanceled(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Your SME order #${orderNumber} has been canceled. Contact support if you need assistance.`,
+    );
+  }
+
+  public sendOrderFailed(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Unfortunately, your SME order #${orderNumber} could not be completed. Please check your payment details or contact support.`,
+    );
+  }
+
+  public sendBusinessOrderPending(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `New order #${orderNumber} received. It is awaiting confirmation on your SME dashboard.`,
+    );
+  }
+
+  public sendBusinessOrderPaid(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Order #${orderNumber} payment confirmed. Please proceed to process this order.`,
+    );
+  }
+
+  public sendBusinessOrderProcessing(to: string, orderNumber: string): void {
+    void this.send(to, `Order #${orderNumber} is now being processed.`);
+  }
+
+  public sendBusinessOrderInTransit(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Order #${orderNumber} is in transit to the receiver.`,
+    );
+  }
+
+  public sendBusinessOrderDelivered(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Order #${orderNumber} has been successfully delivered.`,
+    );
+  }
+
+  public sendBusinessOrderCanceled(to: string, orderNumber: string): void {
+    void this.send(to, `Order #${orderNumber} has been canceled.`);
+  }
+
+  public sendBusinessOrderFailed(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Order #${orderNumber} could not be completed due to a payment failure.`,
+    );
+  }
+
   public sendRiderPickupNotification(to: string, trackingID: string): void {
     void this.send(
       to,

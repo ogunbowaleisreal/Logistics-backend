@@ -9,6 +9,7 @@ import { Rider } from "../../models/Rider.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
 import { redisClient } from "../../config/cache";
 import { termiiService } from "../../utilities/Termii";
+import { sendOrderStatusSMS } from "../../utilities/OrderStatusSMS";
 import logger from "../../../logger";
 import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
 
@@ -176,6 +177,8 @@ export class OrderService {
           status: order.status,
         });
       }
+
+      void sendOrderStatusSMS(order, status);
 
       if ((status === "delivered" || status === "canceled") && order.riderID) {
         void redisClient
