@@ -20,7 +20,7 @@ export class PaystackServices {
         {
           amount: roundedAmount,
           email: email,
-          billName: "SME Logistics Point Purchase",
+          billName: "SME Logistics",
           currency: "NGN",
           callback_url: paystackCallbackURI,
         },

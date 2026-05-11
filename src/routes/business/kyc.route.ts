@@ -5,7 +5,7 @@ import {
   submitCac,
   submitIdentification,
   submitRegistration,
-  verifyBVN,
+  // verifyBVN,
 } from "../../controllers/business/kyc.controller";
 import { businessVerification } from "../../middlewares/authorization.middleware";
 
@@ -17,6 +17,6 @@ router.route("/").get(getKyc);
 router.put("/registration", submitRegistration);
 router.put("/identification", submitIdentification);
 router.put("/cac", submitCac);
-router.route("/bvn").post(submitBvn).patch(verifyBVN);
+router.route("/bvn").post(submitBvn);
 
 export default router;

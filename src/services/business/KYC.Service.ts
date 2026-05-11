@@ -5,6 +5,7 @@ import AppError from "../../utilities/ErrorHandler";
 import { Encryption } from "../../utilities/Encryption";
 import { SafeHaven } from "../../utilities/SafeHaven";
 import logger from "../../../logger";
+import { Monnify } from "../../utilities/Monnify";
 
 type KycFieldStatus = "pending" | "verified" | "rejected";
 type IdentificationType =
@@ -29,12 +30,16 @@ interface CacPayload {
 }
 
 interface BvnPayload {
-  number: string;
+  bvn: string;
+  name: string;
+  dateOfBirth: string;
+  mobileNo: string;
 }
 
 export class KYCService {
   private readonly encryption = new Encryption();
   private readonly safeHaven = new SafeHaven();
+  private readonly monnify = new Monnify();
 
   public async submitRegistration(
     businessId: string,
@@ -98,74 +103,82 @@ export class KYCService {
   }
 
   public async submitBvn(businessId: string, body: BvnPayload) {
+    const { bvn, name, dateOfBirth, mobileNo } = body;
     const kyc = await this.getOrCreateKycRecord(businessId);
-    if (kyc.bvn.status == "verified") {
+    if (kyc.bvn == "verified") {
       throw new AppError(
         400,
         "BVN has already been verified for this business",
       );
     }
 
-    const verificationResponse = await this.safeHaven.initiateVerification(
-      body.number,
-    );
-    if (verificationResponse.statusCode != 200) {
-      logger.error(
-        "Error initiating BVN verification:",
-        verificationResponse.message,
-      );
-      throw new Error("Error initiating BVN verification");
-    }
-
-    kyc.bvn = {
-      identityId: verificationResponse.data._id,
-      document: this.encryption.encrypt(body.number),
-      status: "pending",
-    };
-
-    await kyc.save();
-
-    return this.toResponse(kyc);
-  }
-
-  public async verifyBVN(businessId: string, payload: { otp: string }) {
-    const { otp } = payload;
-    const kyc = await this.getOrCreateKycRecord(businessId);
-
-    const { identityId, status } = kyc.bvn;
-
-    if (status == "verified") {
-      throw new AppError(
-        400,
-        "BVN has already been verified for this business",
-      );
-    }
-
-    if (!identityId) {
-      throw new AppError(
-        400,
-        "BVN verification has not been initiated for this business",
-      );
-    }
-
-    const verificationResponse = await this.safeHaven.validateVerification({
-      identityId,
-      otp,
+    const { responseBody } = await this.monnify.verifyBVN({
+      bvn,
+      name,
+      dateOfBirth,
+      mobileNo,
     });
 
-    if (verificationResponse.statusCode == 200) {
-      const status = verificationResponse.data.status;
-      kyc.bvn.status = status === "SUCCESS" ? "verified" : "rejected";
+    const {
+      bvn: responseBVN,
+      name: responseName,
+      dateOfBirth: responseDateOfBirth,
+      mobileNo: responseMobileNo,
+    } = responseBody;
+
+    if (
+      bvn === responseBVN &&
+      responseName.matchPercentage >= 50 &&
+      responseDateOfBirth !== "NO_MATCH"
+    ) {
+      kyc.bvn = "verified";
     } else {
-      kyc.bvn.status = "rejected";
+      kyc.bvn = "rejected";
     }
 
     await kyc.save();
 
-    await this.syncKycStatus(businessId, kyc);
-
     return this.toResponse(kyc);
   }
+
+  // public async verifyBVN(businessId: string, payload: { otp: string }) {
+  //   const { otp } = payload;
+  //   const kyc = await this.getOrCreateKycRecord(businessId);
+
+  //   const { identityId, status } = kyc.bvn;
+
+  //   if (status == "verified") {
+  //     throw new AppError(
+  //       400,
+  //       "BVN has already been verified for this business",
+  //     );
+  //   }
+
+  //   if (!identityId) {
+  //     throw new AppError(
+  //       400,
+  //       "BVN verification has not been initiated for this business",
+  //     );
+  //   }
+
+  //   const verificationResponse = await this.safeHaven.validateVerification({
+  //     identityId,
+  //     otp,
+  //   });
+
+  //   if (verificationResponse.statusCode == 200) {
+  //     const status = verificationResponse.data.status;
+  //     kyc.bvn.status = status === "SUCCESS" ? "verified" : "rejected";
+  //   } else {
+  //     kyc.bvn.status = "rejected";
+  //   }
+
+  //   await kyc.save();
+
+  //   await this.syncKycStatus(businessId, kyc);
+
+  //   return this.toResponse(kyc);
+  // }
 
   public async getKyc(businessId: string) {
     const kyc = await BusinessKYC.findOne({ businessId, isDeleted: false });
@@ -238,10 +251,10 @@ export class KYCService {
     const allVerified =
       kyc.identification?.status === "verified" &&
       kyc.cac?.status === "verified" &&
-      kyc.bvn?.status === "verified";
+      kyc.bvn === "verified";
 
     const hasSubmission = Boolean(
-      kyc.identification?.document || kyc.cac?.document || kyc.bvn?.document,
+      kyc.identification?.document || kyc.cac?.document || kyc.bvn,
     );
 
     const status: BusinessKycOverallStatus = allVerified
