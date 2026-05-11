@@ -18,8 +18,11 @@ export class ShippingService {
     payload: {
       name: string;
       states: string[];
-      shippingType?: 'local' | 'inter-state' | 'international';
-      pricing: { rideType: 'bike' | 'bus_car' | 'pickup' | 'truck'; amount: number }[];
+      shippingType?: "local" | "inter-state" | "international";
+      pricing: {
+        rideType: "bike" | "bus_car" | "pickup" | "truck";
+        amount: number;
+      }[];
       destinationStates?: string[];
       countries?: string[];
       cities?: string[];
@@ -33,7 +36,10 @@ export class ShippingService {
     return await BusinessShippingZone.create({ ...payload, businessId });
   }
 
-  public async getZones(businessId: string, filter: { shippingType?: string } = {}) {
+  public async getZones(
+    businessId: string,
+    filter: { shippingType?: string } = {},
+  ) {
     const query: any = { businessId };
     if (filter.shippingType) query.shippingType = filter.shippingType;
     return await BusinessShippingZone.find(query).sort({ name: 1 });
@@ -45,8 +51,11 @@ export class ShippingService {
     payload: {
       name?: string;
       states?: string[];
-      shippingType?: 'local' | 'inter-state' | 'international';
-      pricing?: { rideType: 'bike' | 'bus_car' | 'pickup' | 'truck'; amount: number }[];
+      shippingType?: "local" | "inter-state" | "international";
+      pricing?: {
+        rideType: "bike" | "bus_car" | "pickup" | "truck";
+        amount: number;
+      }[];
       destinationStates?: string[];
       countries?: string[];
       cities?: string[];
@@ -59,9 +68,11 @@ export class ShippingService {
     if (!zone) throw new AppError(404, "Zone not found");
     if (payload.name !== undefined) zone.name = payload.name;
     if (payload.states !== undefined) zone.states = payload.states;
-    if (payload.shippingType !== undefined) zone.shippingType = payload.shippingType;
+    if (payload.shippingType !== undefined)
+      zone.shippingType = payload.shippingType;
     if (payload.pricing !== undefined) zone.pricing = payload.pricing;
-    if (payload.destinationStates !== undefined) zone.destinationStates = payload.destinationStates;
+    if (payload.destinationStates !== undefined)
+      zone.destinationStates = payload.destinationStates;
     if (payload.countries !== undefined) zone.countries = payload.countries;
     if (payload.cities !== undefined) zone.cities = payload.cities;
     return await zone.save();
@@ -128,8 +139,8 @@ export class ShippingService {
   public async calculateFee(
     businessId: string,
     params: {
-      shippingType: 'local' | 'inter-state' | 'international';
-      rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+      shippingType: "local" | "inter-state" | "international";
+      rideType: "bike" | "bus_car" | "pickup" | "truck";
       zoneId?: string;
       distanceInKM?: number;
       originState?: string;
@@ -138,73 +149,118 @@ export class ShippingService {
       city?: string;
     },
   ): Promise<number> {
-    const { shippingType, rideType, zoneId, distanceInKM, originState, destinationState, country, city } = params;
+    const {
+      shippingType,
+      rideType,
+      zoneId,
+      distanceInKM,
+      originState,
+      destinationState,
+      country,
+      city,
+    } = params;
 
-    if (shippingType === 'local') {
+    if (shippingType === "local") {
       if (zoneId) {
         const zone = await BusinessShippingZone.findOne({
           _id: zoneId,
           businessId,
-          shippingType: 'local',
+          shippingType: "local",
         });
         if (!zone) throw new AppError(400, "No local shipping zone found");
         const entry = zone.pricing.find((p) => p.rideType === rideType);
-        if (!entry) throw new AppError(400, `No pricing for ride type '${rideType}' in this zone`);
+        if (!entry)
+          throw new AppError(
+            400,
+            `No pricing for ride type '${rideType}' in this zone`,
+          );
         return entry.amount;
       }
 
       if (distanceInKM) {
         const config = await BusinessConfiguration.findOne(
           { businessId },
-          { pricePerKm: 1, minimumCharge: 1, rideTypeConfig: 1 },
+          { rideTypeConfig: 1 },
         ).lean();
-        if (!config) throw new AppError(400, "Business shipping settings not found");
+        if (!config)
+          throw new AppError(400, "Business shipping settings not found");
 
-        const rideTypeConfig = config.rideTypeConfig?.find((r) => r.type === rideType && r.isEnabled);
+        const rideTypeConfig = config.rideTypeConfig?.find(
+          (r) => r.type === rideType && r.isEnabled,
+        );
         if (rideTypeConfig) {
-          return Math.max(distanceInKM * rideTypeConfig.pricePerKm, rideTypeConfig.baseAmount);
+          return Math.max(
+            distanceInKM * rideTypeConfig.pricePerKm,
+            rideTypeConfig.baseAmount,
+          );
+        } else {
+          throw new AppError(
+            400,
+            `Ride type '${rideType}' is not enabled for this business`,
+          );
         }
-        return Math.max(distanceInKM * config.pricePerKm!, config.minimumCharge!);
       }
 
-      throw new AppError(400, "Either zoneId or distanceInKM must be provided for local shipping");
+      throw new AppError(
+        400,
+        "Either zoneId or distanceInKM must be provided for local shipping",
+      );
     }
 
-    if (shippingType === 'inter-state') {
+    if (shippingType === "inter-state") {
       if (!originState || !destinationState) {
-        throw new AppError(400, "originState and destinationState are required for inter-state shipping");
+        throw new AppError(
+          400,
+          "originState and destinationState are required for inter-state shipping",
+        );
       }
       const zone = await BusinessShippingZone.findOne({
         businessId,
-        shippingType: 'inter-state',
-        states: { $regex: new RegExp(`^${originState}$`, 'i') },
-        destinationStates: { $regex: new RegExp(`^${destinationState}$`, 'i') },
+        shippingType: "inter-state",
+        states: { $regex: new RegExp(`^${originState}$`, "i") },
+        destinationStates: { $regex: new RegExp(`^${destinationState}$`, "i") },
       });
-      if (!zone) throw new AppError(400, "No inter-state zone found for this route");
+      if (!zone)
+        throw new AppError(400, "No inter-state zone found for this route");
       const entry = zone.pricing.find((p) => p.rideType === rideType);
-      if (!entry) throw new AppError(400, `No pricing for ride type '${rideType}' in this inter-state zone`);
+      if (!entry)
+        throw new AppError(
+          400,
+          `No pricing for ride type '${rideType}' in this inter-state zone`,
+        );
       return entry.amount;
     }
 
-    if (shippingType === 'international') {
+    if (shippingType === "international") {
       if (!country) {
-        throw new AppError(400, "country is required for international shipping");
+        throw new AppError(
+          400,
+          "country is required for international shipping",
+        );
       }
       const zoneQuery: any = {
         businessId,
-        shippingType: 'international',
-        countries: { $regex: new RegExp(`^${country}$`, 'i') },
+        shippingType: "international",
+        countries: { $regex: new RegExp(`^${country}$`, "i") },
       };
       if (city) {
         zoneQuery.$or = [
           { cities: { $size: 0 } },
-          { cities: { $regex: new RegExp(`^${city}$`, 'i') } },
+          { cities: { $regex: new RegExp(`^${city}$`, "i") } },
         ];
       }
       const zone = await BusinessShippingZone.findOne(zoneQuery);
-      if (!zone) throw new AppError(400, "No international zone found for this destination");
+      if (!zone)
+        throw new AppError(
+          400,
+          "No international zone found for this destination",
+        );
       const entry = zone.pricing.find((p) => p.rideType === rideType);
-      if (!entry) throw new AppError(400, `No pricing for ride type '${rideType}' in this international zone`);
+      if (!entry)
+        throw new AppError(
+          400,
+          `No pricing for ride type '${rideType}' in this international zone`,
+        );
       return entry.amount;
     }
 

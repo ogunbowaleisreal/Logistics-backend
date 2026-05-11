@@ -2,11 +2,9 @@ import { Document, model, Schema } from "mongoose";
 
 export interface IBusinessConfiguration extends Document {
   businessId: Schema.Types.ObjectId;
-  pricePerKm?: number;
-  minimumCharge?: number;
   shippingSettings?: string;
   rideTypeConfig?: {
-    type: "bike" | "bus_car" | "pickup" | "truck";
+    type: "bike" | "bus_car" | "pickup" | "truck" | "cargo";
     isEnabled: boolean;
     pricePerKm: number;
     baseAmount: number;
@@ -22,8 +20,6 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
       ref: "Business",
       required: true,
     },
-    pricePerKm: { type: Number, default: 500 },
-    minimumCharge: { type: Number, default: 2000 },
     shippingSettings: {
       type: String,
       enum: ["distance-based", "zone-based"],
@@ -33,7 +29,7 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
       {
         type: {
           type: String,
-          enum: ["bike", "bus_car", "pickup", "truck"],
+          enum: ["bike", "bus_car", "pickup", "truck", "cargo"],
           required: true,
         },
         isEnabled: { type: Boolean, default: false },

@@ -13,10 +13,10 @@ export class BusinessConfigurationService {
   }
 
   public async updateConfiguration(businessId: string, payload: any) {
-    const { pricePerKm, minimumCharge, shippingSettings, rideTypeConfig, shippingRegion } = payload;
+    const { shippingSettings, rideTypeConfig, shippingRegion } = payload;
     const update: any = {};
-    if (pricePerKm !== undefined) update.pricePerKm = pricePerKm;
-    if (minimumCharge !== undefined) update.minimumCharge = minimumCharge;
+    // if (pricePerKm !== undefined) update.pricePerKm = pricePerKm;
+    // if (minimumCharge !== undefined) update.minimumCharge = minimumCharge;
     if (shippingSettings !== undefined) update.shippingSettings = shippingSettings;
     if (rideTypeConfig !== undefined) update.rideTypeConfig = rideTypeConfig;
     if (shippingRegion !== undefined) update.shippingRegion = shippingRegion;
