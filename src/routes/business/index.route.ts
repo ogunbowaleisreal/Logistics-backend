@@ -12,10 +12,12 @@ import configurationRoute from "./configuration.route";
 import themeRoute from "./theme.route";
 import shippingRoute from "./shipping.route";
 import kycRoute from "./kyc.route";
+import businessProfileRoute from "./businessProfile.route";
 
 const router = Router();
 
 router.use("/auth", businessAuthRoute);
+router.use("/profile", businessProfileRoute);
 router.use("/staff/auth", staffAuthRoute);
 router.use("/staff", staffRoute);
 router.use("/roles", staffRoleRoute);
