@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   login,
   verifyLoginOTP,
@@ -8,7 +8,7 @@ import {
   logout,
 } from "../../controllers/business/staffAuth.controller";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/login", login);
 router.patch("/verify-login-otp", verifyLoginOTP);

@@ -1,4 +1,4 @@
-import express from "express";
+import {Router} from "express";
 import {
   adminDashboard,
   deleteAdmin,
@@ -19,7 +19,7 @@ import {
 } from "../../middlewares/authorization.middleware";
 import { createAdmin } from "../../controllers/admin/authentication.controller";
 
-const router = express.Router();
+const router = Router();
 
 ////////////////////////////////// PROFILE ///////////////////////////////////////////////
 router
@@ -55,7 +55,7 @@ router
 router.get(
   "/image-upload-signature",
   adminVerification,
-  generateImageUploadSignature
+  generateImageUploadSignature,
 );
 
 router.get("/dashboard", adminVerification, adminDashboard);

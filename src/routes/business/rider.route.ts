@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   createRider,
   deleteRider,
@@ -7,15 +7,26 @@ import {
 } from "../../controllers/business/rider.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 import { validate } from "../../middlewares/validation.middleware";
-import { createRiderSchema, updateRiderSchema } from "../../validators/rider.validator";
+import {
+  createRiderSchema,
+  updateRiderSchema,
+} from "../../validators/rider.validator";
 
-const router = express.Router();
+const router = Router();
 
 router
   .route("/")
-  .post(staffRoleVerification("CRTRIDER"), validate(createRiderSchema, "body"), createRider)
+  .post(
+    staffRoleVerification("CRTRIDER"),
+    validate(createRiderSchema, "body"),
+    createRider,
+  )
   .get(staffRoleVerification("GETRIDERS"), getRiders)
-  .patch(staffRoleVerification("UPTRIDER"), validate(updateRiderSchema, "body"), updateRider)
+  .patch(
+    staffRoleVerification("UPTRIDER"),
+    validate(updateRiderSchema, "body"),
+    updateRider,
+  )
   .delete(staffRoleVerification("DELRIDER"), deleteRider);
 
 export default router;

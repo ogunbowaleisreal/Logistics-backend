@@ -1,8 +1,8 @@
-import express from "express";
+import { Router } from "express";
 import { riderVerification } from "../../middlewares/authorization.middleware";
 import { getStats } from "../../controllers/rider/dashboard.controller";
 
-const router = express.Router();
+const router = Router();
 
 router.get("/stats", riderVerification, getStats);
 

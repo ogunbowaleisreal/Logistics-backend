@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   getConfiguration,
   updateConfiguration,
@@ -14,12 +14,16 @@ import {
 import { validate } from "../../middlewares/validation.middleware";
 import { updateConfigurationSchema } from "../../validators/businessConfiguration.validator";
 
-const router = express.Router();
+const router = Router();
 
 router
   .route("/")
   .get(staffRoleVerification("GETCFG"), getConfiguration)
-  .put(staffRoleVerification("UPTCFG"), validate(updateConfigurationSchema, "body"), updateConfiguration);
+  .put(
+    staffRoleVerification("UPTCFG"),
+    validate(updateConfigurationSchema, "body"),
+    updateConfiguration,
+  );
 
 router.patch("/social-links", businessVerification, updateSocialLinks);
 router.patch("/support", businessVerification, updateSupport);

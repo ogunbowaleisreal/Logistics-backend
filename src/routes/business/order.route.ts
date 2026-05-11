@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   changeRider,
   getOrders,
@@ -6,7 +6,7 @@ import {
 } from "../../controllers/business/order.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
-const router = express.Router();
+const router = Router();
 
 router
   .route("/")

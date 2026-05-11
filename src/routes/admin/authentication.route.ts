@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   createSuperAdmin,
   createAdmin,
@@ -12,7 +12,7 @@ import {
 } from "../../controllers/admin/authentication.controller";
 import { roleVerification } from "../../middlewares/authorization.middleware";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/super-admin", createSuperAdmin);
 

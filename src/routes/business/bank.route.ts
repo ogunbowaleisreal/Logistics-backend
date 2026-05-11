@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   createBank,
   deleteBank,
@@ -9,7 +9,7 @@ import {
 } from "../../controllers/business/bank.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
-const router = express.Router();
+const router = Router();
 
 router
   .route("/")

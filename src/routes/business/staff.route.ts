@@ -1,8 +1,16 @@
-import express from "express";
-import { createStaff, getStaff, updateStaff, deleteStaff } from "../../controllers/business/staff.controller";
-import { businessVerification, staffRoleVerification } from "../../middlewares/authorization.middleware";
+import { Router } from "express";
+import {
+  createStaff,
+  getStaff,
+  updateStaff,
+  deleteStaff,
+} from "../../controllers/business/staff.controller";
+import {
+  businessVerification,
+  staffRoleVerification,
+} from "../../middlewares/authorization.middleware";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/", businessVerification, createStaff);
 router.get("/", businessVerification, getStaff);

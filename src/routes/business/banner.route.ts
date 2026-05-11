@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   createBanner,
   deleteBanner,
@@ -8,7 +8,7 @@ import {
 } from "../../controllers/business/banner.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
-const router = express.Router();
+const router = Router();
 
 router
   .route("/")

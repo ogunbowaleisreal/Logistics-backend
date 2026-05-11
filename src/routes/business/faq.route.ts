@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   createFAQ,
   getFAQs,
@@ -7,7 +7,7 @@ import {
 } from "../../controllers/business/faq.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
-const router = express.Router();
+const router = Router();
 
 router
   .route("/")

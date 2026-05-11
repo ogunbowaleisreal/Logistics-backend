@@ -1,4 +1,4 @@
-import express from "express";
+import { Router } from "express";
 import {
   register,
   verifyEmail,
@@ -11,7 +11,7 @@ import {
   logout,
 } from "../../controllers/business/authentication.controller";
 
-const router = express.Router();
+const router = Router();
 
 router.post("/register", register);
 router.post("/verify-email", verifyEmail);
