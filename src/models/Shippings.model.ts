@@ -1,5 +1,13 @@
 import { Schema, Document, model, Types } from "mongoose";
 
+export interface IWeightBracket {
+  _id?: Types.ObjectId;
+  rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+  minKg: number;
+  maxKg: number;
+  amount: number;
+}
+
 interface IBusinessShippingZone extends Document {
   businessId: Types.ObjectId;
   name: string;
@@ -9,6 +17,7 @@ interface IBusinessShippingZone extends Document {
     rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
     amount: number;
   }[];
+  weightBrackets: IWeightBracket[];
   amount?: number;
   destinationStates?: string[];
   countries?: string[];
@@ -31,6 +40,14 @@ const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
   pricing: [
     {
       rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"], required: true },
+      amount: { type: Number, required: true },
+    },
+  ],
+  weightBrackets: [
+    {
+      rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"], required: true },
+      minKg: { type: Number, required: true },
+      maxKg: { type: Number, required: true },
       amount: { type: Number, required: true },
     },
   ],

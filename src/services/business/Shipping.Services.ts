@@ -1,3 +1,4 @@
+import { Types } from "mongoose";
 import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
 import {
   // BusinessShippingRate, // Removed: weight-based rates replaced by flat zone amount
@@ -88,6 +89,87 @@ export class ShippingService {
     return zone;
   }
 
+  public async addWeightBracket(
+    businessId: string,
+    zoneId: string,
+    payload: {
+      rideType: "bike" | "bus_car" | "pickup" | "truck";
+      minKg: number;
+      maxKg: number;
+      amount: number;
+    },
+  ) {
+    const zone = await BusinessShippingZone.findOneAndUpdate(
+      { _id: zoneId, businessId },
+      { $push: { weightBrackets: payload } },
+      { new: true },
+    );
+    if (!zone) throw new AppError(404, "Zone not found");
+    return zone.weightBrackets;
+  }
+
+  public async getWeightBrackets(businessId: string, zoneId: string) {
+    const zone = await BusinessShippingZone.findOne(
+      { _id: zoneId, businessId },
+      { weightBrackets: 1 },
+    ).lean();
+    if (!zone) throw new AppError(404, "Zone not found");
+    return zone.weightBrackets ?? [];
+  }
+
+  public async updateWeightBracket(
+    businessId: string,
+    zoneId: string,
+    bracketId: string,
+    payload: {
+      rideType?: "bike" | "bus_car" | "pickup" | "truck";
+      minKg?: number;
+      maxKg?: number;
+      amount?: number;
+    },
+  ) {
+    const setPayload: Record<string, any> = {};
+    if (payload.rideType !== undefined)
+      setPayload["weightBrackets.$.rideType"] = payload.rideType;
+    if (payload.minKg !== undefined)
+      setPayload["weightBrackets.$.minKg"] = payload.minKg;
+    if (payload.maxKg !== undefined)
+      setPayload["weightBrackets.$.maxKg"] = payload.maxKg;
+    if (payload.amount !== undefined)
+      setPayload["weightBrackets.$.amount"] = payload.amount;
+
+    const zone = await BusinessShippingZone.findOneAndUpdate(
+      {
+        _id: zoneId,
+        businessId,
+        "weightBrackets._id": new Types.ObjectId(bracketId),
+      },
+      { $set: setPayload },
+      { new: true },
+    );
+    if (!zone) throw new AppError(404, "Zone or weight bracket not found");
+    return zone.weightBrackets;
+  }
+
+  public async deleteWeightBracket(
+    businessId: string,
+    zoneId: string,
+    bracketId: string,
+  ) {
+    const exists = await BusinessShippingZone.exists({
+      _id: zoneId,
+      businessId,
+      "weightBrackets._id": new Types.ObjectId(bracketId),
+    });
+    if (!exists) throw new AppError(404, "Zone or weight bracket not found");
+    const zone = await BusinessShippingZone.findOneAndUpdate(
+      { _id: zoneId, businessId },
+      { $pull: { weightBrackets: { _id: new Types.ObjectId(bracketId) } } },
+      { new: true },
+    );
+    return zone!.weightBrackets;
+  }
+
   // public async upsertRates(
   //   businessId: string,
   //   payload: { zoneId: string; rates: IRateInput[] },
@@ -136,6 +218,35 @@ export class ShippingService {
   //   return rate;
   // }
 
+  private resolveZoneFee(
+    zone: {
+      pricing: { rideType: string; amount: number }[];
+      weightBrackets?: {
+        rideType: string;
+        minKg: number;
+        maxKg: number;
+        amount: number;
+      }[];
+    },
+    rideType: string,
+    weightKg?: number,
+  ): number {
+    if (weightKg !== undefined && zone.weightBrackets?.length) {
+      const bracket = zone.weightBrackets.find(
+        (b) =>
+          b.rideType === rideType && weightKg >= b.minKg && weightKg <= b.maxKg,
+      );
+      if (bracket) return bracket.amount;
+    }
+    const entry = zone.pricing.find((p) => p.rideType === rideType);
+    if (!entry)
+      throw new AppError(
+        400,
+        `No pricing for ride type '${rideType}' in this zone`,
+      );
+    return entry.amount;
+  }
+
   public async calculateFee(
     businessId: string,
     params: {
@@ -143,6 +254,7 @@ export class ShippingService {
       rideType: "bike" | "bus_car" | "pickup" | "truck";
       zoneId?: string;
       distanceInKM?: number;
+      weightKg?: number;
       originState?: string;
       destinationState?: string;
       country?: string;
@@ -154,6 +266,7 @@ export class ShippingService {
       rideType,
       zoneId,
       distanceInKM,
+      weightKg,
       originState,
       destinationState,
       country,
@@ -168,13 +281,7 @@ export class ShippingService {
           shippingType: "local",
         });
         if (!zone) throw new AppError(400, "No local shipping zone found");
-        const entry = zone.pricing.find((p) => p.rideType === rideType);
-        if (!entry)
-          throw new AppError(
-            400,
-            `No pricing for ride type '${rideType}' in this zone`,
-          );
-        return entry.amount;
+        return this.resolveZoneFee(zone, rideType, weightKg);
       }
 
       if (distanceInKM) {
@@ -222,13 +329,7 @@ export class ShippingService {
       });
       if (!zone)
         throw new AppError(400, "No inter-state zone found for this route");
-      const entry = zone.pricing.find((p) => p.rideType === rideType);
-      if (!entry)
-        throw new AppError(
-          400,
-          `No pricing for ride type '${rideType}' in this inter-state zone`,
-        );
-      return entry.amount;
+      return this.resolveZoneFee(zone, rideType, weightKg);
     }
 
     if (shippingType === "international") {
@@ -255,13 +356,7 @@ export class ShippingService {
           400,
           "No international zone found for this destination",
         );
-      const entry = zone.pricing.find((p) => p.rideType === rideType);
-      if (!entry)
-        throw new AppError(
-          400,
-          `No pricing for ride type '${rideType}' in this international zone`,
-        );
-      return entry.amount;
+      return this.resolveZoneFee(zone, rideType, weightKg);
     }
 
     throw new AppError(400, "Invalid shipping type");

@@ -36,73 +36,80 @@ class TermiiService {
     }
   }
 
-  public sendOrderDelivered(to: string, orderNumber: string): void {
+  public sendOrderPaid(to: string, senderName: string, orderID: string): void {
     void this.send(
       to,
-      `Yay! Your SME order #${orderNumber} has been delivered. We hope you love your products! Let us know how it goes`,
+      `Hi ${senderName}, payment for Order #${orderID} was confirmed. Your delivery request is queued for processing. Thank you.`,
     );
   }
 
-  public sendOrderInTransit(to: string, orderNumber: string): void {
+  public sendOrderProcessing(
+    to: string,
+    senderName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `Good news! Your SME order #${orderNumber} is in transit and on its way to you. Get ready to glow — it's almost there! `,
+      `Hi ${senderName}, your rider is on the way for pickup on Order #${orderID}. Please stay available for smooth collection.`,
     );
   }
 
-  public sendOrderShipped(to: string, orderNumber: string): void {
+  public sendOrderInTransit(
+    to: string,
+    senderName: string,
+    receiverName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `Your SME order #${orderNumber} has shipped! It's officially on its way — we'll let you know once it's closer to your doorstep.`,
+      `Hi ${senderName}, Order #${orderID} has been picked up and is currently on the way to the ${receiverName}. We'll keep you updated.`,
     );
   }
 
-  public sendOrderDeclined(to: string, orderNumber: string): void {
+  public sendOrderDelivered(
+    to: string,
+    senderName: string,
+    receiverName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `Unfortunately, order #${orderNumber} couldn't be completed. Kindly check your payment method or reach out — we're happy to assist!`,
+      `Hi ${senderName}, Order #${orderID} was successfully delivered to the ${receiverName}. Thank you for choosing our service.`,
     );
   }
 
-  public sendOrderConfirmed(to: string, orderNumber: string): void {
+  public sendOrderCanceled(
+    to: string,
+    senderName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `SME order #${orderNumber} has been confirmed! Everything's on track and we'll keep you posted as we move to shipping`,
+      `Hi ${senderName}, Order #${orderID} could not be processed at this time. Please contact support for assistance.`,
     );
   }
 
-  public sendOrderProcessing(to: string, orderNumber: string): void {
+  public sendReceiverInTransit(
+    to: string,
+    receiverName: string,
+    senderName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `Just a heads-up — your SME order #${orderNumber} is now being processed. We're prepping your skincare goodies with love!`,
+      `Hi ${receiverName}, ${senderName} sent you a package. Order #${orderID} is on the way. Please stay available to receive your delivery.`,
     );
   }
 
-  public sendOrderPending(to: string, orderNumber: string): void {
+  public sendReceiverDelivered(
+    to: string,
+    receiverName: string,
+    senderName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `Your SME order #${orderNumber} has been received and is awaiting confirmation. We'll update you shortly!`,
-    );
-  }
-
-  public sendOrderPaid(to: string, orderNumber: string): void {
-    void this.send(
-      to,
-      `Payment confirmed for SME order #${orderNumber}! We're getting your order ready.`,
-    );
-  }
-
-  public sendOrderCanceled(to: string, orderNumber: string): void {
-    void this.send(
-      to,
-      `Your SME order #${orderNumber} has been canceled. Contact support if you need assistance.`,
-    );
-  }
-
-  public sendOrderFailed(to: string, orderNumber: string): void {
-    void this.send(
-      to,
-      `Unfortunately, your SME order #${orderNumber} could not be completed. Please check your payment details or contact support.`,
+      `Hi ${receiverName}, your package from ${senderName} with Order #${orderID} was successfully delivered. Thank you.`,
     );
   }
 
@@ -149,10 +156,14 @@ class TermiiService {
     );
   }
 
-  public sendRiderPickupNotification(to: string, trackingID: string): void {
+  public sendRiderPickupNotification(
+    to: string,
+    riderName: string,
+    orderID: string,
+  ): void {
     void this.send(
       to,
-      `You have a new pickup assigned. Order #${trackingID}. Please check your dashboard for details.`,
+      `Hi ${riderName}, Order #${orderID} has been assigned to you for delivery. Please proceed to pickup location and begin fulfillment.`,
     );
   }
 

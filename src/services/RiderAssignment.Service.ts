@@ -52,6 +52,7 @@ export class RiderAssignmentService {
 
       void termiiService.sendRiderPickupNotification(
         rider.phone,
+        rider.name,
         order.trackingID,
       );
     } catch (error: any) {

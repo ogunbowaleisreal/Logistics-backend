@@ -75,6 +75,82 @@ export const deleteZone = async (
   }
 };
 
+export const addWeightBracket = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const brackets = await shippingService.addWeightBracket(
+      getBusinessId(req),
+      req.params.zoneId,
+      req.body,
+    );
+    return res
+      .status(201)
+      .json({ message: "Weight bracket added successfully", data: brackets });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const getWeightBrackets = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const brackets = await shippingService.getWeightBrackets(
+      getBusinessId(req),
+      req.params.zoneId,
+    );
+    return res
+      .status(200)
+      .json({ message: "Weight brackets fetched successfully", data: brackets });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const updateWeightBracket = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const brackets = await shippingService.updateWeightBracket(
+      getBusinessId(req),
+      req.params.zoneId,
+      req.params.bracketId,
+      req.body,
+    );
+    return res
+      .status(200)
+      .json({ message: "Weight bracket updated successfully", data: brackets });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const deleteWeightBracket = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const brackets = await shippingService.deleteWeightBracket(
+      getBusinessId(req),
+      req.params.zoneId,
+      req.params.bracketId,
+    );
+    return res
+      .status(200)
+      .json({ message: "Weight bracket deleted successfully", data: brackets });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 // Weight-based rate controllers removed — shipping fee is now a flat amount per zone.
 // export const upsertRates = async (
 //   req: ExtendedRequest | any,

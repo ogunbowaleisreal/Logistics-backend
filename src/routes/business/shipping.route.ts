@@ -5,9 +5,18 @@ import {
   getZones,
   updateZone,
   deleteZone,
+  addWeightBracket,
+  getWeightBrackets,
+  updateWeightBracket,
+  deleteWeightBracket,
 } from "../../controllers/business/shipping.controller";
 import { validate } from "../../middlewares/validation.middleware";
-import { createZoneSchema, updateZoneSchema } from "../../validators/shipping.validator";
+import {
+  createZoneSchema,
+  updateZoneSchema,
+  addWeightBracketSchema,
+  updateWeightBracketSchema,
+} from "../../validators/shipping.validator";
 
 const router = Router();
 
@@ -20,6 +29,16 @@ router
   .route("/zones/:zoneId")
   .put(staffRoleVerification("shipping"), validate(updateZoneSchema, "body"), updateZone)
   .delete(staffRoleVerification("shipping"), deleteZone);
+
+router
+  .route("/zones/:zoneId/weight-brackets")
+  .post(staffRoleVerification("shipping"), validate(addWeightBracketSchema, "body"), addWeightBracket)
+  .get(staffRoleVerification("shipping"), getWeightBrackets);
+
+router
+  .route("/zones/:zoneId/weight-brackets/:bracketId")
+  .put(staffRoleVerification("shipping"), validate(updateWeightBracketSchema, "body"), updateWeightBracket)
+  .delete(staffRoleVerification("shipping"), deleteWeightBracket);
 
 // router
 //   .route("/rates")

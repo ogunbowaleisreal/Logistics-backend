@@ -272,6 +272,7 @@ export class OrderService {
 
       void termiiService.sendRiderPickupNotification(
         newRider.phone,
+        newRider.name,
         order.trackingID,
       );
 

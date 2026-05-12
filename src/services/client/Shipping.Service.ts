@@ -18,12 +18,12 @@ export class ShippingService {
       { shippingRegion: 1 },
     ).lean();
 
-    const region = config?.shippingRegion ?? 'local';
+    const region = config?.shippingRegion ?? "local";
 
     const shippingTypes = {
       local: true,
-      interState: region === 'inter-state' || region === 'international',
-      international: region === 'international',
+      interState: region === "inter-state" || region === "international",
+      international: region === "international",
     };
 
     const zoneQuery: any = { businessId };
@@ -56,10 +56,11 @@ export class ShippingService {
   public async calculateFee(
     businessId: string,
     params: {
-      shippingType: 'local' | 'inter-state' | 'international';
-      rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+      shippingType: "local" | "inter-state" | "international";
+      rideType: "bike" | "bus_car" | "pickup" | "truck";
       zoneId?: string;
       distanceInKM?: number;
+      weightKg?: number;
       originState?: string;
       destinationState?: string;
       country?: string;
@@ -85,11 +86,18 @@ export class ShippingService {
       { rideTypeConfig: 1 },
     ).lean();
 
-    const enabledTypes = (config?.rideTypeConfig ?? []).filter((r) => r.isEnabled);
+    const enabledTypes = (config?.rideTypeConfig ?? []).filter(
+      (r) => r.isEnabled,
+    );
 
     const checks = await Promise.all(
       enabledTypes.map((r) =>
-        Rider.exists({ businessId, rideType: r.type, status: "active", isDeleted: false }),
+        Rider.exists({
+          businessId,
+          rideType: r.type,
+          status: "active",
+          isDeleted: false,
+        }),
       ),
     );
 

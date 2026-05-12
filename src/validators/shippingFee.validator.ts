@@ -3,6 +3,7 @@ import Joi from "joi";
 export const calculateShippingFeeSchema = Joi.object({
   distanceInKM: Joi.number().positive().optional(),
   zoneId: Joi.string().trim().optional(),
+  weightKg: Joi.number().positive().optional(),
   rideType: Joi.string()
     .valid("bike", "bus_car", "pickup", "truck")
     .required(),

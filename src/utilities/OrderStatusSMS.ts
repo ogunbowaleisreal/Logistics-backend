@@ -10,14 +10,14 @@ export async function sendOrderStatusSMS(
   const { receiver, sender } = order.personnelInformation;
   const { trackingID } = order;
 
-  sendReceiverSMS(receiver.phone, trackingID, status);
-  sendBusinessSMS(sender.phone, trackingID, status);
+  sendSenderSMS(sender.phone, sender.name, receiver.name, trackingID, status);
+  sendReceiverSMS(receiver.phone, receiver.name, sender.name, trackingID, status);
 
   try {
     const business = await Business.findById(order.businessId)
       .select("phone")
       .lean();
-    if (business?.phone && business.phone !== sender.phone) {
+    if (business?.phone) {
       sendBusinessSMS(business.phone, trackingID, status);
     }
   } catch (error: any) {
@@ -27,32 +27,45 @@ export async function sendOrderStatusSMS(
   }
 }
 
-function sendReceiverSMS(
+function sendSenderSMS(
   phone: string,
+  senderName: string,
+  receiverName: string,
   trackingID: string,
   status: string,
 ): void {
   switch (status) {
-    case "pending":
-      termiiService.sendOrderPending(phone, trackingID);
-      break;
     case "paid":
-      termiiService.sendOrderPaid(phone, trackingID);
+      termiiService.sendOrderPaid(phone, senderName, trackingID);
       break;
     case "processing":
-      termiiService.sendOrderProcessing(phone, trackingID);
+      termiiService.sendOrderProcessing(phone, senderName, trackingID);
       break;
     case "in-transit":
-      termiiService.sendOrderInTransit(phone, trackingID);
+      termiiService.sendOrderInTransit(phone, senderName, receiverName, trackingID);
       break;
     case "delivered":
-      termiiService.sendOrderDelivered(phone, trackingID);
+      termiiService.sendOrderDelivered(phone, senderName, receiverName, trackingID);
       break;
     case "canceled":
-      termiiService.sendOrderCanceled(phone, trackingID);
+      termiiService.sendOrderCanceled(phone, senderName, trackingID);
       break;
-    case "failed":
-      termiiService.sendOrderFailed(phone, trackingID);
+  }
+}
+
+function sendReceiverSMS(
+  phone: string,
+  receiverName: string,
+  senderName: string,
+  trackingID: string,
+  status: string,
+): void {
+  switch (status) {
+    case "in-transit":
+      termiiService.sendReceiverInTransit(phone, receiverName, senderName, trackingID);
+      break;
+    case "delivered":
+      termiiService.sendReceiverDelivered(phone, receiverName, senderName, trackingID);
       break;
   }
 }
