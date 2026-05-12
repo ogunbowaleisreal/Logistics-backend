@@ -4,12 +4,14 @@ import {
   getConfiguration,
   updateConfiguration,
 } from "../../controllers/admin/configuration.controller";
+import { validate } from "../../middlewares/validation.middleware";
+import { updateConfigurationSchema } from "../../validators/configuration.validator";
 
 const router = Router();
 
 router
   .route("")
   .get(adminVerification, getConfiguration)
-  .put(adminVerification, updateConfiguration);
+  .put(adminVerification, validate(updateConfigurationSchema, "body"), updateConfiguration);
 
 export default router;

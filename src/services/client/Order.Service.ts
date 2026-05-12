@@ -283,11 +283,16 @@ export class OrderService {
   private async computeOrderFees(payload: any) {
     const { calculatedShippingFee } = payload;
     const { serviceFee, VAT } = await configurationService.getConfiguration();
-    if (serviceFee.type === "percentage") {
-      payload.serviceFee = (serviceFee.value / 100) * calculatedShippingFee;
-    } else {
-      payload.serviceFee = serviceFee.value;
-    }
+
+    const matchedTier = serviceFee.tiers.find(
+      (tier) =>
+        calculatedShippingFee >= tier.minAmount &&
+        (tier.maxAmount === null || calculatedShippingFee <= tier.maxAmount),
+    );
+    const rawFee = matchedTier
+      ? (matchedTier.percentage / 100) * calculatedShippingFee
+      : 0;
+    payload.serviceFee = Math.min(rawFee, serviceFee.cap);
 
     if (VAT.type === "percentage") {
       payload.VAT = (VAT.value / 100) * calculatedShippingFee;

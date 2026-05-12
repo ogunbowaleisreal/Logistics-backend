@@ -12,7 +12,7 @@ export class ConfigurationService {
     return configuration;
   }
 
-  public async updateConfiguration(payload: IConfiguration) {
+  public async updateConfiguration(payload: Pick<IConfiguration, "serviceFee" | "VAT">) {
     const { serviceFee, VAT } = payload;
     const configuration = await Configuration.findOneAndUpdate(
       {},
