@@ -7,7 +7,9 @@ import orderRoute from "./order.route";
 import configurationRoute from "./configuration.route";
 import shippingRoute from "./shipping.route";
 import businessProfileRoute from "./businessProfile.route";
+import privacyPolicyRoute from "./privacyPolicy.route";
 import { businessContext } from "../../middlewares/authorization.middleware";
+import termsAndConditionsRoute from "./termsAndConditions.route";
 
 const router = Router();
 
@@ -21,5 +23,7 @@ router.use("/order", orderRoute);
 router.use("/configuration", configurationRoute);
 router.use("/shipping", shippingRoute);
 router.use("/business", businessProfileRoute);
+router.use("/privacy-policy", privacyPolicyRoute);
+router.use("/terms-and-conditions", termsAndConditionsRoute);
 
 export default router;

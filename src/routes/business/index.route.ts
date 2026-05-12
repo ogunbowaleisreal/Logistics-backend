@@ -13,6 +13,8 @@ import themeRoute from "./theme.route";
 import shippingRoute from "./shipping.route";
 import kycRoute from "./kyc.route";
 import businessProfileRoute from "./businessProfile.route";
+import privacyPolicyRoute from "./privacyPolicy.route";
+import termsAndConditionsRoute from "./termsAndConditions.route";
 
 const router = Router();
 
@@ -30,5 +32,7 @@ router.use("/configuration", configurationRoute);
 router.use("/themes", themeRoute);
 router.use("/shipping", shippingRoute);
 router.use("/kyc", kycRoute);
+router.use("/privacy-policy", privacyPolicyRoute);
+router.use("/terms-and-conditions", termsAndConditionsRoute);
 
 export default router;
