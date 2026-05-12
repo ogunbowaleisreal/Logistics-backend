@@ -26,7 +26,7 @@ export class OrderService {
       zoneId,
       distanceInKM,
       rideType,
-      shippingType = 'local',
+      shippingType = "local",
       originState,
       orderInformation,
       personnelInformation,
@@ -38,29 +38,38 @@ export class OrderService {
       { shippingRegion: 1 },
     ).lean();
 
-    const region = config?.shippingRegion ?? 'local';
+    const region = config?.shippingRegion ?? "local";
 
-    if (shippingType === 'inter-state' && region === 'local') {
-      throw new AppError(400, "Inter-state shipping is not enabled for this business");
+    if (shippingType === "inter-state" && region === "local") {
+      throw new AppError(
+        400,
+        "Inter-state shipping is not enabled for this business",
+      );
     }
-    if (shippingType === 'international' && region !== 'international') {
-      throw new AppError(400, "International shipping is not enabled for this business");
+    if (shippingType === "international" && region !== "international") {
+      throw new AppError(
+        400,
+        "International shipping is not enabled for this business",
+      );
     }
 
     if (!rideType) {
       throw new AppError(400, "rideType is required");
     }
 
-    const calculatedShippingFee = await shippingService.calculateFee(businessId, {
-      shippingType,
-      rideType,
-      zoneId,
-      distanceInKM,
-      originState,
-      destinationState: orderInformation.dropoffLocation.state,
-      country: orderInformation.dropoffLocation.country,
-      city: orderInformation.dropoffLocation.city,
-    });
+    const calculatedShippingFee = await shippingService.calculateFee(
+      businessId,
+      {
+        shippingType,
+        rideType,
+        zoneId,
+        distanceInKM,
+        originState,
+        destinationState: orderInformation.dropoffLocation.state,
+        country: orderInformation.dropoffLocation.country,
+        city: orderInformation.dropoffLocation.city,
+      },
+    );
 
     const { amount, serviceFee, VAT, totalAmount } =
       await this.computeOrderFees({
@@ -220,7 +229,10 @@ export class OrderService {
     const order = await Order.findOne({
       ...tenantScope({}, businessId),
       trackingID: trackingID.toUpperCase(),
-    });
+    }).populate([
+      { path: "businessId", select: "name slug logo socialLinks supports" },
+      { path: "riderID", select: "name phone rideType" },
+    ]);
     if (!order) {
       throw new AppError(404, "Order not found");
     }
