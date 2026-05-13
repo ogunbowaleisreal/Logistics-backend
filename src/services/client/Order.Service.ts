@@ -10,6 +10,8 @@ import { resolveBusinessIdFromSlug } from "../../middlewares/authorization.middl
 import { EmailService } from "../Email.Service";
 import { ConfigurationService } from "../Configuration.Service";
 import { SafeHaven } from "../../utilities/SafeHaven";
+import { Monnify } from "../../utilities/Monnify";
+import { Flutterwave } from "../../utilities/Flutterwave";
 import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
@@ -18,6 +20,8 @@ const emailService = new EmailService();
 const shippingService = new ShippingService();
 const configurationService = new ConfigurationService();
 const safeHaven = new SafeHaven();
+const monnify = new Monnify();
+const flutterwave = new Flutterwave();
 
 export class OrderService {
   public async createOrder(_businessId: string, payload: IOrderPayload) {
@@ -140,16 +144,122 @@ export class OrderService {
         accountNumber: "0000000000",
         accountName: "Safehaven Virtual Account",
         bankName: "Safehaven Microfinance Bank",
-        expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30 minutes from now
+        expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
         callbackURL: "https://example.com/callback",
       };
     } else if (paymentMethod == "monnify") {
-      // Implement Monnify payment processing logic here
+      const senderEmail = order.personnelInformation.sender.email;
+      if (!senderEmail) {
+        throw new AppError(400, "Sender email is required for Monnify payment");
+      }
+
+      const { checkoutUrl, transactionReference } =
+        await monnify.initiatePayment({
+          email: senderEmail,
+          amount: order.totalAmount,
+          reference: String(order._id),
+          customerName: order.personnelInformation.sender.name,
+        });
+
+      order.paymentMethod = "monnify";
+      order.virtualAccountData = {
+        sessionId: transactionReference,
+        callbackURL: checkoutUrl,
+      };
+    } else if (paymentMethod == "flutterwave") {
+      const senderEmail = order.personnelInformation.sender.email;
+      if (!senderEmail) {
+        throw new AppError(
+          400,
+          "Sender email is required for Flutterwave payment",
+        );
+      }
+
+      const { paymentUrl, reference, expiresAt } =
+        await flutterwave.initiateCardPayment({
+          txRef: String(order._id),
+          amount: order.totalAmount,
+          redirectUrl: `${process.env.BASE_URL}/api/v1/orders/flutterwave/callback`,
+          customerEmail: senderEmail,
+          customerName: order.personnelInformation.sender.name,
+          customerPhone: order.personnelInformation.sender.phone,
+        });
+
+      order.paymentMethod = "flutterwave";
+      order.virtualAccountData = {
+        sessionId: reference,
+        callbackURL: paymentUrl,
+        expiryDate: expiresAt,
+      };
     } else {
       throw new AppError(400, "Invalid payment method");
     }
 
     return await order.save();
+  }
+
+  public async verifyMonnifyPaymentViaWebhook(payload: any, signature: string) {
+    const rawBody = JSON.stringify(payload);
+    if (!monnify.verifyWebhookSignature(rawBody, signature)) {
+      throw new AppError(400, "Invalid Monnify webhook signature");
+    }
+
+    const { eventType, eventData } = payload;
+
+    if (eventType !== "SUCCESSFUL_TRANSACTION") {
+      return;
+    }
+
+    const {
+      transactionReference,
+      paymentReference,
+      amountPaid,
+      paymentStatus,
+    } = eventData;
+
+    const session = await startSession();
+
+    const order = await session.withTransaction(async () => {
+      const updatedOrder = await Order.findOneAndUpdate(
+        {
+          _id: paymentReference,
+          "virtualAccountData.sessionId": transactionReference,
+        },
+        {
+          status: paymentStatus === "PAID" ? "paid" : "failed",
+          totalAmount: amountPaid,
+        },
+        { new: true, session },
+      );
+
+      if (!updatedOrder) {
+        throw new AppError(404, "Order not found for the provided reference");
+      }
+
+      if (paymentStatus === "PAID") {
+        const business = await Business.findOneAndUpdate(
+          { _id: updatedOrder.businessId, isDeleted: false },
+          { $inc: { "wallet.naira": updatedOrder.amount } },
+          { session },
+        );
+
+        if (!business) {
+          throw new AppError(404, "Account not found");
+        }
+
+        await riderAssignmentService.assignRider(
+          updatedOrder.businessId.toString(),
+          updatedOrder,
+          session,
+        );
+      }
+
+      return updatedOrder;
+    });
+
+    await session.endSession();
+
+    return order;
   }
 
   public async verifySafehavenPaymentViaWebhook(orderID: string, payload: any) {

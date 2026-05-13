@@ -37,6 +37,20 @@ export const checkoutOrder = async (
   }
 };
 
+export const verifyMonnifyPaymentViaWebhook = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const signature = req.headers["monnify-signature"] as string;
+    await orderService.verifyMonnifyPaymentViaWebhook(req.body, signature);
+    return res.status(200).json({ message: "Webhook processed successfully" });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const verifySafehavenPaymentViaWebhook = async (
   req: Request,
   res: Response,

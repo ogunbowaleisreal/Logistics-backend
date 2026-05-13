@@ -6,6 +6,7 @@ import {
   generateImageUploadSignature,
   trackOrder,
   verifySafehavenPaymentViaWebhook,
+  verifyMonnifyPaymentViaWebhook,
   checkoutOrder,
 } from "../../controllers/client/order.controller";
 import {
@@ -59,6 +60,8 @@ router
 router
   .route("/safehaven/webhook/:orderID")
   .post(verifySafehavenPaymentViaWebhook);
+
+router.route("/monnify/webhook").post(verifyMonnifyPaymentViaWebhook);
 
 router.get("/image-signature", generateImageUploadSignature);
 

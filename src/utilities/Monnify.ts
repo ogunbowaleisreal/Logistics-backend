@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig } from "axios";
+import crypto from "crypto";
 import logger from "../../logger";
 import AppError from "./ErrorHandler";
 import { Buffer } from "buffer";
@@ -107,6 +108,78 @@ export class Monnify {
     return response.data;
   }
 
+  public async initiatePayment(data: {
+    email: string;
+    amount: number;
+    reference: string;
+    customerName: string;
+    redirectUrl?: string;
+  }): Promise<{ checkoutUrl: string; transactionReference: string }> {
+    try {
+      const response: any = await this.makeRequest(
+        "post",
+        `${this.baseURL}api/v1/merchant/transactions/init-transaction`,
+        {
+          amount: data.amount,
+          customerName: data.customerName,
+          customerEmail: data.email,
+          paymentReference: data.reference,
+          paymentDescription: "Order payment",
+          currencyCode: "NGN",
+          contractCode: process.env.MONNIFY_CONTRACT_CODE,
+          redirectUrl:
+            data.redirectUrl ||
+            `${process.env.BASE_URL}/api/client/order/monnify/webhook`,
+          paymentMethods: ["CARD", "ACCOUNT_TRANSFER"],
+        },
+      );
+
+      if (!response.requestSuccessful) {
+        throw new AppError(
+          400,
+          response.responseMessage || "Payment initiation failed",
+        );
+      }
+
+
+      logger.info(`Monnify: Initiated payment: ${data.reference}`);
+      return {
+        checkoutUrl: response.responseBody.checkoutUrl,
+        transactionReference: response.responseBody.transactionReference,
+      };
+    } catch (error: any) {
+      if (error instanceof AppError) throw error;
+      logger.error("Monnify: Error initiating payment:", error);
+      throw new AppError(
+        400,
+        error.response?.data?.responseMessage || "Payment initiation failed",
+      );
+    }
+  }
+
+  public async verifyPayment(transactionReference: string): Promise<any> {
+    try {
+      const response = await this.makeRequest<any>(
+        "get",
+        `${this.baseURL}api/v2/transactions/${encodeURIComponent(transactionReference)}`,
+      );
+
+      if (!response.requestSuccessful) {
+        throw new AppError(400, "Payment verification failed");
+      }
+
+      logger.info(`Monnify: Verified payment: ${transactionReference}`);
+      return response.responseBody;
+    } catch (error: any) {
+      if (error instanceof AppError) throw error;
+      logger.error("Monnify: Error verifying payment:", error);
+      throw new AppError(
+        400,
+        error.response?.data?.responseMessage || "Payment verification failed",
+      );
+    }
+  }
+
   public async verifyNIN(NIN: string) {
     const response = await this.makeRequest<any>(
       "post",
@@ -137,5 +210,11 @@ export class Monnify {
       throw Error("BVN verification failed");
     }
     return response;
+  }
+
+  verifyWebhookSignature(payload: string, signature: string): boolean {
+    const hmac = crypto.createHmac("sha512", process.env.MONNIFY_SECRET_KEY!);
+    const expected = hmac.update(payload).digest("hex");
+    return expected === signature;
   }
 }

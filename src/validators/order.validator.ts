@@ -30,9 +30,7 @@ export const createOrderSchema = Joi.object({
   slug: Joi.string().trim().required(),
   zoneId: Joi.string().trim().optional(),
   distanceInKM: Joi.number().positive().optional(),
-  rideType: Joi.string()
-    .valid("bike", "bus_car", "pickup", "truck")
-    .required(),
+  rideType: Joi.string().valid("bike", "bus_car", "pickup", "truck").required(),
   shippingType: Joi.string()
     .valid("local", "inter-state", "international")
     .default("local"),
@@ -79,7 +77,9 @@ export const createOrderSchema = Joi.object({
 
 export const checkoutOrderSchema = Joi.object({
   orderID: Joi.string().trim().required(),
-  paymentMethod: Joi.string().valid("safehaven").required(), // Extend with more methods as needed
+  paymentMethod: Joi.string()
+    .valid("safehaven", "monnify", "flutterwave")
+    .required(), // Extend with more methods as needed
 });
 
 export const cancelOrderSchema = Joi.object({

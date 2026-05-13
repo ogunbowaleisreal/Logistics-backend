@@ -120,7 +120,7 @@ const OrderSchema = new Schema<IOrder>(
       ],
       default: "pending",
     },
-    paymentMethod: { type: String, enum: ["safehaven", "monnify"] },
+    paymentMethod: { type: String, enum: ["safehaven", "monnify", "flutterwave"] },
     amount: { type: Number, min: 0, required: true },
     serviceFee: { type: Number, min: 0 },
     VAT: { type: Number, min: 0 },

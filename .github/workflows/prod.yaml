@@ -62,10 +62,19 @@ jobs:
           MONNIFY_BASE_URL: ${{ secrets.MONNIFY_BASE_URL }}
           MONNIFY_API_KEY: ${{ secrets.MONNIFY_API_KEY }}
           MONNIFY_SECRET_KEY: ${{ secrets.MONNIFY_SECRET_KEY }}
+          MONNIFY_CONTRACT_CODE: ${{ secrets.MONNIFY_CONTRACT_CODE }}
+          MONNIFY_WALLET_ACCOUNT_NUMBER: ${{ secrets.MONNIFY_WALLET_ACCOUNT_NUMBER }}
+
+          FLUTTERWAVE_CLIENT_ID: ${{ secrets.FLUTTERWAVE_CLIENT_ID }}
+          FLUTTERWAVE_CLIENT_SECRET: ${{ secrets.FLUTTERWAVE_CLIENT_SECRET }}
+          FLUTTERWAVE_ENCRYPTION_KEY: ${{ secrets.FLUTTERWAVE_ENCRYPTION_KEY }}
+          FLUTTERWAVE_SECRET_HASH: ${{ secrets.FLUTTERWAVE_SECRET_HASH }}
 
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
 
           TERMII_API_KEY: ${{ secrets.TERMII_API_KEY }}
+
+          BASE_URL: ${{ secrets.BASE_URL }}
 
           NODE_ENV: ${{ secrets.NODE_ENV }}
         run: |
@@ -127,11 +136,19 @@ jobs:
             echo "MONNIFY_BASE_URL=${{ secrets.MONNIFY_BASE_URL }}" >> ${{ secrets.ENV_PATH }}
             echo "MONNIFY_API_KEY=${{ secrets.MONNIFY_API_KEY }}" >> ${{ secrets.ENV_PATH }}
             echo "MONNIFY_SECRET_KEY=${{ secrets.MONNIFY_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "MONNIFY_CONTRACT_CODE=${{ secrets.MONNIFY_CONTRACT_CODE }}" >> ${{ secrets.ENV_PATH }}
+            echo "MONNIFY_WALLET_ACCOUNT_NUMBER=${{ secrets.MONNIFY_WALLET_ACCOUNT_NUMBER }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "FLUTTERWAVE_CLIENT_ID=${{ secrets.FLUTTERWAVE_CLIENT_ID }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLUTTERWAVE_CLIENT_SECRET=${{ secrets.FLUTTERWAVE_CLIENT_SECRET }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLUTTERWAVE_ENCRYPTION_KEY=${{ secrets.FLUTTERWAVE_ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLUTTERWAVE_SECRET_HASH=${{ secrets.FLUTTERWAVE_SECRET_HASH }}" >> ${{ secrets.ENV_PATH }}
 
             echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
 
-            echo "TERMII_API_KEY=${{ secrets.TERMII_API_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "BASE_URL=${{ secrets.BASE_URL }}" >> ${{ secrets.ENV_PATH }}
 
+            echo "TERMII_API_KEY=${{ secrets.TERMII_API_KEY }}" >> ${{ secrets.ENV_PATH }}
 
             echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
 

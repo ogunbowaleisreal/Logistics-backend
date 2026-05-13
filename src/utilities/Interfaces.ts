@@ -80,5 +80,5 @@ export interface IOrderPayload {
       phone: string;
     };
   };
-  paymentMethod: "cash" | "card";
+  // paymentMethod: "cash" | "card";
 }
