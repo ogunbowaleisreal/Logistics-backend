@@ -75,20 +75,20 @@ export const deleteZone = async (
   }
 };
 
-export const addWeightBracket = async (
+export const bulkUpsertWeightBrackets = async (
   req: ExtendedRequest | any,
   res: Response,
   next: NextFunction,
 ) => {
   try {
-    const brackets = await shippingService.addWeightBracket(
+    const brackets = await shippingService.bulkUpsertWeightBrackets(
       getBusinessId(req),
       req.params.zoneId,
-      req.body,
+      req.body.brackets,
     );
     return res
-      .status(201)
-      .json({ message: "Weight bracket added successfully", data: brackets });
+      .status(200)
+      .json({ message: "Weight brackets updated successfully", data: brackets });
   } catch (error: any) {
     next(error);
   }

@@ -4,7 +4,7 @@ import Joi from "joi";
 type ValidationSource = "body" | "query";
 
 export const validate = (
-  schema: Joi.ObjectSchema,
+  schema: Joi.Schema,
   source: ValidationSource,
 ) => {
   return (req: Request, res: Response, next: NextFunction) => {

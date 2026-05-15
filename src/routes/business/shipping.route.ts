@@ -5,7 +5,7 @@ import {
   getZones,
   updateZone,
   deleteZone,
-  addWeightBracket,
+  bulkUpsertWeightBrackets,
   getWeightBrackets,
   updateWeightBracket,
   deleteWeightBracket,
@@ -14,7 +14,7 @@ import { validate } from "../../middlewares/validation.middleware";
 import {
   createZoneSchema,
   updateZoneSchema,
-  addWeightBracketSchema,
+  bulkUpsertWeightBracketsSchema,
   updateWeightBracketSchema,
 } from "../../validators/shipping.validator";
 
@@ -32,7 +32,7 @@ router
 
 router
   .route("/zones/:zoneId/weight-brackets")
-  .post(staffRoleVerification("shipping"), validate(addWeightBracketSchema, "body"), addWeightBracket)
+  .put(staffRoleVerification("shipping"), validate(bulkUpsertWeightBracketsSchema, "body"), bulkUpsertWeightBrackets)
   .get(staffRoleVerification("shipping"), getWeightBrackets);
 
 router

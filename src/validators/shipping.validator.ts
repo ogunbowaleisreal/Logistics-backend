@@ -59,16 +59,23 @@ export const updateZoneSchema = Joi.object({
   cities: Joi.array().items(Joi.string()).optional(),
 });
 
-export const addWeightBracketSchema = Joi.object({
-  rideType: Joi.string()
-    .valid("bike", "bus_car", "pickup", "truck")
+export const bulkUpsertWeightBracketsSchema = Joi.object({
+  brackets: Joi.array()
+    .items(
+      Joi.object({
+        rideType: Joi.string()
+          .valid("bike", "bus_car", "pickup", "truck")
+          .required(),
+        minKg: Joi.number().min(0).required(),
+        maxKg: Joi.number()
+          .greater(Joi.ref("minKg"))
+          .required()
+          .messages({ "number.greater": "maxKg must be greater than minKg" }),
+        amount: Joi.number().min(0).required(),
+      }),
+    )
+    .min(1)
     .required(),
-  minKg: Joi.number().min(0).required(),
-  maxKg: Joi.number()
-    .greater(Joi.ref("minKg"))
-    .required()
-    .messages({ "number.greater": "maxKg must be greater than minKg" }),
-  amount: Joi.number().min(0).required(),
 });
 
 export const updateWeightBracketSchema = Joi.object({
