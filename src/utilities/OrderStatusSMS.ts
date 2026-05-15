@@ -8,10 +8,16 @@ export async function sendOrderStatusSMS(
   status: string,
 ): Promise<void> {
   const { receiver, sender } = order.personnelInformation;
-  const { trackingID } = order;
+  const trackingID = order.trackingID.replace("SME-", "");
 
   sendSenderSMS(sender.phone, sender.name, receiver.name, trackingID, status);
-  sendReceiverSMS(receiver.phone, receiver.name, sender.name, trackingID, status);
+  sendReceiverSMS(
+    receiver.phone,
+    receiver.name,
+    sender.name,
+    trackingID,
+    status,
+  );
 
   try {
     const business = await Business.findById(order.businessId)
@@ -38,14 +44,27 @@ function sendSenderSMS(
     case "paid":
       termiiService.sendOrderPaid(phone, senderName, trackingID);
       break;
+    case "approved":
+      termiiService.sendOrderApproved(phone, senderName, trackingID);
+      break;
     case "processing":
       termiiService.sendOrderProcessing(phone, senderName, trackingID);
       break;
     case "in-transit":
-      termiiService.sendOrderInTransit(phone, senderName, receiverName, trackingID);
+      termiiService.sendOrderInTransit(
+        phone,
+        senderName,
+        receiverName,
+        trackingID,
+      );
       break;
     case "delivered":
-      termiiService.sendOrderDelivered(phone, senderName, receiverName, trackingID);
+      termiiService.sendOrderDelivered(
+        phone,
+        senderName,
+        receiverName,
+        trackingID,
+      );
       break;
     case "canceled":
       termiiService.sendOrderCanceled(phone, senderName, trackingID);
@@ -62,10 +81,20 @@ function sendReceiverSMS(
 ): void {
   switch (status) {
     case "in-transit":
-      termiiService.sendReceiverInTransit(phone, receiverName, senderName, trackingID);
+      termiiService.sendReceiverInTransit(
+        phone,
+        receiverName,
+        senderName,
+        trackingID,
+      );
       break;
     case "delivered":
-      termiiService.sendReceiverDelivered(phone, receiverName, senderName, trackingID);
+      termiiService.sendReceiverDelivered(
+        phone,
+        receiverName,
+        senderName,
+        trackingID,
+      );
       break;
   }
 }
@@ -81,6 +110,9 @@ function sendBusinessSMS(
       break;
     case "paid":
       termiiService.sendBusinessOrderPaid(phone, trackingID);
+      break;
+    case "approved":
+      termiiService.sendBusinessOrderApproved(phone, trackingID);
       break;
     case "processing":
       termiiService.sendBusinessOrderProcessing(phone, trackingID);

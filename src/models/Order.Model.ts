@@ -5,8 +5,8 @@ export interface IOrder extends Document {
   businessId: Schema.Types.ObjectId;
   zoneId?: Schema.Types.ObjectId;
   distanceInKM?: number;
-  rideType?: 'bike' | 'bus_car' | 'pickup' | 'truck';
-  shippingType?: 'local' | 'inter-state' | 'international';
+  rideType?: "bike" | "bus_car" | "pickup" | "truck";
+  shippingType?: "local" | "inter-state" | "international";
   trackingID: string;
   orderInformation: {
     pickupLocation: {
@@ -112,6 +112,7 @@ const OrderSchema = new Schema<IOrder>(
       enum: [
         "pending",
         "paid",
+        "approved",
         "processing",
         "in-transit",
         "delivered",
@@ -120,7 +121,10 @@ const OrderSchema = new Schema<IOrder>(
       ],
       default: "pending",
     },
-    paymentMethod: { type: String, enum: ["safehaven", "monnify", "flutterwave"] },
+    paymentMethod: {
+      type: String,
+      enum: ["safehaven", "monnify", "flutterwave"],
+    },
     amount: { type: Number, min: 0, required: true },
     serviceFee: { type: Number, min: 0 },
     VAT: { type: Number, min: 0 },

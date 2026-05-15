@@ -39,7 +39,18 @@ class TermiiService {
   public sendOrderPaid(to: string, senderName: string, orderID: string): void {
     void this.send(
       to,
-      `Hi ${senderName}, payment for Order #${orderID} was confirmed. Your delivery request is queued for processing. Thank you.`,
+      `Hi ${senderName}, payment for Order #${orderID} was confirmed. Your delivery request is queued for approval. Thank you.`,
+    );
+  }
+
+  public sendOrderApproved(
+    to: string,
+    senderName: string,
+    orderID: string,
+  ): void {
+    void this.send(
+      to,
+      `Hi ${senderName}, your for Order #${orderID} has been approved. Your delivery request is queued for processing. Thank you.`,
     );
   }
 
@@ -123,7 +134,14 @@ class TermiiService {
   public sendBusinessOrderPaid(to: string, orderNumber: string): void {
     void this.send(
       to,
-      `Order #${orderNumber} payment confirmed. Please proceed to process this order.`,
+      `Order #${orderNumber} payment confirmed. Please proceed to approve this order.`,
+    );
+  }
+
+  public sendBusinessOrderApproved(to: string, orderNumber: string): void {
+    void this.send(
+      to,
+      `Order #${orderNumber} has been approved. Please proceed to process this order.`,
     );
   }
 
@@ -132,10 +150,7 @@ class TermiiService {
   }
 
   public sendBusinessOrderInTransit(to: string, orderNumber: string): void {
-    void this.send(
-      to,
-      `Order #${orderNumber} is in transit to the receiver.`,
-    );
+    void this.send(to, `Order #${orderNumber} is in transit to the receiver.`);
   }
 
   public sendBusinessOrderDelivered(to: string, orderNumber: string): void {

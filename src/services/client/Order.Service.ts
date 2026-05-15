@@ -247,11 +247,11 @@ export class OrderService {
           throw new AppError(404, "Account not found");
         }
 
-        await riderAssignmentService.assignRider(
-          updatedOrder.businessId.toString(),
-          updatedOrder,
-          session,
-        );
+        // await riderAssignmentService.assignRider(
+        //   updatedOrder.businessId.toString(),
+        //   updatedOrder,
+        //   session,
+        // );
       }
 
       return updatedOrder;
@@ -310,11 +310,11 @@ export class OrderService {
             throw new AppError(404, "Account not found");
           }
 
-          await riderAssignmentService.assignRider(
-            updatedOrder.businessId.toString(),
-            updatedOrder,
-            session,
-          );
+          // await riderAssignmentService.assignRider(
+          //   updatedOrder.businessId.toString(),
+          //   updatedOrder,
+          //   session,
+          // );
         }
 
         return updatedOrder;

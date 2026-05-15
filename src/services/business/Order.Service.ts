@@ -18,6 +18,7 @@ const emailService = new EmailService();
 const VALID_STATUSES: string[] = [
   "pending",
   "paid",
+  "approved",
   "processing",
   "in-transit",
   "delivered",
@@ -150,7 +151,8 @@ export class OrderService {
           if (!business) {
             throw new AppError(404, "Account not found");
           }
-
+        }
+        if (status === "approved") {
           await riderAssignmentService.assignRider(
             order.businessId.toString(),
             order,

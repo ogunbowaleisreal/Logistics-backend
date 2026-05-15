@@ -8,7 +8,7 @@ import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent"
 import { sendOrderStatusSMS } from "../../utilities/OrderStatusSMS";
 
 const RIDER_ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  paid: ["processing"],
+  approved: ["processing"],
   processing: ["in-transit"],
   "in-transit": ["processing", "delivered"],
 };
