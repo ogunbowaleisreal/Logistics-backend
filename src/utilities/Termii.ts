@@ -185,7 +185,7 @@ class TermiiService {
   public sendRiderOTP(to: string, otp: string): void {
     void this.send(
       to,
-      `Your SME Logistics login OTP is: ${otp}. It expires in 5 minutes. Do not share this code.`,
+      `Your LogisticsPadi login OTP is: ${otp}. It expires in 5 minutes. Do not share this code.`,
     );
   }
 }

@@ -60,7 +60,7 @@ class App {
 
   private setupRoutes(): void {
     this.app.get("/home", (req: Request, res: Response) => {
-      res.send("Welcome to SME Logistics API");
+      res.send("Welcome to Logisticspadi API");
     });
     this.app.use("/api/client", clientRoute);
     this.app.use("/api/admin", adminRoute);

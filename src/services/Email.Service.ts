@@ -11,7 +11,7 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Your SME Logistics Account Verification Code",
+        subject: "Your LogisticsPadi Account Verification Code",
         html: `Your verification code is: ${otp}`,
       });
       logger.info("Account verification email sent");
@@ -26,7 +26,7 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Update Your SME Logistics Password",
+        subject: "Update Your LogisticsPadi Password",
         html: `Your password update code is: ${otp}`,
       });
       logger.info(`Password update email sent to: ${email}`);
@@ -41,8 +41,8 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Welcome to SME Logistics",
-        html: `Welcome to SME Logistics`,
+        subject: "Welcome to LogisticsPadi",
+        html: `Welcome to LogisticsPadi`,
       });
       logger.info(`Welcome email sent to: ${email}`);
     } catch (error: any) {
@@ -71,8 +71,8 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Welcome to SME Logistics",
-        html: `Welcome to SME Logistics<br>Email: ${email}<br>Here's your temporary password: ${password}`,
+        subject: "Welcome to LogisticsPadi",
+        html: `Welcome to LogisticsPadi<br>Email: ${email}<br>Here's your temporary password: ${password}`,
       });
       logger.info(`Welcome email sent to: ${email}`);
     } catch (error: any) {
@@ -86,7 +86,7 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Verify Your SME Logistics Business Account",
+        subject: "Verify Your LogisticsPadi Business Account",
         html: `Hi ${name},<br><br>Your email verification code is: <strong>${otp}</strong><br><br>This code expires in 5 minutes.`,
       });
       logger.info(`Business verification email sent to: ${email}`);
@@ -101,8 +101,8 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Welcome to SME Logistics",
-        html: `Hi ${name},<br><br>Welcome to SME Logistics! Your business account has been successfully verified and is now active.`,
+        subject: "Welcome to LogisticsPadi",
+        html: `Hi ${name},<br><br>Welcome to LogisticsPadi! Your business account has been successfully verified and is now active.`,
       });
       logger.info(`Business welcome email sent to: ${email}`);
     } catch (error: any) {
@@ -131,7 +131,7 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Reset Your SME Logistics Business Password",
+        subject: "Reset Your LogisticsPadi Business Password",
         html: `Your password reset code is: <strong>${otp}</strong><br><br>This code expires in 15 minutes.`,
       });
       logger.info(`Business password reset email sent to: ${email}`);
@@ -146,7 +146,7 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Welcome to the Team — SME Logistics",
+        subject: "Welcome to the Team — LogisticsPadi",
         html: `Hi ${firstname},<br><br>Your staff account has been created.<br><br>Email: ${email}<br>Temporary Password: <strong>${password}</strong><br><br>Please log in and change your password.`,
       });
       logger.info(`Staff welcome email sent to: ${email}`);
@@ -161,7 +161,7 @@ export class EmailService {
       await resend.emails.send({
         from,
         to: email,
-        subject: "Reset Your SME Logistics Staff Password",
+        subject: "Reset Your LogisticsPadi Staff Password",
         html: `Hi ${firstname},<br><br>Your password reset code is: <strong>${otp}</strong><br><br>This code expires in 15 minutes.`,
       });
       logger.info(`Staff password reset email sent to: ${email}`);
