@@ -18,7 +18,8 @@ export const updateConfigurationSchema = Joi.object({
       }),
     )
     .optional(),
-  shippingRegion: Joi.string()
-    .valid("local", "inter-state", "international")
+  shippingRegion: Joi.array()
+    .items(Joi.string().valid("local", "inter-state", "international"))
+    .min(1)
     .optional(),
 });

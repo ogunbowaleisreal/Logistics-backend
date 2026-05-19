@@ -9,7 +9,7 @@ export interface IBusinessConfiguration extends Document {
     pricePerKm: number;
     baseAmount: number;
   }[];
-  shippingRegion?: string;
+  shippingRegion?: ("local" | "inter-state" | "international")[];
   __v?: number;
 }
 
@@ -38,9 +38,9 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
       },
     ],
     shippingRegion: {
-      type: String,
+      type: [String],
       enum: ["local", "inter-state", "international"],
-      default: "local",
+      default: ["local"],
     },
   },
   {

@@ -23,6 +23,11 @@ const safeHaven = new SafeHaven();
 const monnify = new Monnify();
 const flutterwave = new Flutterwave();
 
+function normalizeRegions(val: string | string[] | undefined): string[] {
+  if (!val) return ["local"];
+  return Array.isArray(val) ? val : [val];
+}
+
 export class OrderService {
   public async createOrder(_businessId: string, payload: IOrderPayload) {
     const {
@@ -42,15 +47,15 @@ export class OrderService {
       { shippingRegion: 1 },
     ).lean();
 
-    const region = config?.shippingRegion ?? "local";
+    const regions = normalizeRegions(config?.shippingRegion);
 
-    if (shippingType === "inter-state" && region === "local") {
+    if (shippingType === "inter-state" && !regions.includes("inter-state")) {
       throw new AppError(
         400,
         "Inter-state shipping is not enabled for this business",
       );
     }
-    if (shippingType === "international" && region !== "international") {
+    if (shippingType === "international" && !regions.includes("international")) {
       throw new AppError(
         400,
         "International shipping is not enabled for this business",

@@ -8,6 +8,11 @@ import { ShippingService as BusinessShippingService } from "../business/Shipping
 
 const businessShippingService = new BusinessShippingService();
 
+function normalizeRegions(val: string | string[] | undefined): string[] {
+  if (!val) return ["local"];
+  return Array.isArray(val) ? val : [val];
+}
+
 export class ShippingService {
   public async getBusinessZones(
     businessId: string,
@@ -18,12 +23,12 @@ export class ShippingService {
       { shippingRegion: 1 },
     ).lean();
 
-    const region = config?.shippingRegion ?? "local";
+    const regions = normalizeRegions(config?.shippingRegion);
 
     const shippingTypes = {
-      local: true,
-      interState: region === "inter-state" || region === "international",
-      international: region === "international",
+      local: regions.includes("local"),
+      interState: regions.includes("inter-state"),
+      international: regions.includes("international"),
     };
 
     const zoneQuery: any = { businessId };

@@ -10,9 +10,7 @@ type SupportsPayload = {
 
 export class BusinessProfileService {
   public async getProfile(businessId: string) {
-    const business = await Business.findById(businessId).select(
-      "-password -__v -isDeleted",
-    );
+    const business = await Business.findById(businessId);
     if (!business) throw new AppError(404, "Business not found");
     return business;
   }

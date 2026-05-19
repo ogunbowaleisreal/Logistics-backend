@@ -13,7 +13,9 @@ export interface IBusiness extends Document {
   isEmailVerified: boolean;
   twoFactorAuthentication: boolean;
   kycStatus?: "not-submitted" | "pending" | "verified" | "rejected";
-  wallet: number;
+  wallet: {
+    naira: number;
+  };
   socialLinks: {
     instagram: string;
     facebook: string;
@@ -66,7 +68,9 @@ const BusinessSchema = new Schema<IBusiness>(
       enum: ["not-submitted", "pending", "verified", "rejected"],
       default: "not-submitted",
     },
-    wallet: { type: Number, default: 0, min: 0 },
+    wallet: {
+      naira: { type: Number, default: 0 },
+    },
     socialLinks: {
       instagram: { type: String, default: "" },
       facebook: { type: String, default: "" },
