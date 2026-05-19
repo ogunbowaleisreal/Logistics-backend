@@ -2,6 +2,7 @@ import { Document, model, Schema } from "mongoose";
 
 export interface IBusiness extends Document {
   name: string;
+  username: string;
   slug: string;
   email: string;
   phone: string;
@@ -42,6 +43,7 @@ export interface IBusiness extends Document {
 const BusinessSchema = new Schema<IBusiness>(
   {
     name: { type: String, required: true },
+    username: { type: String, required: true, unique: true },
     slug: { type: String, required: true, unique: true, index: true },
     email: { type: String, required: true, unique: true },
     phone: { type: String, required: true, unique: true },

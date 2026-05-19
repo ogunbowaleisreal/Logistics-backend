@@ -15,7 +15,7 @@ export class BusinessAuthenticationService {
     authenticationTokenGenerator: AuthenticationTokenGenerator,
     cacheService: CacheService,
     emailService: EmailService,
-    hasher: Hasher
+    hasher: Hasher,
   ) {
     this.authenticationTokenGenerator = authenticationTokenGenerator;
     this.cacheService = cacheService;
@@ -24,18 +24,19 @@ export class BusinessAuthenticationService {
   }
 
   public async register(payload: any) {
-    const { name, email, phone, password } = payload;
+    const { name, username, email, phone, password } = payload;
 
     const existing = await Business.findOne({
-      $or: [{ email: email.toLowerCase() }, { phone }],
+      $or: [{ email: email.toLowerCase() }, { phone }, { username }],
     });
     if (existing) throw new AppError(409, "Business already exists");
 
-    const slug = await this.generateUniqueSlug(name);
+    const slug = await this.generateUniqueSlug(username);
     const hashedPassword = await this.hasher.hashPassword(password);
 
     const business = await Business.create({
       name,
+      username,
       slug,
       email: email.toLowerCase(),
       phone,
@@ -54,7 +55,8 @@ export class BusinessAuthenticationService {
   public async verifyEmail(payload: any) {
     const { email, otp } = payload;
 
-    const cached = await this.cacheService.getCachedBizEmailVerificationOTP(email);
+    const cached =
+      await this.cacheService.getCachedBizEmailVerificationOTP(email);
     if (JSON.parse(cached).otp !== otp) {
       throw new AppError(401, "Invalid OTP");
     }
@@ -66,10 +68,13 @@ export class BusinessAuthenticationService {
     business.status = "active";
     await business.save();
 
-    await this.emailService.sendBusinessWelcomeEmail({ email, name: business.name });
+    await this.emailService.sendBusinessWelcomeEmail({
+      email,
+      name: business.name,
+    });
 
     const { accessToken, refreshToken } = await this.getAuthorizationToken(
-      business.id
+      business.id,
     );
 
     return { business, accessToken, refreshToken };
@@ -86,16 +91,20 @@ export class BusinessAuthenticationService {
 
     const passwordVerification = await this.hasher.verifyPassword(
       password,
-      business.password!
+      business.password!,
     );
-    if (!passwordVerification) throw new AppError(400, "Invalid login credentials!");
+    if (!passwordVerification)
+      throw new AppError(400, "Invalid login credentials!");
 
     if (!business.isEmailVerified) {
       throw new AppError(403, "Please verify your email before logging in");
     }
 
     if (business.status === "suspended") {
-      throw new AppError(403, "Your account has been suspended, please contact support");
+      throw new AppError(
+        403,
+        "Your account has been suspended, please contact support",
+      );
     }
 
     if (business.twoFactorAuthentication) {
@@ -104,9 +113,14 @@ export class BusinessAuthenticationService {
     }
 
     const { accessToken, refreshToken } = await this.getAuthorizationToken(
-      business.id
+      business.id,
     );
-    return { business, accessToken, refreshToken, twoFactorAuthentication: false };
+    return {
+      business,
+      accessToken,
+      refreshToken,
+      twoFactorAuthentication: false,
+    };
   }
 
   public async sendLogin2FAVerification(email: string) {
@@ -131,7 +145,7 @@ export class BusinessAuthenticationService {
     if (!business) throw new AppError(400, "Invalid login credentials!");
 
     const { accessToken, refreshToken } = await this.getAuthorizationToken(
-      business.id
+      business.id,
     );
     return { business, accessToken, refreshToken };
   }
@@ -166,10 +180,14 @@ export class BusinessAuthenticationService {
 
   public async getAccessToken(filter: any) {
     const { refreshToken } = filter;
-    const cachedBusinessId = await this.cacheService.getAuthorizationToken(refreshToken);
+    const cachedBusinessId =
+      await this.cacheService.getAuthorizationToken(refreshToken);
     if (!cachedBusinessId) throw new AppError(401, "Invalid refresh token");
 
-    const business = await Business.findOne({ _id: cachedBusinessId, isDeleted: false });
+    const business = await Business.findOne({
+      _id: cachedBusinessId,
+      isDeleted: false,
+    });
     if (!business) throw new AppError(404, "Business not found");
 
     const accessToken = this.authenticationTokenGenerator.generateToken({
@@ -184,15 +202,24 @@ export class BusinessAuthenticationService {
     return;
   }
 
+  public async checkUsernameAvailability(username: string) {
+    const existing = await Business.findOne({
+      username: username.toLowerCase(),
+    });
+    return { available: !existing };
+  }
+
   private async getAuthorizationToken(businessId: string) {
     const accessToken = this.authenticationTokenGenerator.generateToken({
       businessId,
       type: "business",
     });
-    const refreshToken = this.authenticationTokenGenerator.generateRefreshToken({
-      businessId,
-      type: "business",
-    });
+    const refreshToken = this.authenticationTokenGenerator.generateRefreshToken(
+      {
+        businessId,
+        type: "business",
+      },
+    );
     await this.cacheService.cacheAuthorizationToken(businessId, refreshToken);
     return { accessToken, refreshToken };
   }
