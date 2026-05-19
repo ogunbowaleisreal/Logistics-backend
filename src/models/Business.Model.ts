@@ -75,15 +75,15 @@ const BusinessSchema = new Schema<IBusiness>(
     },
     supports: {
       phone: {
-        value: { type: String, required: true },
+        value: { type: String },
         isEnabled: { type: Boolean, default: false },
       },
       email: {
-        value: { type: String, required: true },
+        value: { type: String },
         isEnabled: { type: Boolean, default: false },
       },
       whatsapp: {
-        value: { type: String, required: true },
+        value: { type: String },
         isEnabled: { type: Boolean, default: false },
       },
     },
