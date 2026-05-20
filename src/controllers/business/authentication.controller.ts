@@ -15,10 +15,13 @@ const businessAuthService = new BusinessAuthenticationService(
   authenticationTokenGenerator,
   cacheService,
   emailService,
-  hasher
+  hasher,
 );
 
-export const register = async (req: Request, res: Response): Promise<Response> => {
+export const register = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const business = await businessAuthService.register(req.body);
     return res.status(201).json({
@@ -33,7 +36,28 @@ export const register = async (req: Request, res: Response): Promise<Response> =
   }
 };
 
-export const verifyEmail = async (req: Request, res: Response): Promise<Response> => {
+export const sendBusinessEmailVerification = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  const { email } = req.query as { email: string };
+  try {
+    await businessAuthService.sendBusinessEmailVerification(email);
+    return res.status(200).json({
+      message: "Business verification email sent successfully.",
+    });
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return res.status(500).json({ message: error.message });
+  }
+};
+
+export const verifyEmail = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const response = await businessAuthService.verifyEmail(req.body);
     return res.status(200).json({
@@ -71,7 +95,7 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
 
 export const sendLogin2FAVerification = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   const { email } = req.query as { email: string };
   try {
@@ -85,10 +109,15 @@ export const sendLogin2FAVerification = async (
   }
 };
 
-export const verifyLoginOTP = async (req: Request, res: Response): Promise<Response> => {
+export const verifyLoginOTP = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     const response = await businessAuthService.verifyLoginOTP(req.body);
-    return res.status(200).json({ message: "Login successful", data: response });
+    return res
+      .status(200)
+      .json({ message: "Login successful", data: response });
   } catch (error: any) {
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ message: error.message });
@@ -97,7 +126,10 @@ export const verifyLoginOTP = async (req: Request, res: Response): Promise<Respo
   }
 };
 
-export const forgotPassword = async (req: Request, res: Response): Promise<Response> => {
+export const forgotPassword = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     await businessAuthService.forgotPassword(req.body);
     return res.status(200).json({ message: "Password reset OTP sent" });
@@ -109,7 +141,10 @@ export const forgotPassword = async (req: Request, res: Response): Promise<Respo
   }
 };
 
-export const resetPassword = async (req: Request, res: Response): Promise<Response> => {
+export const resetPassword = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
     await businessAuthService.resetPassword(req.body);
     return res.status(200).json({ message: "Password reset successfully" });
@@ -123,7 +158,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<Respon
 
 export const generateNewAccessToken = async (
   req: Request,
-  res: Response
+  res: Response,
 ): Promise<Response> => {
   try {
     const token = await businessAuthService.getAccessToken(req.query);
@@ -139,7 +174,10 @@ export const generateNewAccessToken = async (
   }
 };
 
-export const logout = async (req: Request, res: Response): Promise<Response> => {
+export const logout = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   const { refreshToken } = req.query as { refreshToken: string };
   try {
     await businessAuthService.logout(refreshToken);
@@ -152,10 +190,17 @@ export const logout = async (req: Request, res: Response): Promise<Response> => 
   }
 };
 
-export const checkUsernameAvailability = async (req: Request, res: Response): Promise<Response> => {
+export const checkUsernameAvailability = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
   try {
-    const result = await businessAuthService.checkUsernameAvailability(req.query.username as string);
-    return res.status(200).json({ message: "Username availability checked", data: result });
+    const result = await businessAuthService.checkUsernameAvailability(
+      req.query.username as string,
+    );
+    return res
+      .status(200)
+      .json({ message: "Username availability checked", data: result });
   } catch (error: any) {
     if (error instanceof AppError) {
       return res.status(error.statusCode).json({ message: error.message });

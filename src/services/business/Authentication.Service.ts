@@ -80,6 +80,30 @@ export class BusinessAuthenticationService {
     return { business, accessToken, refreshToken };
   }
 
+  public async sendBusinessEmailVerification(email: string) {
+    const business = await Business.findOne({
+      email: email.toLowerCase().trim(),
+    });
+    if (!business) {
+      throw new AppError(404, "Business not found");
+    }
+
+    if (business.isEmailVerified === true) {
+      throw new AppError(400, "Email has already been verified");
+    }
+
+    // Generate OTP
+    const otp = this.authenticationTokenGenerator.generateOTP(6);
+    await this.cacheService.cacheBizEmailVerificationOTP(email, otp);
+    await this.emailService.sendBusinessEmailVerification({
+      email,
+      otp,
+      name: business.name,
+    });
+
+    return;
+  }
+
   public async login(payload: any) {
     const { email, password } = payload;
 
