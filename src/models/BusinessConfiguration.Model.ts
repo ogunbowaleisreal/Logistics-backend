@@ -4,7 +4,7 @@ export interface IBusinessConfiguration extends Document {
   businessId: Schema.Types.ObjectId;
   shippingSettings?: string;
   rideTypeConfig?: {
-    type: "bike" | "bus_car" | "pickup" | "truck" | "cargo";
+    type: "bike" | "bus_car" | "truck" | "cargo";
     isEnabled: boolean;
     pricePerKm: number;
     baseAmount: number;
@@ -29,7 +29,7 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
       {
         type: {
           type: String,
-          enum: ["bike", "bus_car", "pickup", "truck", "cargo"],
+          enum: ["bike", "bus_car", "truck", "cargo"],
           required: true,
         },
         isEnabled: { type: Boolean, default: false },

@@ -30,7 +30,7 @@ export const createOrderSchema = Joi.object({
   slug: Joi.string().trim().required(),
   zoneId: Joi.string().trim().optional(),
   distanceInKM: Joi.number().positive().optional(),
-  rideType: Joi.string().valid("bike", "bus_car", "pickup", "truck").required(),
+  rideType: Joi.string().valid("bike", "bus_car", "truck", "cargo").required(),
   shippingType: Joi.string()
     .valid("local", "inter-state", "international")
     .default("local"),

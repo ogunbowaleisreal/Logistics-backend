@@ -21,7 +21,7 @@ export class ShippingService {
       states: string[];
       shippingType?: "local" | "inter-state" | "international";
       pricing: {
-        rideType: "bike" | "bus_car" | "pickup" | "truck";
+        rideType: "bike" | "bus_car" | "truck";
         amount: number;
       }[];
       destinationStates?: string[];
@@ -54,7 +54,7 @@ export class ShippingService {
       states?: string[];
       shippingType?: "local" | "inter-state" | "international";
       pricing?: {
-        rideType: "bike" | "bus_car" | "pickup" | "truck";
+        rideType: "bike" | "bus_car" | "truck";
         amount: number;
       }[];
       destinationStates?: string[];
@@ -100,7 +100,7 @@ export class ShippingService {
     businessId: string,
     zoneId: string,
     incoming: {
-      rideType: "bike" | "bus_car" | "pickup" | "truck";
+      rideType: "bike" | "bus_car" | "truck";
       minKg: number;
       maxKg: number;
       amount: number;
@@ -173,7 +173,7 @@ export class ShippingService {
     zoneId: string,
     bracketId: string,
     payload: {
-      rideType?: "bike" | "bus_car" | "pickup" | "truck";
+      rideType?: "bike" | "bus_car" | "truck";
       minKg?: number;
       maxKg?: number;
       amount?: number;
@@ -302,7 +302,7 @@ export class ShippingService {
     businessId: string,
     params: {
       shippingType: "local" | "inter-state" | "international";
-      rideType: "bike" | "bus_car" | "pickup" | "truck";
+      rideType: "bike" | "bus_car" | "truck";
       zoneId?: string;
       distanceInKM?: number;
       weightKg?: number;

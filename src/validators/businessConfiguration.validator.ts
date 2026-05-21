@@ -10,7 +10,7 @@ export const updateConfigurationSchema = Joi.object({
     .items(
       Joi.object({
         type: Joi.string()
-          .valid("bike", "bus_car", "pickup", "truck")
+          .valid("bike", "bus_car", "truck", "cargo")
           .required(),
         isEnabled: Joi.boolean().required(),
         pricePerKm: Joi.number().min(0).required(),

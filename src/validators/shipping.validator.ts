@@ -1,9 +1,7 @@
 import Joi from "joi";
 
 const pricingItemSchema = Joi.object({
-  rideType: Joi.string()
-    .valid("bike", "bus_car", "pickup", "truck")
-    .required(),
+  rideType: Joi.string().valid("bike", "bus_car", "truck", "cargo").required(),
   amount: Joi.number().min(0).required(),
 });
 
@@ -13,13 +11,9 @@ export const createZoneSchema = Joi.object({
   shippingType: Joi.string()
     .valid("local", "inter-state", "international")
     .default("local"),
-  pricing: Joi.array()
-    .items(pricingItemSchema)
-    .min(1)
-    .required()
-    .messages({
-      "array.min": "At least one pricing entry is required",
-    }),
+  pricing: Joi.array().items(pricingItemSchema).min(1).required().messages({
+    "array.min": "At least one pricing entry is required",
+  }),
   destinationStates: Joi.when("shippingType", {
     is: "inter-state",
     then: Joi.array().items(Joi.string()).min(1).required(),
@@ -39,13 +33,9 @@ export const updateZoneSchema = Joi.object({
   shippingType: Joi.string()
     .valid("local", "inter-state", "international")
     .optional(),
-  pricing: Joi.array()
-    .items(pricingItemSchema)
-    .min(1)
-    .optional()
-    .messages({
-      "array.min": "At least one pricing entry is required",
-    }),
+  pricing: Joi.array().items(pricingItemSchema).min(1).optional().messages({
+    "array.min": "At least one pricing entry is required",
+  }),
   destinationStates: Joi.when("shippingType", {
     is: "inter-state",
     then: Joi.array().items(Joi.string()).min(1).required(),
@@ -64,7 +54,7 @@ export const bulkUpsertWeightBracketsSchema = Joi.object({
     .items(
       Joi.object({
         rideType: Joi.string()
-          .valid("bike", "bus_car", "pickup", "truck")
+          .valid("bike", "bus_car", "truck", "cargo")
           .required(),
         minKg: Joi.number().min(0).required(),
         maxKg: Joi.number()
@@ -79,9 +69,7 @@ export const bulkUpsertWeightBracketsSchema = Joi.object({
 });
 
 export const updateWeightBracketSchema = Joi.object({
-  rideType: Joi.string()
-    .valid("bike", "bus_car", "pickup", "truck")
-    .optional(),
+  rideType: Joi.string().valid("bike", "bus_car", "truck", "cargo").optional(),
   minKg: Joi.number().min(0).optional(),
   maxKg: Joi.number().min(0).optional(),
   amount: Joi.number().min(0).optional(),

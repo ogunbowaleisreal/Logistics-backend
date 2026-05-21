@@ -62,7 +62,7 @@ export class ShippingService {
     businessId: string,
     params: {
       shippingType: "local" | "inter-state" | "international";
-      rideType: "bike" | "bus_car" | "pickup" | "truck";
+      rideType: "bike" | "bus_car" | "truck";
       zoneId?: string;
       distanceInKM?: number;
       weightKg?: number;

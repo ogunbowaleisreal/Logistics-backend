@@ -2,7 +2,7 @@ import { Schema, Document, model, Types } from "mongoose";
 
 export interface IWeightBracket {
   _id?: Types.ObjectId;
-  rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+  rideType: "bike" | "bus_car" | "truck";
   minKg: number;
   maxKg: number;
   amount: number;
@@ -11,10 +11,10 @@ export interface IWeightBracket {
 interface IBusinessShippingZone extends Document {
   businessId: Types.ObjectId;
   name: string;
-  shippingType: 'local' | 'inter-state' | 'international';
+  shippingType: "local" | "inter-state" | "international";
   states: string[];
   pricing: {
-    rideType: 'bike' | 'bus_car' | 'pickup' | 'truck';
+    rideType: "bike" | "bus_car" | "truck";
     amount: number;
   }[];
   weightBrackets: IWeightBracket[];
@@ -39,13 +39,21 @@ const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
   states: [{ type: String }],
   pricing: [
     {
-      rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"], required: true },
+      rideType: {
+        type: String,
+        enum: ["bike", "bus_car", "truck", "cargo"],
+        required: true,
+      },
       amount: { type: Number, required: true },
     },
   ],
   weightBrackets: [
     {
-      rideType: { type: String, enum: ["bike", "bus_car", "pickup", "truck"], required: true },
+      rideType: {
+        type: String,
+        enum: ["bike", "bus_car", "truck", "cargo"],
+        required: true,
+      },
       minKg: { type: Number, required: true },
       maxKg: { type: Number, required: true },
       amount: { type: Number, required: true },
