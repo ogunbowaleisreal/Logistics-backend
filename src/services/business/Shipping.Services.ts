@@ -18,10 +18,10 @@ export class ShippingService {
     businessId: string,
     payload: {
       name: string;
-      states: string[];
+      states?: string[];
       shippingType?: "local" | "inter-state" | "international";
       pricing: {
-        rideType: "bike" | "bus_car" | "truck";
+        rideType: "bike" | "bus_car" | "truck" | "cargo";
         amount: number;
       }[];
       destinationStates?: string[];
@@ -54,7 +54,7 @@ export class ShippingService {
       states?: string[];
       shippingType?: "local" | "inter-state" | "international";
       pricing?: {
-        rideType: "bike" | "bus_car" | "truck";
+        rideType: "bike" | "bus_car" | "truck" | "cargo";
         amount: number;
       }[];
       destinationStates?: string[];
@@ -302,7 +302,7 @@ export class ShippingService {
     businessId: string,
     params: {
       shippingType: "local" | "inter-state" | "international";
-      rideType: "bike" | "bus_car" | "truck";
+      rideType: "bike" | "bus_car" | "truck" | "cargo";
       zoneId?: string;
       distanceInKM?: number;
       weightKg?: number;

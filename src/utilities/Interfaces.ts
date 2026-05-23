@@ -47,7 +47,7 @@ export interface IOrderPayload {
   slug: string;
   zoneId?: string;
   distanceInKM?: number;
-  rideType?: 'bike' | 'bus_car' | 'pickup' | 'truck';
+  rideType?: 'bike' | 'bus_car' | 'truck';
   shippingType?: 'local' | 'inter-state' | 'international';
   originState?: string;
   orderInformation: {

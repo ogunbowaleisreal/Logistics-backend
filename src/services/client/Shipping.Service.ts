@@ -82,7 +82,6 @@ export class ShippingService {
     const labelMap: Record<string, string> = {
       bike: "Bike",
       bus_car: "Bus / Car",
-      pickup: "Pickup",
       truck: "Truck",
     };
 

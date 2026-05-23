@@ -5,7 +5,7 @@ export const createRiderSchema = Joi.object({
   phone: Joi.string().trim().required(),
   dailyCapacity: Joi.number().min(0).required(),
   rideType: Joi.string().valid("bike", "bus_car", "truck").required().messages({
-    "any.only": "rideType must be one of: bike, bus_car, pickup, truck",
+    "any.only": "rideType must be one of: bike, bus_car, truck",
     "any.required": "rideType is required",
   }),
 });

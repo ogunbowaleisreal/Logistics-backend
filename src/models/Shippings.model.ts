@@ -14,7 +14,7 @@ interface IBusinessShippingZone extends Document {
   shippingType: "local" | "inter-state" | "international";
   states: string[];
   pricing: {
-    rideType: "bike" | "bus_car" | "truck";
+    rideType: "bike" | "bus_car" | "truck" | "cargo";
     amount: number;
   }[];
   weightBrackets: IWeightBracket[];

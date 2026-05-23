@@ -7,7 +7,7 @@ interface IRider extends Document {
   dailyCapacity: number;
   totalDeliveries?: number;
   todaysRideCount?: number;
-  rideType?: "bike" | "bus_car" | "pickup" | "truck";
+  rideType?: "bike" | "bus_car"  | "truck";
   status?: string;
   isDeleted?: boolean;
   __v?: number;

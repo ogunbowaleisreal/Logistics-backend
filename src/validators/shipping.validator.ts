@@ -7,7 +7,11 @@ const pricingItemSchema = Joi.object({
 
 export const createZoneSchema = Joi.object({
   name: Joi.string().trim().required(),
-  states: Joi.array().items(Joi.string().trim()).min(1).required(),
+  states: Joi.when("shippingType", {
+    is: "international",
+    then: Joi.array().items(Joi.string().trim()).optional(),
+    otherwise: Joi.array().items(Joi.string().trim()).min(1).required(),
+  }),
   shippingType: Joi.string()
     .valid("local", "inter-state", "international")
     .default("local"),
