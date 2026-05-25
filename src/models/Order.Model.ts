@@ -33,6 +33,7 @@ export interface IOrder extends Document {
   };
   status: string;
   paymentMethod: string;
+  payementId?: string;
   riderID?: string;
   amount: number;
   serviceFee?: number;
@@ -125,6 +126,7 @@ const OrderSchema = new Schema<IOrder>(
       type: String,
       enum: ["safehaven", "monnify", "flutterwave"],
     },
+    payementId: { type: String },
     amount: { type: Number, min: 0, required: true },
     serviceFee: { type: Number, min: 0 },
     VAT: { type: Number, min: 0 },

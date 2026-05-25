@@ -109,7 +109,7 @@ export class OrderService {
       amount,
       serviceFee,
       VAT,
-      totalAmount: 100,
+      totalAmount,
     });
 
     if (order.personnelInformation.sender.email) {
@@ -149,11 +149,11 @@ export class OrderService {
         });
       order.paymentMethod = "safehaven";
       order.virtualAccountData = {
-        accountNumber: accountNumber,
-        accountName: accountName,
+        accountNumber: "0000000000",
+        accountName: "Logistics Payment Account",
         bankName: "Safehaven Microfinance Bank",
-        expiryDate: expiryDate,
-        callbackURL: callbackURL,
+        expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+        callbackURL: "https://webhook.site/your-webhook-url", // TODO: Replace with actual callback URL
       };
     } else if (paymentMethod == "monnify") {
       const senderEmail = order.personnelInformation.sender.email;
@@ -338,6 +338,30 @@ export class OrderService {
       return order;
     }
   }
+
+  public async verifyFlutterwavePaymentViaWebhook(payload: any) {
+    // const { id, txRef, amount, currency, status } = payload;
+    // const transaction = await NairaWallet.findOne({
+    //   paymentReference: txRef,
+    // });
+
+    // if (!transaction) {
+    //   throw new AppError(404, "Transaction not found");
+    // }
+
+    // if (transaction.status === "successful") return;
+
+    // const updatedTransaction = await this.verifyPayment(
+    //   { id: transaction.account },
+    //   {
+    //     transactionReference: txRef,
+    //     transactionID: id,
+    //   },
+    // );
+
+    return;
+  }
+
 
   public async trackOrder(businessId: string, trackingID: string) {
     const validateTrackingID = trackingID.startsWith("SME-");

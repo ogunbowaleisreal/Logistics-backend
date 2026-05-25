@@ -7,6 +7,7 @@ import {
   trackOrder,
   verifySafehavenPaymentViaWebhook,
   verifyMonnifyPaymentViaWebhook,
+  verifyFlutterwavePaymentViaWebhook,
   checkoutOrder,
 } from "../../controllers/client/order.controller";
 import {
@@ -62,6 +63,8 @@ router
   .post(verifySafehavenPaymentViaWebhook);
 
 router.route("/monnify/webhook").post(verifyMonnifyPaymentViaWebhook);
+
+router.post("/flutter/webhook", verifyFlutterwavePaymentViaWebhook);
 
 router.get("/image-signature", generateImageUploadSignature);
 

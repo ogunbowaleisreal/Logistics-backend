@@ -65,6 +65,30 @@ export const verifySafehavenPaymentViaWebhook = async (
   }
 };
 
+export const verifyFlutterwavePaymentViaWebhook = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const payload = req.body;
+  console.log("======================REQ HEADER =====================");
+  console.log(req.headers);
+  console.log("======================REQ BODY =====================");
+  console.log(req.body);
+
+  try {
+    throw new Error(
+      "Flutterwave webhook verification is currently disabled for testing purposes",
+    );
+    // await orderService.verifyFlutterwavePaymentViaWebhook(payload);
+    // return res.status(200).json({
+    //   message: "Wallet payment verified successfully",
+    // });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const trackOrder = async (
   req: ExtendedRequest,
   res: Response,
