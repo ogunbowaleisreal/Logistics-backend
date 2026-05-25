@@ -65,10 +65,11 @@ jobs:
           MONNIFY_CONTRACT_CODE: ${{ secrets.MONNIFY_CONTRACT_CODE }}
           MONNIFY_WALLET_ACCOUNT_NUMBER: ${{ secrets.MONNIFY_WALLET_ACCOUNT_NUMBER }}
 
-          FLUTTERWAVE_CLIENT_ID: ${{ secrets.FLUTTERWAVE_CLIENT_ID }}
-          FLUTTERWAVE_CLIENT_SECRET: ${{ secrets.FLUTTERWAVE_CLIENT_SECRET }}
-          FLUTTERWAVE_ENCRYPTION_KEY: ${{ secrets.FLUTTERWAVE_ENCRYPTION_KEY }}
           FLUTTERWAVE_SECRET_HASH: ${{ secrets.FLUTTERWAVE_SECRET_HASH }}
+          FLW_ENCRYPTION_KEY: ${{ secrets.FLW_ENCRYPTION_KEY }}
+          FLUTTERWAVE_PUBLIC_KEY: ${{ secrets.FLUTTERWAVE_PUBLIC_KEY }}
+          FLUTTERWAVE_SECRET_KEY: ${{ secrets.FLUTTERWAVE_SECRET_KEY }}
+          FLUTTERWAVE_REDIRECT_URL: ${{ secrets.FLUTTERWAVE_REDIRECT_URL }}
 
           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
 
@@ -139,10 +140,11 @@ jobs:
             echo "MONNIFY_CONTRACT_CODE=${{ secrets.MONNIFY_CONTRACT_CODE }}" >> ${{ secrets.ENV_PATH }}
             echo "MONNIFY_WALLET_ACCOUNT_NUMBER=${{ secrets.MONNIFY_WALLET_ACCOUNT_NUMBER }}" >> ${{ secrets.ENV_PATH }}
 
-            echo "FLUTTERWAVE_CLIENT_ID=${{ secrets.FLUTTERWAVE_CLIENT_ID }}" >> ${{ secrets.ENV_PATH }}
-            echo "FLUTTERWAVE_CLIENT_SECRET=${{ secrets.FLUTTERWAVE_CLIENT_SECRET }}" >> ${{ secrets.ENV_PATH }}
-            echo "FLUTTERWAVE_ENCRYPTION_KEY=${{ secrets.FLUTTERWAVE_ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
             echo "FLUTTERWAVE_SECRET_HASH=${{ secrets.FLUTTERWAVE_SECRET_HASH }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLW_ENCRYPTION_KEY=${{ secrets.FLW_ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLUTTERWAVE_PUBLIC_KEY=${{ secrets.FLUTTERWAVE_PUBLIC_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLUTTERWAVE_SECRET_KEY=${{ secrets.FLUTTERWAVE_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "FLUTTERWAVE_REDIRECT_URL=${{ secrets.FLUTTERWAVE_REDIRECT_URL }}" >> ${{ secrets.ENV_PATH }}
 
             echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
 

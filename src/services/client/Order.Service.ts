@@ -55,7 +55,10 @@ export class OrderService {
         "Inter-state shipping is not enabled for this business",
       );
     }
-    if (shippingType === "international" && !regions.includes("international")) {
+    if (
+      shippingType === "international" &&
+      !regions.includes("international")
+    ) {
       throw new AppError(
         400,
         "International shipping is not enabled for this business",
@@ -184,7 +187,7 @@ export class OrderService {
         await flutterwave.initiateCardPayment({
           txRef: String(order._id),
           amount: order.totalAmount,
-          redirectUrl: `${process.env.BASE_URL}/api/v1/orders/flutterwave/callback`,
+          redirectUrl: `${process.env.FLUTTERWAVE_REDIRECT_URL}/?orderId=${order._id}`,
           customerEmail: senderEmail,
           customerName: order.personnelInformation.sender.name,
           customerPhone: order.personnelInformation.sender.phone,
