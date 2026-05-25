@@ -5,7 +5,7 @@ export interface IOrder extends Document {
   businessId: Schema.Types.ObjectId;
   zoneId?: Schema.Types.ObjectId;
   distanceInKM?: number;
-  rideType?: "bike" | "bus_car" | "truck";
+  rideType?: "bike" | "bus_car" | "truck" | "cargo";
   shippingType?: "local" | "inter-state" | "international";
   trackingID: string;
   orderInformation: {
@@ -101,7 +101,7 @@ const OrderSchema = new Schema<IOrder>(
     riderID: { type: Schema.Types.ObjectId, ref: "Rider" },
     distanceInKM: { type: Number },
     zoneId: { type: Schema.Types.ObjectId, ref: "BusinessShippingZone" },
-    rideType: { type: String, enum: ["bike", "bus_car", "truck"] },
+    rideType: { type: String, enum: ["bike", "bus_car", "truck", "cargo"] },
     shippingType: {
       type: String,
       enum: ["local", "inter-state", "international"],

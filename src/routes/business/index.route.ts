@@ -1,5 +1,6 @@
 import { Router } from "express";
 import businessAuthRoute from "./authentication.route";
+import dashboardRoute from "./dashboard.route";
 import staffAuthRoute from "./staffAuth.route";
 import staffRoute from "./staff.route";
 import staffRoleRoute from "./staffRole.route";
@@ -19,6 +20,7 @@ import termsAndConditionsRoute from "./termsAndConditions.route";
 const router = Router();
 
 router.use("/auth", businessAuthRoute);
+router.use("/dashboard", dashboardRoute);
 router.use("/profile", businessProfileRoute);
 router.use("/staff/auth", staffAuthRoute);
 router.use("/staff", staffRoute);

@@ -106,7 +106,7 @@ export class OrderService {
       amount,
       serviceFee,
       VAT,
-      totalAmount,
+      totalAmount: 100,
     });
 
     if (order.personnelInformation.sender.email) {
@@ -139,18 +139,18 @@ export class OrderService {
     }
 
     if (paymentMethod == "safehaven") {
-      // const { accountNumber, accountName, expiryDate, callbackURL } =
-      //   await safeHaven.createVirtualAccount({
-      //     amount: order.totalAmount!,
-      //     reference: order.id,
-      //   });
+      const { accountNumber, accountName, expiryDate, callbackURL } =
+        await safeHaven.createVirtualAccount({
+          amount: order.totalAmount!,
+          reference: order.id,
+        });
       order.paymentMethod = "safehaven";
       order.virtualAccountData = {
-        accountNumber: "0000000000",
-        accountName: "Safehaven Virtual Account",
+        accountNumber: accountNumber,
+        accountName: accountName,
         bankName: "Safehaven Microfinance Bank",
-        expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        callbackURL: "https://example.com/callback",
+        expiryDate: expiryDate,
+        callbackURL: callbackURL,
       };
     } else if (paymentMethod == "monnify") {
       const senderEmail = order.personnelInformation.sender.email;
