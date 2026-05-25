@@ -340,28 +340,54 @@ export class OrderService {
   }
 
   public async verifyFlutterwavePaymentViaWebhook(payload: any) {
-    // const { id, txRef, amount, currency, status } = payload;
-    // const transaction = await NairaWallet.findOne({
-    //   paymentReference: txRef,
-    // });
+    const { event, data } = payload;
 
-    // if (!transaction) {
-    //   throw new AppError(404, "Transaction not found");
-    // }
+    if (event !== "charge.completed") {
+      throw new AppError(400, "Invalid Flutterwave event type");
+    }
 
-    // if (transaction.status === "successful") return;
+    const { tx_ref, status, amount } = data;
+    const isSuccessful = status === "successful";
 
-    // const updatedTransaction = await this.verifyPayment(
-    //   { id: transaction.account },
-    //   {
-    //     transactionReference: txRef,
-    //     transactionID: id,
-    //   },
-    // );
+    const session = await startSession();
 
-    return;
+    const order = await session.withTransaction(async () => {
+      const updatedOrder = await Order.findOneAndUpdate(
+        {
+          _id: tx_ref,
+          "virtualAccountData.sessionId": tx_ref,
+          status: { $ne: "paid" },
+        },
+        {
+          status: isSuccessful ? "paid" : "failed",
+          totalAmount: amount,
+        },
+        { new: true, session },
+      );
+
+      if (!updatedOrder) {
+        return null;
+      }
+
+      if (isSuccessful) {
+        const business = await Business.findOneAndUpdate(
+          { _id: updatedOrder.businessId, isDeleted: false },
+          { $inc: { "wallet.naira": updatedOrder.amount } },
+          { session },
+        );
+
+        if (!business) {
+          throw new AppError(404, "Account not found");
+        }
+      }
+
+      return updatedOrder;
+    });
+
+    await session.endSession();
+
+    return order;
   }
-
 
   public async trackOrder(businessId: string, trackingID: string) {
     const validateTrackingID = trackingID.startsWith("SME-");

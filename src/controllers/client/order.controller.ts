@@ -71,19 +71,13 @@ export const verifyFlutterwavePaymentViaWebhook = async (
   next: NextFunction,
 ) => {
   const payload = req.body;
-  console.log("======================REQ HEADER =====================");
-  console.log(req.headers);
-  console.log("======================REQ BODY =====================");
-  console.log(req.body);
 
   try {
-    throw new Error(
-      "Flutterwave webhook verification is currently disabled for testing purposes",
-    );
-    // await orderService.verifyFlutterwavePaymentViaWebhook(payload);
-    // return res.status(200).json({
-    //   message: "Wallet payment verified successfully",
-    // });
+    
+    await orderService.verifyFlutterwavePaymentViaWebhook(payload);
+    return res.status(200).json({
+      message: "Wallet payment verified successfully",
+    });
   } catch (error: any) {
     next(error);
   }

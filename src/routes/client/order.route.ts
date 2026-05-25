@@ -22,6 +22,7 @@ import {
   getMyOrdersSchema,
   trackOrderSchema,
 } from "../../validators/order.validator";
+import { verifyFlutterwaveWebookHash } from "../../middlewares/checkout.middleware";
 
 const router = Router();
 
@@ -64,7 +65,7 @@ router
 
 router.route("/monnify/webhook").post(verifyMonnifyPaymentViaWebhook);
 
-router.post("/flutter/webhook", verifyFlutterwavePaymentViaWebhook);
+router.post("/flutter/webhook", verifyFlutterwaveWebookHash, verifyFlutterwavePaymentViaWebhook);
 
 router.get("/image-signature", generateImageUploadSignature);
 
