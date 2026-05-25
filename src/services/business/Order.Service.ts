@@ -40,7 +40,10 @@ export class OrderService {
     if (orderID) {
       const order = await Order.findOne(
         tenantScope({ _id: orderID }, businessId),
-      );
+      ).populate({
+        path: "riderID",
+        select: "name phone",
+      });
       if (!order) {
         throw new AppError(404, "Order not found");
       }
