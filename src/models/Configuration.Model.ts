@@ -6,6 +6,19 @@ export interface IServiceFeeTier {
   percentage: number;
 }
 
+export interface IAddress {
+  street: string;
+  city: string;
+  state?: string;
+  country: string;
+}
+
+export interface IContactInfo {
+  phoneNumbers: string[];
+  emails: string[];
+  address: IAddress;
+}
+
 export interface IConfiguration extends Document {
   serviceFee: {
     tiers: IServiceFeeTier[];
@@ -15,6 +28,7 @@ export interface IConfiguration extends Document {
     type: string;
     value: number;
   };
+  contactInfo: IContactInfo;
   __v?: number;
 }
 
@@ -48,6 +62,16 @@ const ConfigurationSchema = new Schema<IConfiguration>(
         default: "percentage",
       },
       value: { type: Number, default: 7.5 },
+    },
+    contactInfo: {
+      phoneNumbers: { type: [String], default: [] },
+      emails: { type: [String], default: [] },
+      address: {
+        street:  { type: String, default: "" },
+        city:    { type: String, default: "" },
+        state:   { type: String, default: "" },
+        country: { type: String, default: "" },
+      },
     },
   },
   {

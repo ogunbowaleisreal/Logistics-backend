@@ -12,6 +12,10 @@ const router = Router();
 router
   .route("")
   .get(adminVerification, getConfiguration)
-  .put(adminVerification, validate(updateConfigurationSchema, "body"), updateConfiguration);
+  .patch(
+    adminVerification,
+    validate(updateConfigurationSchema, "body"),
+    updateConfiguration,
+  );
 
 export default router;

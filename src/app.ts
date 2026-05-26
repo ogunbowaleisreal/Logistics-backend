@@ -16,6 +16,7 @@ import clientRoute from "./routes/client/index.route";
 import adminRoute from "./routes/admin/index.route";
 import businessRoute from "./routes/business/index.route";
 import riderRoute from "./routes/rider/index.route";
+import publicRoute from "./routes/public/index.route";
 import AppError from "./utilities/ErrorHandler";
 import { v4 as uuidv4 } from "uuid";
 import { startRiderResetJob } from "./jobs/RiderReset.Job";
@@ -66,6 +67,7 @@ class App {
     this.app.use("/api/admin", adminRoute);
     this.app.use("/api/business", businessRoute);
     this.app.use("/api/rider", riderRoute);
+    this.app.use("/api/public", publicRoute);
     this.app.use(
       "/api/*",
       (req: Request, res: Response, next: NextFunction) => {

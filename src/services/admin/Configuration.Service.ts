@@ -12,11 +12,13 @@ export class ConfigurationService {
     return configuration;
   }
 
-  public async updateConfiguration(payload: Pick<IConfiguration, "serviceFee" | "VAT">) {
-    const { serviceFee, VAT } = payload;
+  public async updateConfiguration(payload: Pick<IConfiguration, "serviceFee" | "VAT" | "contactInfo">) {
+    const { serviceFee, VAT, contactInfo } = payload;
+    const update: Partial<Pick<IConfiguration, "serviceFee" | "VAT" | "contactInfo">> = { serviceFee, VAT };
+    if (contactInfo !== undefined) update.contactInfo = contactInfo;
     const configuration = await Configuration.findOneAndUpdate(
       {},
-      { serviceFee, VAT },
+      update,
       { new: true, upsert: true },
     );
     return configuration;
