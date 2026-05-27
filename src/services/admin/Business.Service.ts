@@ -38,7 +38,10 @@ export class BusinessService {
     return paginateModel(Business, query, page, limit);
   }
 
-  public async suspendBusiness(businessId: string) {
+  public async updateBusinessStatus(
+    businessId: string,
+    status: "active" | "suspended",
+  ) {
     const business = await Business.findOne({
       _id: businessId,
       isDeleted: false,
@@ -48,11 +51,11 @@ export class BusinessService {
       throw new AppError(404, "Business not found");
     }
 
-    if (business.status === "suspended") {
-      throw new AppError(400, "Business already suspended");
+    if (business.status === status) {
+      throw new AppError(400, `Business already ${status}`);
     }
 
-    business.status = "suspended";
+    business.status = status;
     await business.save();
 
     return business;

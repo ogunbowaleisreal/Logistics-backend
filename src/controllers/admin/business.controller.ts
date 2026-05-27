@@ -18,18 +18,24 @@ export const getBusinesses = async (
   }
 };
 
-export const suspendBusiness = async (
+export const updateBusinessStatus = async (
   req: Request,
   res: Response,
   next: NextFunction,
 ) => {
-  const { businessId } = req.body as { businessId: string };
+  const { businessId, status } = req.body as {
+    businessId: string;
+    status: "active" | "suspended";
+  };
 
   try {
-    const business = await businessService.suspendBusiness(businessId);
+    const business = await businessService.updateBusinessStatus(
+      businessId,
+      status,
+    );
     return res
       .status(200)
-      .json({ message: "Business suspended successfully", data: business });
+      .json({ message: `Business ${status} successfully`, data: business });
   } catch (error: any) {
     next(error);
   }

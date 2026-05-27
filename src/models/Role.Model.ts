@@ -19,7 +19,7 @@ export const Permissions = [
   { code: "GETCONFIG", name: "GET CONFIGURATION" },
   { code: "UPTCONFIG", name: "UPDATE CONFIGURATION" },
   { code: "GETBUSINESS", name: "GET BUSINESSES" },
-  { code: "SUSPBUSINESS", name: "SUSPEND BUSINESS" },
+  { code: "UPTBUSINESS", name: "UPDATE BUSINESS STATUS" },
   { code: "DELBUSINESS", name: "DELETE BUSINESS" },
 ];
 
