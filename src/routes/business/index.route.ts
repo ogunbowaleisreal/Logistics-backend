@@ -16,6 +16,7 @@ import kycRoute from "./kyc.route";
 import businessProfileRoute from "./businessProfile.route";
 import privacyPolicyRoute from "./privacyPolicy.route";
 import termsAndConditionsRoute from "./termsAndConditions.route";
+import withdrawalRoute from "./withdrawal.route";
 
 const router = Router();
 
@@ -36,5 +37,6 @@ router.use("/shipping", shippingRoute);
 router.use("/kyc", kycRoute);
 router.use("/privacy-policy", privacyPolicyRoute);
 router.use("/terms-and-conditions", termsAndConditionsRoute);
+router.use("/withdrawals", withdrawalRoute);
 
 export default router;

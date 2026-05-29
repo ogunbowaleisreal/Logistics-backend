@@ -2,26 +2,27 @@ import { Router } from "express";
 import {
   createBank,
   deleteBank,
-  getBankCodes,
+  getBankList,
   getBanks,
   setDefaultBank,
   verifyBank,
 } from "../../controllers/business/bank.controller";
-import { staffRoleVerification } from "../../middlewares/authorization.middleware";
+import { businessVerification } from "../../middlewares/authorization.middleware";
 
 const router = Router();
 
 router
   .route("/")
-  .post(staffRoleVerification("CRTBANK"), createBank)
-  .get(staffRoleVerification("GETBANKS"), getBanks)
-  .delete(staffRoleVerification("DELBANK"), deleteBank);
+  .post(businessVerification, createBank)
+  .get(businessVerification, getBanks)
+  .delete(businessVerification, deleteBank);
 
-router.patch("/default", staffRoleVerification("CRTBANK"), setDefaultBank);
+router.patch("/default", businessVerification, setDefaultBank);
+
 
 router
   .route("/verify")
-  .get(staffRoleVerification("GETBANKS"), getBankCodes)
-  .post(staffRoleVerification("GETBANKS"), verifyBank);
+  .get(businessVerification, getBankList)
+  .post(businessVerification, verifyBank);
 
 export default router;

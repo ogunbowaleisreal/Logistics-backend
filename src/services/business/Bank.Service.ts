@@ -1,45 +1,31 @@
 import axios from "axios";
-import { Bank } from "../../models/Bank.Model";
+import { Bank, BankList } from "../../models/Bank.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModel } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
+import { SafeHaven } from "../../utilities/SafeHaven";
+
+const safeHaven = new SafeHaven();
 
 export class BankService {
-  public async getBankCodes() {
-    const secretKey = process.env["PAYSTACK_SECRET_KEY"] as string;
-    const url = "https://api.paystack.co/bank";
-    const options = {
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-      },
-    };
-    const response = await axios.get(url, options);
-
-    if (response.statusText != "OK") {
-      throw new Error(`Request failed with status ${response.status}`);
-    }
-    const { data } = response;
-    return data;
+  public async getBankList() {
+    const bankList = await BankList.find();
+    return bankList;
   }
 
-  public async verifyBank(payload: any) {
-    const { bankCode, accountNumber } = payload;
-    const secretKey = process.env["PAYSTACK_SECRET_KEY"];
-    const url = `https://api.paystack.co/bank/resolve`;
-    const options = {
-      headers: {
-        Authorization: `Bearer ${secretKey}`,
-      },
-      params: {
-        account_number: accountNumber,
-        bank_code: bankCode,
-      },
+  public async verifyBank(filter: any) {
+    const { bankCode, accountNumber } = filter;
+
+    const response = await safeHaven.verifyBank({
+      bankCode,
+      accountNumber,
+    });
+
+    return {
+      bankCode,
+      accountNumber,
+      accountName: response.accountName,
     };
-    const response = await axios.get(url, options);
-    if (response.statusText != "OK") {
-      throw new Error(`Request failed with status ${response.status}`);
-    }
-    return response.data.data;
   }
 
   public async createBank(businessId: string, payload: any) {
@@ -76,15 +62,6 @@ export class BankService {
     );
     return banks;
   }
-
-  // public async updateBank(payload: any) {
-  //   const { bankID, ...rest } = payload;
-  //   const bank = await Bank.findOne({ _id: bankID, isDeleted: false }, rest, {
-  //     new: true,
-  //   });
-  //   if (!bank) throw new AppError(404, "Bank not found");
-  //   return bank;
-  // }
 
   public async deleteBank(businessId: string, bankID: string) {
     const bank = await Bank.findOneAndUpdate(

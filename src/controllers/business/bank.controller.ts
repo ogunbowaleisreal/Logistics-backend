@@ -1,18 +1,18 @@
 import { Request, Response } from "express";
 import AppError from "../../utilities/ErrorHandler";
-import { BankService } from "../../services/admin/Bank.Service";
+import { BankService } from "../../services/business/Bank.Service";
 
 const bankService = new BankService();
 
-export const getBankCodes = async (
+export const getBankList = async (
   req: Request,
   res: Response,
 ): Promise<Response> => {
   try {
-    const bank = await bankService.getBankCodes();
+    const bank = await bankService.getBankList();
     return res
       .status(200)
-      .json({ message: "Bank code fetched successfully", data: bank });
+      .json({ message: "Bank list fetched successfully", data: bank });
   } catch (error: any) {
     if (error instanceof AppError)
       return res.status(error.statusCode).json({ message: error.message });

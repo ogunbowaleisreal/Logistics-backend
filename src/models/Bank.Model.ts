@@ -3,6 +3,7 @@ import { Document, model, Schema } from "mongoose";
 interface IBank extends Document {
   businessId: Schema.Types.ObjectId;
   name: string;
+  bankCode: string;
   accountName: string;
   accountNumber: string;
   status: string;
@@ -19,6 +20,7 @@ const BankSchema = new Schema<IBank>(
       required: true,
     },
     name: { type: String, required: true },
+    bankCode: { type: String, required: true },
     accountName: { type: String, required: true },
     accountNumber: { type: String, required: true },
     status: { type: String, enum: ["active", "inactive"], default: "active" },
@@ -41,3 +43,26 @@ const BankSchema = new Schema<IBank>(
 BankSchema.index({ businessId: 1, accountNumber: 1 });
 
 export const Bank = model<IBank>("Bank", BankSchema);
+
+interface IBankList extends Document {
+  name: string;
+  bankCode: string;
+  __v?: number;
+}
+
+const BankListSchema = new Schema<IBankList>(
+  {
+    name: { type: String, required: true },
+    bankCode: { type: String, required: true },
+  },
+  {
+    timestamps: true,
+    toJSON: {
+      transform(doc, ret) {
+        delete ret.__v;
+      },
+    },
+  },
+);
+
+export const BankList = model<IBankList>("BankList", BankListSchema);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { BankService } from "../../services/admin/Bank.Service";
+import { BankService } from "../../services/business/Bank.Service";
 import AppError from "../../utilities/ErrorHandler";
 import logger from "../../../logger";
 
@@ -7,7 +7,7 @@ const bankService = new BankService();
 
 export const getBankCodes = async (req: Request, res: Response) => {
   try {
-    const bank = await bankService.getBankCodes();
+    const bank = await bankService.getBankList();
     return res
       .status(200)
       .json({ message: "Bank code fetched successfully", data: bank });
