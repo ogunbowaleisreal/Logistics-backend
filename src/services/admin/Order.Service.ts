@@ -18,7 +18,16 @@ export class OrderService {
     const { orderID, bankID, riderID, status, search, page, limit } = payload;
 
     if (orderID) {
-      const order = await Order.findOne({ _id: orderID });
+      const order = await Order.findOne({ _id: orderID }).populate([
+        {
+          path: "riderID",
+          select: "name phone",
+        },
+        {
+          path: "zoneId",
+          select: "name shippingType states destinationStates countries cities",
+        },
+      ]);
       if (!order) {
         throw new AppError(404, "Order not found");
       }
@@ -84,6 +93,10 @@ export class OrderService {
           path: "riderID",
           select: "name phone",
         },
+        {
+          path: "zoneId",
+          select: "name shippingType states destinationStates countries cities",
+        },
       ],
     );
 
@@ -112,7 +125,16 @@ export class OrderService {
       { _id: orderID },
       { status },
       { new: true },
-    );
+    ).populate([
+      {
+        path: "riderID",
+        select: "name phone",
+      },
+      {
+        path: "zoneId",
+        select: "name shippingType states destinationStates countries cities",
+      },
+    ]);
 
     if (!order) {
       throw new AppError(404, "Order not found");

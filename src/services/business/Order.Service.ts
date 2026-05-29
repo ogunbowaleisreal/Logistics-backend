@@ -40,10 +40,16 @@ export class OrderService {
     if (orderID) {
       const order = await Order.findOne(
         tenantScope({ _id: orderID }, businessId),
-      ).populate({
-        path: "riderID",
-        select: "name phone",
-      });
+      ).populate([
+        {
+          path: "riderID",
+          select: "name phone",
+        },
+        {
+          path: "zoneId",
+          select: "name shippingType states destinationStates countries cities",
+        },
+      ]);
       if (!order) {
         throw new AppError(404, "Order not found");
       }
@@ -102,6 +108,11 @@ export class OrderService {
         {
           path: "riderID",
           select: "name phone",
+        },
+        ,
+        {
+          path: "zoneId",
+          select: "name shippingType states destinationStates countries cities",
         },
       ],
     );
