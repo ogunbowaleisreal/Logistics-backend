@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { getContactInfo } from "../../controllers/public/configuration.controller";
+import {
+  getContactInfo,
+  getPaymentMethods,
+} from "../../controllers/public/configuration.controller";
 
 const router = Router();
 
 router.get("/contact", getContactInfo);
+router.get("/payment-methods", getPaymentMethods);
 
 export default router;

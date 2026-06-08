@@ -30,3 +30,7 @@ export const updateConfigurationSchema = Joi.object({
   }).optional(),
   contactInfo: contactInfoSchema,
 }).or("serviceFee", "VAT", "contactInfo");
+
+export const updatePaymentMethodSchema = Joi.object({
+  isEnabled: Joi.boolean().required(),
+});

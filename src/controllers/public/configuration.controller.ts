@@ -18,3 +18,20 @@ export const getContactInfo = async (
     next(error);
   }
 };
+
+export const getPaymentMethods = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const configuration = await configurationService.getConfiguration();
+    const enabled = configuration.paymentMethods.filter((m) => m.isEnabled);
+    return res.status(200).json({
+      message: "Payment methods fetched successfully",
+      data: enabled,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};

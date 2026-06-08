@@ -1,7 +1,9 @@
 import {
   Configuration,
   IConfiguration,
+  PaymentGateway,
 } from "../../models/Configuration.Model";
+import AppError from "../../utilities/ErrorHandler";
 
 export class ConfigurationService {
   public async getConfiguration() {
@@ -22,5 +24,18 @@ export class ConfigurationService {
       { new: true, upsert: true },
     );
     return configuration;
+  }
+
+  public async updatePaymentMethod(gateway: PaymentGateway, isEnabled: boolean) {
+    const configuration = await this.getConfiguration();
+
+    const entry = configuration.paymentMethods.find((m) => m.gateway === gateway);
+    if (!entry) {
+      throw new AppError(404, `Payment gateway "${gateway}" not found`);
+    }
+
+    entry.isEnabled = isEnabled;
+    await configuration.save();
+    return configuration.paymentMethods;
   }
 }

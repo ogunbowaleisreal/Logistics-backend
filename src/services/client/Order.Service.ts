@@ -112,6 +112,20 @@ export class OrderService {
       totalAmount,
     });
 
+    // const { accountNumber, accountName, expiryDate, callbackURL } =
+    // await safeHaven.createVirtualAccount({
+    //   amount: order.totalAmount!,
+    //   reference: order.id,
+    // });
+    order.paymentMethod = "safehaven";
+    order.virtualAccountData = {
+      accountNumber: "0000000000",
+      accountName: "Logistics Payment Account",
+      bankName: "Safehaven Microfinance Bank",
+      expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+      callbackURL: "https://webhook.site/your-webhook-url", // TODO: Replace with actual callback URL
+    };
+
     if (order.personnelInformation.sender.email) {
       void emailService.sendOrderConfirmation({
         email: order.personnelInformation.sender.email,
@@ -130,9 +144,11 @@ export class OrderService {
   ) {
     const { orderID, paymentMethod } = payload;
 
-    const order = await Order.findOne(
-      tenantScope({ _id: orderID }, businessId),
-    );
+    const [order, config] = await Promise.all([
+      Order.findOne(tenantScope({ _id: orderID }, businessId)),
+      configurationService.getConfiguration(),
+    ]);
+
     if (!order) {
       throw new AppError(404, "Order not found");
     }
@@ -141,20 +157,14 @@ export class OrderService {
       throw new AppError(400, "Only pending orders can be checked out");
     }
 
+    const enabledGateways = config.paymentMethods
+      .filter((m) => m.isEnabled)
+      .map((m) => m.gateway);
+    if (!enabledGateways.includes(paymentMethod as any)) {
+      throw new AppError(400, "Selected payment method is not available");
+    }
+
     if (paymentMethod == "safehaven") {
-      const { accountNumber, accountName, expiryDate, callbackURL } =
-        await safeHaven.createVirtualAccount({
-          amount: order.totalAmount!,
-          reference: order.id,
-        });
-      order.paymentMethod = "safehaven";
-      order.virtualAccountData = {
-        accountNumber: "0000000000",
-        accountName: "Logistics Payment Account",
-        bankName: "Safehaven Microfinance Bank",
-        expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-        callbackURL: "https://webhook.site/your-webhook-url", // TODO: Replace with actual callback URL
-      };
     } else if (paymentMethod == "monnify") {
       const senderEmail = order.personnelInformation.sender.email;
       if (!senderEmail) {

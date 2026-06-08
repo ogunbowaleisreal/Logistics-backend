@@ -19,6 +19,14 @@ export interface IContactInfo {
   address: IAddress;
 }
 
+export type PaymentGateway = "safehaven" | "monnify" | "flutterwave" | "paystack";
+
+export interface IPaymentMethod {
+  gateway: PaymentGateway;
+  isEnabled: boolean;
+  label: string;
+}
+
 export interface IConfiguration extends Document {
   serviceFee: {
     tiers: IServiceFeeTier[];
@@ -29,8 +37,16 @@ export interface IConfiguration extends Document {
     value: number;
   };
   contactInfo: IContactInfo;
+  paymentMethods: IPaymentMethod[];
   __v?: number;
 }
+
+const DEFAULT_PAYMENT_METHODS: IPaymentMethod[] = [
+  { gateway: "safehaven",   isEnabled: true,  label: "SafeHaven" },
+  { gateway: "monnify",     isEnabled: true,  label: "Monnify" },
+  { gateway: "flutterwave", isEnabled: true,  label: "Flutterwave" },
+  { gateway: "paystack",    isEnabled: false, label: "Paystack" },
+];
 
 const DEFAULT_TIERS: IServiceFeeTier[] = [
   { minAmount: 0,         maxAmount: 5000,   percentage: 7.5 },
@@ -72,6 +88,16 @@ const ConfigurationSchema = new Schema<IConfiguration>(
         state:   { type: String, default: "" },
         country: { type: String, default: "" },
       },
+    },
+    paymentMethods: {
+      type: [
+        {
+          gateway:   { type: String, enum: ["safehaven", "monnify", "flutterwave", "paystack"], required: true },
+          isEnabled: { type: Boolean, default: true },
+          label:     { type: String, required: true },
+        },
+      ],
+      default: DEFAULT_PAYMENT_METHODS,
     },
   },
   {
