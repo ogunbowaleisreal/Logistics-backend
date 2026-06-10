@@ -1,7 +1,7 @@
 import { NextFunction, Response } from "express";
 import { ExtendedRequest } from "../../utilities/Interfaces";
 import { ConfigurationService } from "../../services/admin/Configuration.Service";
-import { PaymentGateway } from "../../models/Configuration.Model";
+import { IServiceFeeTier, PaymentGateway } from "../../models/Configuration.Model";
 
 const configurationService = new ConfigurationService();
 
@@ -49,6 +49,23 @@ export const getPaymentMethods = async (
     return res.status(200).json({
       message: "Payment methods fetched successfully",
       data: configuration.paymentMethods,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const updateServiceFee = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { tiers, cap } = req.body as { tiers?: IServiceFeeTier[]; cap?: number };
+  try {
+    const configuration = await configurationService.updateServiceFee({ tiers, cap });
+    return res.status(200).json({
+      message: "Service fee updated successfully",
+      data: configuration?.serviceFee,
     });
   } catch (error: any) {
     next(error);

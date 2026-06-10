@@ -12,6 +12,8 @@ import configurationRoute from "./configuration.route";
 import businessRoute from "./business.route";
 import shippingRoute from "./shipping.route";
 import kycRoute from "./kyc.route";
+import generalFaqRoute from "./generalFaq.route";
+import waitlistRoute from "./waitlist.route";
 
 const router = Router();
 
@@ -28,5 +30,7 @@ router.use("/configuration", configurationRoute);
 router.use("/businesses", businessRoute);
 router.use("/shipping", shippingRoute);
 router.use("/kyc", kycRoute);
+router.use("/general-faq", generalFaqRoute);
+router.use("/waitlist", waitlistRoute);
 
 export default router;

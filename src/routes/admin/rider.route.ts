@@ -3,9 +3,9 @@ import { adminVerification } from "../../middlewares/authorization.middleware";
 import {
   createRider,
   deleteRider,
-  getRiders,
   updateRider,
 } from "../../controllers/business/rider.controller";
+import { getRiders } from "../../controllers/admin/rider.controller";
 
 const router = Router();
 

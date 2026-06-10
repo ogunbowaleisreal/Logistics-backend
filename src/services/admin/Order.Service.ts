@@ -15,7 +15,8 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 
 export class OrderService {
   public async getOrders(businessId: string, payload: any) {
-    const { orderID, bankID, riderID, status, search, page, limit } = payload;
+    const { orderID, bankID, riderID, status, search, page, limit, from, to } =
+      payload;
 
     if (orderID) {
       const order = await Order.findOne({ _id: orderID }).populate([
@@ -46,6 +47,15 @@ export class OrderService {
     }
     if (bankID) {
       query.bankID = bankID;
+    }
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) {
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = toDate;
+      }
     }
     if (search) {
       query.$or = [

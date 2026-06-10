@@ -5,11 +5,13 @@ import {
   updateConfiguration,
   getPaymentMethods,
   updatePaymentMethod,
+  updateServiceFee,
 } from "../../controllers/admin/configuration.controller";
 import { validate } from "../../middlewares/validation.middleware";
 import {
   updateConfigurationSchema,
   updatePaymentMethodSchema,
+  updateServiceFeeSchema,
 } from "../../validators/configuration.validator";
 
 const router = Router();
@@ -21,6 +23,14 @@ router
     adminVerification,
     validate(updateConfigurationSchema, "body"),
     updateConfiguration,
+  );
+
+router
+  .route("/service-fee")
+  .patch(
+    adminVerification,
+    validate(updateServiceFeeSchema, "body"),
+    updateServiceFee,
   );
 
 router

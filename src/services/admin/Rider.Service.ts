@@ -4,25 +4,13 @@ import { paginateModel } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
 
 export class RiderService {
-  public async createRider(businessId: string, payload: any) {
-    const { name, phone, dailyCapacity } = payload;
-
-    const rider = await Rider.create({
-      businessId,
-      name,
-      phone,
-      dailyCapacity,
-    });
-
-    return rider;
-  }
-
-  public async getRiders(businessId: string, filter: any) {
-    const { riderID, search, status, page, limit } = filter;
+  public async getRiders(filter: any) {
+    const { businessId, riderID, search, status, page, limit } = filter;
 
     if (riderID) {
+      const baseQuery = { _id: riderID, isDeleted: false };
       const rider = await Rider.findOne(
-        tenantScope({ _id: riderID, isDeleted: false }, businessId),
+        businessId ? tenantScope(baseQuery, businessId) : baseQuery,
       );
       if (!rider) {
         throw new AppError(404, "Rider not found");
@@ -44,40 +32,40 @@ export class RiderService {
 
     const riders = await paginateModel(
       Rider,
-      tenantScope(query, businessId),
+      businessId ? tenantScope(query, businessId) : query,
       page,
       limit,
     );
     return riders;
   }
 
-  public async updateRider(businessId: string, payload: any) {
-    const { riderID, name, phone, dailyCapacity, status } = payload;
+  // public async updateRider(businessId: string, payload: any) {
+  //   const { riderID, name, phone, dailyCapacity, status } = payload;
 
-    const rider = await Rider.findOne(
-      tenantScope({ _id: riderID, isDeleted: false }, businessId),
-    );
-    if (!rider) {
-      throw new AppError(404, "Rider not found");
-    }
+  //   const rider = await Rider.findOne(
+  //     tenantScope({ _id: riderID, isDeleted: false }, businessId),
+  //   );
+  //   if (!rider) {
+  //     throw new AppError(404, "Rider not found");
+  //   }
 
-    if (name) rider.name = name;
-    if (phone) rider.phone = phone;
-    if (dailyCapacity) rider.dailyCapacity = dailyCapacity;
-    if (status) rider.status = status;
+  //   if (name) rider.name = name;
+  //   if (phone) rider.phone = phone;
+  //   if (dailyCapacity) rider.dailyCapacity = dailyCapacity;
+  //   if (status) rider.status = status;
 
-    return await rider.save();
-  }
+  //   return await rider.save();
+  // }
 
-  public async deleteRider(businessId: string, riderID: string) {
-    const rider = await Rider.findOneAndUpdate(
-      tenantScope({ _id: riderID, isDeleted: false }, businessId),
-      { isDeleted: true },
-    );
-    if (!rider) {
-      throw new AppError(404, "Rider not found");
-    }
+  // public async deleteRider(businessId: string, riderID: string) {
+  //   const rider = await Rider.findOneAndUpdate(
+  //     tenantScope({ _id: riderID, isDeleted: false }, businessId),
+  //     { isDeleted: true },
+  //   );
+  //   if (!rider) {
+  //     throw new AppError(404, "Rider not found");
+  //   }
 
-    return;
-  }
+  //   return;
+  // }
 }

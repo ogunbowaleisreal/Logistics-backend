@@ -1,6 +1,7 @@
 import {
   Configuration,
   IConfiguration,
+  IServiceFeeTier,
   PaymentGateway,
 } from "../../models/Configuration.Model";
 import AppError from "../../utilities/ErrorHandler";
@@ -26,6 +27,19 @@ export class ConfigurationService {
     return configuration;
   }
 
+  public async updateServiceFee(payload: { tiers?: IServiceFeeTier[]; cap?: number }) {
+    const { tiers, cap } = payload;
+    const update: Record<string, unknown> = {};
+    if (tiers !== undefined) update["serviceFee.tiers"] = tiers;
+    if (cap !== undefined) update["serviceFee.cap"] = cap;
+    const configuration = await Configuration.findOneAndUpdate(
+      {},
+      { $set: update },
+      { new: true, upsert: true },
+    );
+    return configuration;
+  }
+
   public async updatePaymentMethod(gateway: PaymentGateway, isEnabled: boolean) {
     const configuration = await this.getConfiguration();
 
@@ -38,4 +52,5 @@ export class ConfigurationService {
     await configuration.save();
     return configuration.paymentMethods;
   }
+
 }

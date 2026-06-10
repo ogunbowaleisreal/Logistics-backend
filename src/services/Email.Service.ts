@@ -185,6 +185,21 @@ export class EmailService {
     }
   }
 
+  async sendWaitlistConfirmationEmail(payload: any): Promise<void> {
+    const { email, fullName } = payload;
+    try {
+      await resend.emails.send({
+        from,
+        to: email,
+        subject: "You're on the Waitlist — LogisticsPadi",
+        html: `Hi ${fullName},<br><br>Thank you for requesting early access to LogisticsPadi! You're officially on the waitlist.<br><br>We'll notify you as soon as your spot is ready.`,
+      });
+      logger.info(`Waitlist confirmation email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Waitlist confirmation email error: ${error.message}`);
+    }
+  }
+
   async sendOrderStatusUpdate(payload: any): Promise<void> {
     const { email, name, trackingID, status } = payload;
     try {

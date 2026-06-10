@@ -35,7 +35,8 @@ const LOCKED_RIDER_CHANGE_STATUSES = [
 
 export class OrderService {
   public async getOrders(businessId: string, payload: any) {
-    const { orderID, riderID, status, search, page, limit } = payload;
+    const { orderID, riderID, status, search, page, limit, from, to } =
+      payload;
 
     if (orderID) {
       const order = await Order.findOne(
@@ -62,6 +63,15 @@ export class OrderService {
     }
     if (status) {
       query.status = status;
+    }
+    if (from || to) {
+      query.createdAt = {};
+      if (from) query.createdAt.$gte = new Date(from);
+      if (to) {
+        const toDate = new Date(to);
+        toDate.setHours(23, 59, 59, 999);
+        query.createdAt.$lte = toDate;
+      }
     }
     if (search) {
       query.$or = [
