@@ -140,9 +140,9 @@ export class OrderService {
 
   public async checkoutOrder(
     businessId: string,
-    payload: { orderID: string; paymentMethod: string },
+    payload: { orderID: string; paymentMethod: string; slug: string },
   ) {
-    const { orderID, paymentMethod } = payload;
+    const { orderID, paymentMethod, slug } = payload;
 
     const [order, config] = await Promise.all([
       Order.findOne(tenantScope({ _id: orderID }, businessId)),
@@ -197,7 +197,7 @@ export class OrderService {
         await flutterwave.initiateCardPayment({
           txRef: String(order._id),
           amount: order.totalAmount,
-          redirectUrl: `${process.env.FLUTTERWAVE_REDIRECT_URL}/?orderId=${order._id}`,
+          redirectUrl: `${process.env.FLUTTERWAVE_REDIRECT_URL}/${slug}/payment?orderId=${order._id}`,
           customerEmail: senderEmail,
           customerName: order.personnelInformation.sender.name,
           customerPhone: order.personnelInformation.sender.phone,

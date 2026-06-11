@@ -370,6 +370,7 @@ async function businessContext(
     const businessId = await resolveBusinessIdFromSlug(slug);
 
     req.businessId = businessId;
+    req.body.slug = slug;
     return next();
   } catch (error: any) {
     return res
@@ -421,6 +422,7 @@ async function bodyBusinessContext(
     }
 
     req.businessId = await resolveBusinessIdFromSlug(slug);
+    req.body.slug = slug;
     return next();
   } catch (error: any) {
     const statusCode = error.message === "Business not found" ? 404 : 500;
