@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   deleteBusiness,
   getBusinesses,
+  getBusinessStats,
   updateBusinessStatus,
 } from "../../controllers/admin/business.controller";
 import { roleVerification } from "../../middlewares/authorization.middleware";
@@ -13,5 +14,9 @@ router
   .get(roleVerification("GETBUSINESS"), getBusinesses)
   .patch(roleVerification("UPDATEBUSINESSSTATUS"), updateBusinessStatus)
   .delete(roleVerification("DELBUSINESS"), deleteBusiness);
+
+router
+  .route("/stats")
+  .get(roleVerification("GETBUSINESS"), getBusinessStats);
 
 export default router;

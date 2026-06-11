@@ -41,6 +41,23 @@ export const updateBusinessStatus = async (
   }
 };
 
+export const getBusinessStats = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { businessId } = req.query as { businessId: string };
+
+  try {
+    const stats = await businessService.getBusinessStats(businessId);
+    return res
+      .status(200)
+      .json({ message: "Business stats fetched successfully", data: stats });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
 export const deleteBusiness = async (
   req: Request,
   res: Response,
