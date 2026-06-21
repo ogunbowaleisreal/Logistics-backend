@@ -46,10 +46,20 @@ export const getBusinessStats = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { businessId } = req.query as { businessId: string };
+  const { businessId, revenueFilter, startDate, endDate } = req.query as {
+    businessId: string;
+    revenueFilter?: "today" | "thisWeek" | "thisMonth" | "custom" | "allTime";
+    startDate?: string;
+    endDate?: string;
+  };
 
   try {
-    const stats = await businessService.getBusinessStats(businessId);
+    const stats = await businessService.getBusinessStats(
+      businessId,
+      revenueFilter,
+      startDate,
+      endDate,
+    );
     return res
       .status(200)
       .json({ message: "Business stats fetched successfully", data: stats });

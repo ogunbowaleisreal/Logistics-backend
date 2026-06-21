@@ -24,6 +24,34 @@ function getDateBoundaries() {
   return { todayStart, weekStart, monthStart };
 }
 
+type RevenueFilter = "today" | "thisWeek" | "thisMonth" | "custom" | "allTime";
+
+function getRevenueDateMatch(
+  revenueFilter: RevenueFilter,
+  startDate?: string,
+  endDate?: string,
+): Record<string, any> {
+  const { todayStart, weekStart, monthStart } = getDateBoundaries();
+
+  switch (revenueFilter) {
+    case "today":
+      return { createdAt: { $gte: todayStart } };
+    case "thisWeek":
+      return { createdAt: { $gte: weekStart } };
+    case "thisMonth":
+      return { createdAt: { $gte: monthStart } };
+    case "custom": {
+      const start = new Date(startDate!);
+      const end = new Date(endDate!);
+      // include the entire end day
+      end.setUTCHours(23, 59, 59, 999);
+      return { createdAt: { $gte: start, $lte: end } };
+    }
+    default:
+      return {};
+  }
+}
+
 export class BusinessService {
   public async getBusinesses(filter: any) {
     const { businessId, search, status, plan, page, limit } = filter;
@@ -83,8 +111,21 @@ export class BusinessService {
     return business;
   }
 
-  public async getBusinessStats(businessId: string) {
+  public async getBusinessStats(
+    businessId: string,
+    revenueFilter: RevenueFilter = "allTime",
+    startDate?: string,
+    endDate?: string,
+  ) {
+    if (revenueFilter === "custom" && (!startDate || !endDate)) {
+      throw new AppError(
+        400,
+        "startDate and endDate are required for custom revenue filter",
+      );
+    }
+
     const { todayStart, weekStart, monthStart } = getDateBoundaries();
+    const revenueDateMatch = getRevenueDateMatch(revenueFilter, startDate, endDate);
 
     const [business, aggregation] = await Promise.all([
       Business.findOne({ _id: businessId, isDeleted: false }).select("wallet"),
@@ -96,25 +137,29 @@ export class BusinessService {
               {
                 $match: {
                   status: { $nin: ["canceled", "failed", "pending"] },
+                  ...revenueDateMatch,
                 },
               },
               { $group: { _id: null, sum: { $sum: "$amount" } } },
             ],
-            totalOrders: [{ $count: "count" }],
-            ordersToday: [
-              { $match: { createdAt: { $gte: todayStart } } },
+            totalOrders: [
+              { $match: revenueDateMatch },
               { $count: "count" },
             ],
-            ordersThisWeek: [
-              { $match: { createdAt: { $gte: weekStart } } },
-              { $count: "count" },
-            ],
-            ordersThisMonth: [
-              { $match: { createdAt: { $gte: monthStart } } },
-              { $count: "count" },
-            ],
+            // ordersToday: [
+            //   { $match: { createdAt: { $gte: todayStart } } },
+            //   { $count: "count" },
+            // ],
+            // ordersThisWeek: [
+            //   { $match: { createdAt: { $gte: weekStart } } },
+            //   { $count: "count" },
+            // ],
+            // ordersThisMonth: [
+            //   { $match: { createdAt: { $gte: monthStart } } },
+            //   { $count: "count" },
+            // ],
             orderStatusBreakdown: [
-              { $match: { status: { $in: TRACKED_STATUSES } } },
+              { $match: { status: { $in: TRACKED_STATUSES }, ...revenueDateMatch } },
               { $group: { _id: "$status", count: { $sum: 1 } } },
             ],
           },
@@ -139,11 +184,11 @@ export class BusinessService {
       walletBalance: business.wallet?.naira ?? 0,
       totalRevenue: facet.totalRevenue?.[0]?.sum ?? 0,
       totalOrders: facet.totalOrders?.[0]?.count ?? 0,
-      ordersByPeriod: {
-        today: facet.ordersToday?.[0]?.count ?? 0,
-        thisWeek: facet.ordersThisWeek?.[0]?.count ?? 0,
-        thisMonth: facet.ordersThisMonth?.[0]?.count ?? 0,
-      },
+      // ordersByPeriod: {
+      //   today: facet.ordersToday?.[0]?.count ?? 0,
+      //   thisWeek: facet.ordersThisWeek?.[0]?.count ?? 0,
+      //   thisMonth: facet.ordersThisMonth?.[0]?.count ?? 0,
+      // },
       orderStatusBreakdown: statusMap,
     };
   }
