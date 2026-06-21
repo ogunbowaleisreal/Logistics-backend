@@ -109,21 +109,21 @@ export class OrderService {
       amount,
       serviceFee,
       VAT,
-      totalAmount,
+      totalAmount: 100, // TODO: Change back to totalAmount when not testing
     });
 
-    // const { accountNumber, accountName, expiryDate, callbackURL } =
-    // await safeHaven.createVirtualAccount({
-    //   amount: order.totalAmount!,
-    //   reference: order.id,
-    // });
+    const { accountNumber, accountName, expiryDate, callbackURL } =
+      await safeHaven.createVirtualAccount({
+        amount: order.totalAmount!,
+        reference: order.id,
+      });
     order.paymentMethod = "safehaven";
     order.virtualAccountData = {
-      accountNumber: "0000000000",
-      accountName: "Logistics Payment Account",
+      accountNumber,
+      accountName,
       bankName: "Safehaven Microfinance Bank",
-      expiryDate: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-      callbackURL: "https://webhook.site/your-webhook-url", // TODO: Replace with actual callback URL
+      expiryDate,
+      callbackURL,
     };
 
     if (order.personnelInformation.sender.email) {
@@ -281,6 +281,7 @@ export class OrderService {
   }
 
   public async verifySafehavenPaymentViaWebhook(orderID: string, payload: any) {
+    console.log(orderID, payload);
     const { type, data } = payload;
     if (type === "virtualAccount.transfer") {
       const { sessionId, externalReference } = data;
