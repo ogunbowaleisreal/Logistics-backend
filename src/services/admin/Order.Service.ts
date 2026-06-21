@@ -20,6 +20,7 @@ export class OrderService {
 
     if (orderID) {
       const order = await Order.findOne({ _id: orderID }).populate([
+        { path: "businessId", select: "name" },
         {
           path: "riderID",
           select: "name phone",
@@ -99,6 +100,7 @@ export class OrderService {
       limit,
       { createdAt: -1 },
       [
+        { path: "businessId", select: "name" },
         {
           path: "riderID",
           select: "name phone",
