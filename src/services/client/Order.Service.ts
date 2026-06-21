@@ -281,7 +281,6 @@ export class OrderService {
   }
 
   public async verifySafehavenPaymentViaWebhook(orderID: string, payload: any) {
-    console.log(orderID, payload);
     const { type, data } = payload;
     if (type === "virtualAccount.transfer") {
       const { sessionId, externalReference } = data;

@@ -5,9 +5,6 @@ import {
   getMyOrders,
   generateImageUploadSignature,
   trackOrder,
-  verifySafehavenPaymentViaWebhook,
-  verifyMonnifyPaymentViaWebhook,
-  verifyFlutterwavePaymentViaWebhook,
   checkoutOrder,
 } from "../../controllers/client/order.controller";
 import {
@@ -22,8 +19,6 @@ import {
   getMyOrdersSchema,
   trackOrderSchema,
 } from "../../validators/order.validator";
-import { verifyFlutterwaveWebookHash } from "../../middlewares/checkout.middleware";
-
 const router = Router();
 
 router.get(
@@ -58,14 +53,6 @@ router
     validate(checkoutOrderSchema, "body"),
     checkoutOrder,
   );
-
-router
-  .route("/safehaven/webhook/:orderID")
-  .post(verifySafehavenPaymentViaWebhook);
-
-router.route("/monnify/webhook").post(verifyMonnifyPaymentViaWebhook);
-
-router.post("/flutter/webhook", verifyFlutterwaveWebookHash, verifyFlutterwavePaymentViaWebhook);
 
 router.get("/image-signature", generateImageUploadSignature);
 
