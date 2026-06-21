@@ -7,6 +7,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "typeRoots": ["./types"],
+    "skipLibCheck": true,
   },
   "include": ["src/**/*.ts", "index.ts", "../proto2/index.ts"],
   "exclude": ["node_modules"]
