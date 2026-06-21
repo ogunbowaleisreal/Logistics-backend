@@ -1,5 +1,6 @@
 import { Business } from "../../models/Business.Model";
 import AppError from "../../utilities/ErrorHandler";
+import { loginWithGoogleHelper } from "../../utilities/FirebaseAuhenticationHelper";
 import { Hasher } from "../../utilities/Hasher";
 import { CacheService } from "../Cache.Service";
 import { EmailService } from "../Email.Service";
@@ -224,6 +225,51 @@ export class BusinessAuthenticationService {
   public async logout(refreshToken: string) {
     await this.cacheService.deleteCachedData(refreshToken);
     return;
+  }
+
+  public async loginWithGoogle(payload: { idToken: string }) {
+    const { idToken } = payload;
+
+    const { uid, email, firstname, lastname, emailVerified } =
+      await loginWithGoogleHelper(idToken);
+
+    let business = await Business.findOne({
+      email: email.toLowerCase(),
+      isDeleted: false,
+    });
+
+    if (business) {
+      if (!business.googleUid) {
+        business.googleUid = uid;
+        await business.save();
+      }
+    } else {
+      const displayName =
+        firstname || lastname
+          ? `${firstname} ${lastname}`.trim()
+          : email.split("@")[0];
+
+      business = await Business.create({
+        name: displayName,
+        email: email.toLowerCase(),
+        googleUid: uid,
+        authProvider: "google",
+        isEmailVerified: emailVerified,
+        status: "active",
+        isProfileComplete: false,
+      });
+    }
+
+    const { accessToken, refreshToken } = await this.getAuthorizationToken(
+      business.id,
+    );
+
+    return {
+      business,
+      accessToken,
+      refreshToken,
+      isProfileComplete: business.isProfileComplete ?? false,
+    };
   }
 
   public async checkUsernameAvailability(username: string) {

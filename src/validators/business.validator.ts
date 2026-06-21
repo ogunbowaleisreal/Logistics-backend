@@ -24,3 +24,7 @@ export const registerBusinessSchema = Joi.object({
 export const checkUsernameSchema = Joi.object({
   username: usernameField,
 });
+
+export const googleSignInSchema = Joi.object({
+  idToken: Joi.string().required(),
+});

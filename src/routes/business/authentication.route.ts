@@ -3,6 +3,7 @@ import {
   register,
   verifyEmail,
   login,
+  loginWithGoogle,
   sendLogin2FAVerification,
   verifyLoginOTP,
   forgotPassword,
@@ -16,6 +17,7 @@ import { validate } from "../../middlewares/validation.middleware";
 import {
   registerBusinessSchema,
   checkUsernameSchema,
+  googleSignInSchema,
 } from "../../validators/business.validator";
 
 const router = Router();
@@ -24,6 +26,7 @@ router.post("/register", validate(registerBusinessSchema, "body"), register);
 router.get("/send-verification-otp", sendBusinessEmailVerification);
 router.post("/verify-email", verifyEmail);
 router.post("/login", login);
+router.post("/google", validate(googleSignInSchema, "body"), loginWithGoogle);
 router.get("/send-login-otp", sendLogin2FAVerification);
 router.patch("/verify-login-otp", verifyLoginOTP);
 router.post("/forgot-password", forgotPassword);

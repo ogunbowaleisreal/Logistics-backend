@@ -2,11 +2,14 @@ import { Document, model, Schema } from "mongoose";
 
 export interface IBusiness extends Document {
   name: string;
-  username: string;
-  slug: string;
+  username?: string;
+  slug?: string;
   email: string;
-  phone: string;
+  phone?: string;
   password?: string;
+  authProvider?: "local" | "google";
+  googleUid?: string;
+  isProfileComplete?: boolean;
   logo?: string;
   status: "active" | "suspended" | "pending";
   // plan: "free" | "starter" | "growth" | "enterprise";
@@ -45,11 +48,18 @@ export interface IBusiness extends Document {
 const BusinessSchema = new Schema<IBusiness>(
   {
     name: { type: String, required: true },
-    username: { type: String, required: true, unique: true },
-    slug: { type: String, required: true, unique: true, index: true },
+    username: { type: String, unique: true, sparse: true },
+    slug: { type: String, unique: true, sparse: true, index: true },
     email: { type: String, required: true, unique: true },
-    phone: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
+    phone: { type: String, unique: true, sparse: true },
+    password: { type: String },
+    authProvider: {
+      type: String,
+      enum: ["local", "google"],
+      default: "local",
+    },
+    googleUid: { type: String, unique: true, sparse: true },
+    isProfileComplete: { type: Boolean, default: true },
     logo: { type: String },
     status: {
       type: String,

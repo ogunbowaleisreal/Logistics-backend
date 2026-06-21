@@ -190,6 +190,24 @@ export const logout = async (
   }
 };
 
+export const loginWithGoogle = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const result = await businessAuthService.loginWithGoogle(req.body);
+    return res.status(200).json({
+      message: "Login successful",
+      data: result,
+    });
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      return res.status(error.statusCode).json({ message: error.message });
+    }
+    return res.status(500).json({ message: error.message });
+  }
+};
+
 export const checkUsernameAvailability = async (
   req: Request,
   res: Response,
