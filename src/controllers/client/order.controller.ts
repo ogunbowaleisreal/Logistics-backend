@@ -58,6 +58,8 @@ export const verifySafehavenPaymentViaWebhook = async (
 ) => {
   try {
     const { orderID } = req.params;
+    console.log("Received Safehaven webhook for orderID:", orderID);
+    console.log(orderID, req.body);
     await orderService.verifySafehavenPaymentViaWebhook(orderID, req.body);
     return res.status(200).json({ message: "Webhook processed successfully" });
   } catch (error: any) {
@@ -73,7 +75,6 @@ export const verifyFlutterwavePaymentViaWebhook = async (
   const payload = req.body;
 
   try {
-    
     await orderService.verifyFlutterwavePaymentViaWebhook(payload);
     return res.status(200).json({
       message: "Wallet payment verified successfully",
