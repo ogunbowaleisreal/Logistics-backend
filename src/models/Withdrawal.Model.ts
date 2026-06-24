@@ -2,7 +2,7 @@ import { Document, model, Schema } from "mongoose";
 
 export interface IWithdrawal extends Document {
   businessId: Schema.Types.ObjectId;
-  bankId: Schema.Types.ObjectId;
+  bankId?: Schema.Types.ObjectId;
   amount: number;
   reference: string;
   status: "pending" | "successful" | "failed" | "reversed";
@@ -26,7 +26,7 @@ const WithdrawalSchema = new Schema<IWithdrawal>(
     bankId: {
       type: Schema.Types.ObjectId,
       ref: "Bank",
-      required: true,
+      required: false,
     },
     amount: { type: Number, required: true },
     reference: { type: String, required: true, unique: true },

@@ -5,23 +5,27 @@ import { Hasher } from "../../utilities/Hasher";
 import { CacheService } from "../Cache.Service";
 import { EmailService } from "../Email.Service";
 import { AuthenticationTokenGenerator } from "../Unique.Service";
+import { StaffRoleService } from "./StaffRole.Service";
 
 export class BusinessAuthenticationService {
   private authenticationTokenGenerator: AuthenticationTokenGenerator;
   private cacheService: CacheService;
   private emailService: EmailService;
   private hasher: Hasher;
+  private staffRoleService: StaffRoleService;
 
   constructor(
     authenticationTokenGenerator: AuthenticationTokenGenerator,
     cacheService: CacheService,
     emailService: EmailService,
     hasher: Hasher,
+    staffRoleService: StaffRoleService,
   ) {
     this.authenticationTokenGenerator = authenticationTokenGenerator;
     this.cacheService = cacheService;
     this.emailService = emailService;
     this.hasher = hasher;
+    this.staffRoleService = staffRoleService;
   }
 
   public async register(payload: any) {
@@ -45,6 +49,8 @@ export class BusinessAuthenticationService {
       status: "pending",
       isEmailVerified: false,
     });
+
+    await this.staffRoleService.seedDefaultRoles(business.id);
 
     const otp = this.authenticationTokenGenerator.generateOTP(6);
     await this.cacheService.cacheBizEmailVerificationOTP(email, otp);
@@ -258,6 +264,8 @@ export class BusinessAuthenticationService {
         status: "active",
         isProfileComplete: false,
       });
+
+      await this.staffRoleService.seedDefaultRoles(business.id);
     }
 
     const { accessToken, refreshToken } = await this.getAuthorizationToken(

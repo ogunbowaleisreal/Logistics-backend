@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { BusinessAuthenticationService } from "../../services/business/Authentication.Service";
+import { StaffRoleService } from "../../services/business/StaffRole.Service";
 import { CacheService } from "../../services/Cache.Service";
 import { EmailService } from "../../services/Email.Service";
 import { AuthenticationTokenGenerator } from "../../services/Unique.Service";
@@ -10,12 +11,14 @@ const hasher = new Hasher();
 const cacheService = new CacheService();
 const authenticationTokenGenerator = new AuthenticationTokenGenerator();
 const emailService = new EmailService();
+const staffRoleService = new StaffRoleService();
 
 const businessAuthService = new BusinessAuthenticationService(
   authenticationTokenGenerator,
   cacheService,
   emailService,
   hasher,
+  staffRoleService,
 );
 
 export const register = async (

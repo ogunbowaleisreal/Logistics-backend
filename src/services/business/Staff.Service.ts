@@ -25,10 +25,9 @@ export class StaffService {
   }
 
   public async createStaff(businessId: string, payload: any) {
-    const { firstname, lastname, email, phone, roleId } = payload;
+    const { firstname, lastname, email, phone, roleType } = payload;
 
-    // Validate the role belongs to this business
-    await this.staffRoleService.verifyRoleByID(businessId, roleId);
+    const roleDoc = await this.staffRoleService.getRoleByType(businessId, roleType);
 
     const existing = await Staff.findOne({ businessId, email: email.toLowerCase() });
     if (existing) throw new AppError(409, "Staff with this email already exists");
@@ -43,7 +42,7 @@ export class StaffService {
       email: email.toLowerCase(),
       phone,
       password: hashedPassword,
-      role: roleId,
+      role: roleDoc._id,
     });
 
     await this.emailService.sendStaffWelcomeEmail({ email: email.toLowerCase(), firstname, password: tempPassword });
@@ -67,7 +66,7 @@ export class StaffService {
   }
 
   public async updateStaff(businessId: string, payload: any) {
-    const { staffId, firstname, lastname, phone, status, roleId } = payload;
+    const { staffId, firstname, lastname, phone, status } = payload;
 
     const staff = await Staff.findOne({ _id: staffId, businessId, isDeleted: false });
     if (!staff) throw new AppError(404, "Staff not found");
@@ -77,9 +76,9 @@ export class StaffService {
     if (phone) staff.phone = phone;
     if (status) staff.status = status;
 
-    if (roleId) {
-      await this.staffRoleService.verifyRoleByID(businessId, roleId);
-      staff.role = roleId;
+    if (payload.roleType) {
+      const roleDoc = await this.staffRoleService.getRoleByType(businessId, payload.roleType);
+      staff.role = roleDoc._id as any;
     }
 
     return await staff.save();

@@ -60,6 +60,7 @@ export class SafeHaven {
       const response = await axios(config);
       return response.data;
     } catch (error: any) {
+      console.log(error.response);
       throw new AppError(
         error.response?.status || 500,
         error.response?.data?.message || "An error occurred",

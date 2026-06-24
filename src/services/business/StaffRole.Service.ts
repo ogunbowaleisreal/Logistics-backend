@@ -1,18 +1,58 @@
-import { StaffRole, StaffPermissions } from "../../models/StaffRole.Model";
+import { StaffRole, StaffPermissions, StaffRoleType, StaffRoleTypeValue } from "../../models/StaffRole.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModel } from "../../utilities/Pagination.Helper";
 
+const DEFAULT_ROLE_PERMISSIONS: Record<StaffRoleTypeValue, string[]> = {
+  customer_service: ["GETORDERS", "UPTORDER"],
+  manager: [
+    "GETORDERS", "UPTORDER",
+    "CRTSTAFF", "UPTSTAFF", "GETSTAFF", "DELSTAFF",
+    "CRTRIDER", "UPTRIDER", "GETRIDERS", "DELRIDER",
+    "GETCFG", "GETBIZPROFILE", "UPTBIZPROFILE",
+  ],
+  admin: [
+    "GETORDERS", "UPTORDER",
+    "CRTSTAFF", "UPTSTAFF", "GETSTAFF", "DELSTAFF",
+    "CRTRIDER", "UPTRIDER", "GETRIDERS", "DELRIDER",
+    "GETCFG", "GETBIZPROFILE", "UPTBIZPROFILE",
+    "UPTCFG",
+    "CRTBANNER", "UPTBANNER", "GETBANNERS", "DELBANNER",
+    "CRTFAQ", "UPTFAQ", "GETFAQS", "DELFAQ",
+    "CRTTHEME", "UPTTHEME", "GETTHEMES", "DELTHEME",
+    "CRTBANK", "GETBANKS", "DELBANK",
+    "GETSTFROLES", "UPTSTFROLE",
+  ],
+};
+
+const DEFAULT_ROLE_TITLES: Record<StaffRoleTypeValue, string> = {
+  customer_service: "Customer Service",
+  manager: "Manager",
+  admin: "Admin",
+};
+
 export class StaffRoleService {
-  public async createRole(businessId: string, payload: any) {
-    const { title, permissions } = payload;
-
-    const validPermissions = this.getPermissionsCodes(permissions);
-
-    const existing = await StaffRole.findOne({ businessId, title: { $regex: `^${title}$`, $options: "i" } });
-    if (existing) throw new AppError(409, "Role already exists");
-
-    const role = await StaffRole.create({ businessId, title, permissions: validPermissions });
-    return role;
+  public async seedDefaultRoles(businessId: string): Promise<{ created: number; skipped: number }> {
+    const types = Object.values(StaffRoleType) as StaffRoleTypeValue[];
+    const results = await Promise.all(
+      types.map((type) =>
+        StaffRole.updateOne(
+          { businessId, type },
+          {
+            $setOnInsert: {
+              businessId,
+              type,
+              title: DEFAULT_ROLE_TITLES[type],
+              permissions: DEFAULT_ROLE_PERMISSIONS[type],
+              staffCount: 0,
+              status: "active",
+            },
+          },
+          { upsert: true },
+        ),
+      ),
+    );
+    const created = results.filter((r) => r.upsertedCount > 0).length;
+    return { created, skipped: types.length - created };
   }
 
   public async updateRole(businessId: string, payload: any) {
@@ -22,8 +62,6 @@ export class StaffRoleService {
     if (!role) throw new AppError(404, "Role not found");
 
     if (title && title !== role.title) {
-      const duplicate = await StaffRole.findOne({ businessId, title: { $regex: `^${title}$`, $options: "i" } });
-      if (duplicate) throw new AppError(409, "Role already exists");
       role.title = title;
     }
 
@@ -53,8 +91,11 @@ export class StaffRoleService {
     return await paginateModel(StaffRole, query, page, limit);
   }
 
-  public async verifyRoleByID(businessId: string, roleId: string) {
-    const role = await StaffRole.findOne({ _id: roleId, businessId });
+  public async getRoleByType(businessId: string, roleType: string) {
+    const validType = Object.values(StaffRoleType).find((t) => t === roleType);
+    if (!validType) throw new AppError(400, `Invalid role type. Must be one of: ${Object.values(StaffRoleType).join(", ")}`);
+
+    const role = await StaffRole.findOne({ businessId, type: validType });
     if (!role) throw new AppError(404, "Role not found");
     return role;
   }

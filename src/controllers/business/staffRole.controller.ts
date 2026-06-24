@@ -4,17 +4,6 @@ import { StaffRoleService } from "../../services/business/StaffRole.Service";
 
 const staffRoleService = new StaffRoleService();
 
-export const createRole = async (req: Request | any, res: Response): Promise<Response> => {
-  try {
-    const businessId = req.business?.businessId ?? req.staff?.businessId;
-    const role = await staffRoleService.createRole(businessId, req.body);
-    return res.status(201).json({ message: "Role created successfully", data: role });
-  } catch (error: any) {
-    if (error instanceof AppError) return res.status(error.statusCode).json({ message: error.message });
-    return res.status(500).json({ message: error.message });
-  }
-};
-
 export const getRoles = async (req: Request | any, res: Response): Promise<Response> => {
   try {
     const businessId = req.business?.businessId ?? req.staff?.businessId;

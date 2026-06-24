@@ -1,7 +1,7 @@
 import { randomUUID } from "crypto";
 import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
-import { Bank } from "../../models/Bank.Model";
+import { Bank, BankList } from "../../models/Bank.Model";
 import { Withdrawal } from "../../models/Withdrawal.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { SafeHaven } from "../../utilities/SafeHaven";
@@ -11,7 +11,13 @@ import { tenantScope } from "../../utilities/TenantScope";
 const safehaven = new SafeHaven();
 
 export class WithdrawalService {
-  public async requestWithdrawal(businessId: string, amount: number) {
+  public async requestWithdrawal(
+    businessId: string,
+    amount: number,
+    bankID?: string,
+    inlineBank?: { bankCode: string; accountNumber: string },
+    saveAccount?: boolean,
+  ) {
     const business = await Business.findById(businessId)
       .select("wallet")
       .lean();
@@ -21,18 +27,92 @@ export class WithdrawalService {
       throw new AppError(400, "Insufficient wallet balance");
     }
 
-    const bank = await Bank.findOne(
-      tenantScope(
-        { isDefault: true, status: "active", isDeleted: false },
-        businessId,
-      ),
-    );
+    let bankId: any = undefined;
+    let bankSnapshot: {
+      accountName: string;
+      accountNumber: string;
+      bankName: string;
+      bankCode: string;
+    };
 
-    if (!bank) throw new AppError(400, "No default bank account set");
+    if (inlineBank) {
+      const [verified, bankRecord] = await Promise.all([
+        safehaven.verifyBank({
+          bankCode: inlineBank.bankCode,
+          accountNumber: inlineBank.accountNumber,
+        }),
+        BankList.findOne({ bankCode: inlineBank.bankCode }).lean(),
+      ]);
+
+      if (!bankRecord) throw new AppError(400, "Invalid bank code");
+
+      bankSnapshot = {
+        accountName: verified.accountName,
+        accountNumber: inlineBank.accountNumber,
+        bankName: bankRecord.name,
+        bankCode: inlineBank.bankCode,
+      };
+
+      if (saveAccount) {
+        const hasDefault = await Bank.exists(
+          tenantScope(
+            { isDefault: true, status: "active", isDeleted: false },
+            businessId,
+          ),
+        );
+
+        const savedBank = await Bank.create({
+          businessId,
+          name: bankRecord.name,
+          bankCode: inlineBank.bankCode,
+          accountName: verified.accountName,
+          accountNumber: inlineBank.accountNumber,
+          status: "active",
+          isDefault: !hasDefault,
+          isDeleted: false,
+        });
+
+        bankId = savedBank._id;
+      }
+    } else if (bankID) {
+      const bank = await Bank.findOne(
+        tenantScope(
+          { _id: bankID, status: "active", isDeleted: false },
+          businessId,
+        ),
+      );
+
+      if (!bank) throw new AppError(400, "Bank account not found");
+
+      bankId = bank._id;
+      bankSnapshot = {
+        accountName: bank.accountName,
+        accountNumber: bank.accountNumber,
+        bankName: bank.name,
+        bankCode: bank.bankCode,
+      };
+    } else {
+      const bank = await Bank.findOne(
+        tenantScope(
+          { isDefault: true, status: "active", isDeleted: false },
+          businessId,
+        ),
+      );
+
+      if (!bank) throw new AppError(400, "No default bank account set");
+
+      bankId = bank._id;
+      bankSnapshot = {
+        accountName: bank.accountName,
+        accountNumber: bank.accountNumber,
+        bankName: bank.name,
+        bankCode: bank.bankCode,
+      };
+    }
 
     // const nameEnquiryReference = await safehaven.makeNameEnquiry({
-    //   bankCode: bank.bankCode,
-    //   accountNumber: bank.accountNumber,
+    //   bankCode: bankSnapshot.bankCode,
+    //   accountNumber: bankSnapshot.accountNumber,
     // });
 
     const reference = `WD-${randomUUID()}`;
@@ -40,8 +120,8 @@ export class WithdrawalService {
     // const safehavenResponse = await safehaven.makeTransfer({
     //   amount,
     //   reference,
-    //   beneficiaryAccountNumber: bank.accountNumber,
-    //   beneficiaryBankCode: bank.bankCode,
+    //   beneficiaryAccountNumber: bankSnapshot.accountNumber,
+    //   beneficiaryBankCode: bankSnapshot.bankCode,
     //   nameEnquiryReference,
     // });
 
@@ -57,16 +137,11 @@ export class WithdrawalService {
         [
           {
             businessId,
-            bankId: bank._id,
+            ...(bankId && { bankId }),
             amount,
             reference,
             status: "successful",
-            bankSnapshot: {
-              accountName: bank.accountName,
-              accountNumber: bank.accountNumber,
-              bankName: bank.name,
-              bankCode: bank.bankCode,
-            },
+            bankSnapshot,
             sessionId: "00000000000000000000000",
           },
         ],

@@ -1,5 +1,13 @@
 import mongoose, { Document, Schema } from "mongoose";
 
+export const StaffRoleType = {
+  CUSTOMER_SERVICE: "customer_service",
+  MANAGER: "manager",
+  ADMIN: "admin",
+} as const;
+
+export type StaffRoleTypeValue = (typeof StaffRoleType)[keyof typeof StaffRoleType];
+
 export const StaffPermissions = [
   // Staff management
   { code: "CRTSTAFF", name: "CREATE STAFF" },
@@ -8,7 +16,6 @@ export const StaffPermissions = [
   { code: "DELSTAFF", name: "DELETE STAFF" },
 
   // Staff roles
-  { code: "CRTSTFROLE", name: "CREATE STAFF ROLE" },
   { code: "UPTSTFROLE", name: "UPDATE STAFF ROLE" },
   { code: "GETSTFROLES", name: "GET STAFF ROLES" },
 
@@ -56,6 +63,7 @@ export const StaffPermissions = [
 
 export interface IStaffRole extends Document {
   businessId: Schema.Types.ObjectId;
+  type: StaffRoleTypeValue;
   title: string;
   permissions: string[];
   staffCount: number;
@@ -68,6 +76,11 @@ const StaffRoleSchema = new Schema<IStaffRole>(
     businessId: {
       type: Schema.Types.ObjectId,
       ref: "Business",
+      required: true,
+    },
+    type: {
+      type: String,
+      enum: Object.values(StaffRoleType),
       required: true,
     },
     title: { type: String, required: true },
@@ -87,8 +100,7 @@ const StaffRoleSchema = new Schema<IStaffRole>(
   },
 );
 
-// Two businesses can both have a role called "Manager"
-StaffRoleSchema.index({ businessId: 1, title: 1 }, { unique: true });
+StaffRoleSchema.index({ businessId: 1, type: 1 }, { unique: true });
 
 export const StaffRole = mongoose.model<IStaffRole>(
   "StaffRoles",

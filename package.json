@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npx tsc",
     "dev": "nodemon --exec ts-node index.ts",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "migrate:seed-roles": "ts-node scripts/seedStandardRoles.ts"
   },
   "keywords": [],
   "author": "Ibrahim Ayandiran(iam-phenomenal)",
