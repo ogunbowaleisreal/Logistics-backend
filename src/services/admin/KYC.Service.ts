@@ -189,7 +189,7 @@ export class KYCService {
     const allVerified =
       kyc.identification?.status === "verified" &&
       kyc.cac?.status === "verified" &&
-      kyc.bvn === "verified";
+      kyc.bvn.status === "verified";
 
     const hasSubmission = Boolean(
       kyc.identification?.document || kyc.cac?.document || kyc.bvn,

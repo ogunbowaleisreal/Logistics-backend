@@ -15,7 +15,11 @@ export interface IBusinessKYC extends Document {
     status: "pending" | "verified" | "rejected";
     rejectionReason?: string;
   };
-  bvn: "pending" | "verified" | "rejected";
+  bvn: {
+    identityId?: string;
+    document: string;
+    status: "pending" | "verified" | "rejected";
+  };
   isDeleted: boolean;
   __v?: number;
 }
@@ -49,8 +53,9 @@ const BusinessKYCSchema = new Schema<IBusinessKYC>(
       rejectionReason: { type: String },
     },
     bvn: {
-      type: String,
-      enum: ["pending", "verified", "rejected"],
+      identityId: { type: String },
+      document: { type: String },
+      status: { type: String, enum: ["pending", "verified", "rejected"] },
     },
     isDeleted: { type: Boolean, default: false },
   },
