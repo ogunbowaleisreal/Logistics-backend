@@ -7,8 +7,11 @@ import AppError from "../../utilities/ErrorHandler";
 import { SafeHaven } from "../../utilities/SafeHaven";
 import { paginateModel } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
+import { EmailService } from "../Email.Service";
+import { termiiService } from "../../utilities/Termii";
 
 const safehaven = new SafeHaven();
+const emailService = new EmailService();
 
 export class WithdrawalService {
   public async requestWithdrawal(
@@ -19,7 +22,7 @@ export class WithdrawalService {
     saveAccount?: boolean,
   ) {
     const business = await Business.findById(businessId)
-      .select("wallet")
+      .select("wallet email phone name")
       .lean();
     if (!business) throw new AppError(404, "Business not found");
 
@@ -152,6 +155,24 @@ export class WithdrawalService {
     });
 
     await session.endSession();
+
+    if (process.env["NODE_ENV"] === "development") {
+      void emailService.sendWithdrawalSuccessEmail({
+        email: business.email,
+        name: business.name,
+        amount,
+        reference,
+        bankSnapshot,
+      });
+      if (business.phone) {
+        void termiiService.sendWithdrawalSuccess(
+          business.phone,
+          business.name,
+          amount,
+          reference,
+        );
+      }
+    }
 
     return transaction;
   }

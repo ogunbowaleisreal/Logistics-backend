@@ -229,4 +229,25 @@ export class EmailService {
       logger.error(`Payment review email error: ${error.message}`);
     }
   }
+
+  async sendWithdrawalSuccessEmail(payload: {
+    email: string;
+    name: string;
+    amount: number;
+    reference: string;
+    bankSnapshot: { accountName: string; accountNumber: string; bankName: string };
+  }): Promise<void> {
+    const { email, name, amount, reference, bankSnapshot } = payload;
+    try {
+      await resend.emails.send({
+        from,
+        to: email,
+        subject: "Withdrawal Successful",
+        html: `Hi ${name},<br><br>Your withdrawal request has been processed successfully.<br><br>Amount: <strong>₦${amount.toLocaleString()}</strong><br>Reference: <strong>${reference}</strong><br>Destination: <strong>${bankSnapshot.accountName} — ${bankSnapshot.bankName} (${bankSnapshot.accountNumber})</strong><br><br>Funds will reflect in your bank account shortly.`,
+      });
+      logger.info(`Withdrawal success email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Withdrawal success email error: ${error.message}`);
+    }
+  }
 }
