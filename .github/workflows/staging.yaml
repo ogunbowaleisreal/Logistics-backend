@@ -96,7 +96,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           key: ${{ secrets.SSH_KEY }}
           source: "./*"
-          target: ${{ secrets.PROJECT_PATH }}
+          target: ${{ secrets.STAGING_PROJECT_PATH  }}
 
       - name: Create .env file on server
         uses: appleboy/ssh-action@v0.1.10
