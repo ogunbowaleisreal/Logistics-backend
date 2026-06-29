@@ -4,6 +4,7 @@ import {
   // BusinessShippingRate, // Removed: weight-based rates replaced by flat zone amount
   BusinessShippingZone,
 } from "../../models/Shippings.model";
+import { GlobalShippingZone } from "../../models/GlobalShippingZone.model";
 import AppError from "../../utilities/ErrorHandler";
 
 // interface IRateInput {
@@ -77,6 +78,18 @@ export class ShippingService {
     if (payload.countries !== undefined) zone.countries = payload.countries;
     if (payload.cities !== undefined) zone.cities = payload.cities;
     return await zone.save();
+  }
+
+  public async cloneFromTemplate(businessId: string, templateId: string) {
+    const template = await GlobalShippingZone.findById(templateId).lean();
+    if (!template) throw new AppError(404, "Global shipping zone template not found");
+
+    const nameConflict = await BusinessShippingZone.exists({ businessId, name: template.name });
+    if (nameConflict)
+      throw new AppError(400, `A zone named "${template.name}" already exists for this business`);
+
+    const { _id, description, __v, createdAt, updatedAt, ...fields } = template as any;
+    return await BusinessShippingZone.create({ ...fields, businessId });
   }
 
   public async deleteZone(businessId: string, zoneId: string) {
