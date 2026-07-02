@@ -5,16 +5,13 @@ import {
   updateStaff,
   deleteStaff,
 } from "../../controllers/business/staff.controller";
-import {
-  businessVerification,
-  staffRoleVerification,
-} from "../../middlewares/authorization.middleware";
+import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
 const router = Router();
 
-router.post("/", businessVerification, createStaff);
-router.get("/", businessVerification, getStaff);
-router.patch("/", businessVerification, updateStaff);
-router.delete("/", businessVerification, deleteStaff);
+router.post("/", staffRoleVerification("CRTSTAFF"), createStaff);
+router.get("/", staffRoleVerification("GETSTAFF"), getStaff);
+router.patch("/", staffRoleVerification("UPTSTAFF"), updateStaff);
+router.delete("/", staffRoleVerification("DELSTAFF"), deleteStaff);
 
 export default router;

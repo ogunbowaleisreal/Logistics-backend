@@ -16,7 +16,7 @@ export class StaffService {
     hasher: Hasher,
     emailService: EmailService,
     passwordGenerator: PasswordGeneratorService,
-    staffRoleService: StaffRoleService
+    staffRoleService: StaffRoleService,
   ) {
     this.hasher = hasher;
     this.emailService = emailService;
@@ -25,14 +25,19 @@ export class StaffService {
   }
 
   public async createStaff(businessId: string, payload: any) {
-    const { firstname, lastname, email, phone, roleType } = payload;
+    const { firstname, lastname, email, phone, roleId } = payload;
 
-    const roleDoc = await this.staffRoleService.getRoleByType(businessId, roleType);
+    const roleDoc = await this.staffRoleService.getRoleById(businessId, roleId);
 
-    const existing = await Staff.findOne({ businessId, email: email.toLowerCase() });
-    if (existing) throw new AppError(409, "Staff with this email already exists");
+    const existing = await Staff.findOne({
+      businessId,
+      email: email.toLowerCase(),
+    });
+    if (existing)
+      throw new AppError(409, "Staff with this email already exists");
 
-    const tempPassword = this.passwordGenerator.generateTemporaryPasswordForNewAdmin(10);
+    const tempPassword =
+      this.passwordGenerator.generateTemporaryPasswordForNewAdmin(10);
     const hashedPassword = await this.hasher.hashPassword(tempPassword);
 
     const staff = await Staff.create({
@@ -45,7 +50,11 @@ export class StaffService {
       role: roleDoc._id,
     });
 
-    await this.emailService.sendStaffWelcomeEmail({ email: email.toLowerCase(), firstname, password: tempPassword });
+    await this.emailService.sendStaffWelcomeEmail({
+      email: email.toLowerCase(),
+      firstname,
+      password: tempPassword,
+    });
 
     return staff;
   }
@@ -54,7 +63,11 @@ export class StaffService {
     const { staffId, page, limit, status } = filter;
 
     if (staffId) {
-      const staff = await Staff.findOne({ _id: staffId, businessId, isDeleted: false }).populate("role");
+      const staff = await Staff.findOne({
+        _id: staffId,
+        businessId,
+        isDeleted: false,
+      }).populate("role");
       if (!staff) throw new AppError(404, "Staff not found");
       return staff;
     }
@@ -68,7 +81,11 @@ export class StaffService {
   public async updateStaff(businessId: string, payload: any) {
     const { staffId, firstname, lastname, phone, status } = payload;
 
-    const staff = await Staff.findOne({ _id: staffId, businessId, isDeleted: false });
+    const staff = await Staff.findOne({
+      _id: staffId,
+      businessId,
+      isDeleted: false,
+    });
     if (!staff) throw new AppError(404, "Staff not found");
 
     if (firstname) staff.firstname = firstname;
@@ -76,8 +93,11 @@ export class StaffService {
     if (phone) staff.phone = phone;
     if (status) staff.status = status;
 
-    if (payload.roleType) {
-      const roleDoc = await this.staffRoleService.getRoleByType(businessId, payload.roleType);
+    if (payload.roleId) {
+      const roleDoc = await this.staffRoleService.getRoleById(
+        businessId,
+        payload.roleId,
+      );
       staff.role = roleDoc._id as any;
     }
 
@@ -85,7 +105,11 @@ export class StaffService {
   }
 
   public async deleteStaff(businessId: string, staffId: string) {
-    const staff = await Staff.findOne({ _id: staffId, businessId, isDeleted: false });
+    const staff = await Staff.findOne({
+      _id: staffId,
+      businessId,
+      isDeleted: false,
+    });
     if (!staff) throw new AppError(404, "Staff not found");
 
     staff.isDeleted = true;

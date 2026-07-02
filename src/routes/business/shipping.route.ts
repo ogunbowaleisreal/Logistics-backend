@@ -22,32 +22,48 @@ const router = Router();
 
 router
   .route("/zones")
-  .post(staffRoleVerification("shipping"), validate(createZoneSchema, "body"), createZone)
-  .get(staffRoleVerification("shipping"), getZones);
+  .post(
+    staffRoleVerification("CRTSHIPPING"),
+    validate(createZoneSchema, "body"),
+    createZone,
+  )
+  .get(staffRoleVerification("GETSHIPPINGS"), getZones);
 
 router
   .route("/zones/:zoneId")
-  .put(staffRoleVerification("shipping"), validate(updateZoneSchema, "body"), updateZone)
-  .delete(staffRoleVerification("shipping"), deleteZone);
+  .put(
+    staffRoleVerification("UPTSHIPPING"),
+    validate(updateZoneSchema, "body"),
+    updateZone,
+  )
+  .delete(staffRoleVerification("DELSHIPPING"), deleteZone);
 
 router
   .route("/zones/:zoneId/weight-brackets")
-  .put(staffRoleVerification("shipping"), validate(bulkUpsertWeightBracketsSchema, "body"), bulkUpsertWeightBrackets)
-  .get(staffRoleVerification("shipping"), getWeightBrackets);
+  .put(
+    staffRoleVerification("UPTSHIPPING"),
+    validate(bulkUpsertWeightBracketsSchema, "body"),
+    bulkUpsertWeightBrackets,
+  )
+  .get(staffRoleVerification("GETSHIPPINGS"), getWeightBrackets);
 
 router
   .route("/zones/:zoneId/weight-brackets/:bracketId")
-  .put(staffRoleVerification("shipping"), validate(updateWeightBracketSchema, "body"), updateWeightBracket)
-  .delete(staffRoleVerification("shipping"), deleteWeightBracket);
+  .put(
+    staffRoleVerification("UPTSHIPPING"),
+    validate(updateWeightBracketSchema, "body"),
+    updateWeightBracket,
+  )
+  .delete(staffRoleVerification("DELSHIPPING"), deleteWeightBracket);
 
 // router
 //   .route("/rates")
-//   .post(staffRoleVerification("shipping"), upsertRates)
-//   .get(staffRoleVerification("shipping"), getRates);
+//   .post(staffRoleVerification("CRTSHIPPING"), upsertRates)
+//   .get(staffRoleVerification("GETSHIPPINGS"), getRates);
 
 // router
 //   .route("/rates/:rateId")
-//   .put(staffRoleVerification("shipping"), updateRate)
-//   .delete(staffRoleVerification("shipping"), deleteRate);
+//   .put(staffRoleVerification("UPTSHIPPING"), updateRate)
+//   .delete(staffRoleVerification("DELSHIPPING"), deleteRate);
 
 export default router;

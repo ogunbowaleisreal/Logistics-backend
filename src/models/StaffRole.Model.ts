@@ -6,7 +6,8 @@ export const StaffRoleType = {
   ADMIN: "admin",
 } as const;
 
-export type StaffRoleTypeValue = (typeof StaffRoleType)[keyof typeof StaffRoleType];
+export type StaffRoleTypeValue =
+  (typeof StaffRoleType)[keyof typeof StaffRoleType];
 
 export const StaffPermissions = [
   // Staff management
@@ -59,6 +60,20 @@ export const StaffPermissions = [
   // Business profile
   { code: "GETBIZPROFILE", name: "GET BUSINESS PROFILE" },
   { code: "UPTBIZPROFILE", name: "UPDATE BUSINESS PROFILE" },
+
+  // Privacy Policy
+  { code: "GETPRV", name: "GET PRIVACY POLICY" },
+  { code: "UPTPRV", name: "UPDATE PRIVACY POLICY" },
+
+  // Terms and Conditions
+  { code: "GETTC", name: "GET TERMS AND CONDITIONS" },
+  { code: "CRTTC", name: "CREATE TERMS AND CONDITIONS" },
+
+  // Shipping
+  { code: "CRTSHIPPING", name: "CREATE SHIPPING" },
+  { code: "UPTSHIPPING", name: "UPDATE SHIPPING" },
+  { code: "GETSHIPPINGS", name: "GET SHIPPINGS" },
+  { code: "DELSHIPPING", name: "DELETE SHIPPING" },
 ];
 
 export interface IStaffRole extends Document {

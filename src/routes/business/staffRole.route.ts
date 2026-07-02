@@ -4,12 +4,16 @@ import {
   updateRole,
   getPermissions,
 } from "../../controllers/business/staffRole.controller";
-import { businessVerification } from "../../middlewares/authorization.middleware";
+import { staffRoleVerification } from "../../middlewares/authorization.middleware";
 
 const router = Router();
 
-router.get("/permissions", getPermissions);
-router.get("/", businessVerification, getRoles);
-router.patch("/", businessVerification, updateRole);
+router.get(
+  "/permissions",
+  staffRoleVerification("GETSTFROLES"),
+  getPermissions,
+);
+router.get("/", staffRoleVerification("GETSTFROLES"), getRoles);
+router.patch("/", staffRoleVerification("UPTSTFROLE"), updateRole);
 
 export default router;
