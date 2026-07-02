@@ -1,9 +1,10 @@
-import { Types } from "mongoose";
+import { Types, startSession } from "mongoose";
 import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
 import {
   // BusinessShippingRate, // Removed: weight-based rates replaced by flat zone amount
   BusinessShippingZone,
 } from "../../models/Shippings.model";
+import { GlobalShippingZone } from "../../models/GlobalShippingZone.model";
 import AppError from "../../utilities/ErrorHandler";
 
 // interface IRateInput {
@@ -77,6 +78,33 @@ export class ShippingService {
     if (payload.countries !== undefined) zone.countries = payload.countries;
     if (payload.cities !== undefined) zone.cities = payload.cities;
     return await zone.save();
+  }
+
+  public async cloneFromTemplate(businessId: string) {
+    const templates = await GlobalShippingZone.find().lean();
+    if (!templates.length)
+      throw new AppError(404, "No global shipping zone templates found");
+
+    const zonesToInsert = templates.map((template) => {
+      const { _id, description, __v, createdAt, updatedAt, ...fields } =
+        template as any;
+      return { ...fields, businessId };
+    });
+
+    const session = await startSession();
+    try {
+      const createdZones = await session.withTransaction(async () => {
+        // Replaces every existing business zone with the current global templates,
+        // discarding any prior business customizations.
+        await BusinessShippingZone.deleteMany({ businessId }, { session });
+        return await BusinessShippingZone.insertMany(zonesToInsert, {
+          session,
+        });
+      });
+      return createdZones;
+    } finally {
+      await session.endSession();
+    }
   }
 
   public async deleteZone(businessId: string, zoneId: string) {

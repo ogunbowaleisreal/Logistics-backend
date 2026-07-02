@@ -188,6 +188,18 @@ class TermiiService {
       `Your LogisticsPadi login OTP is: ${otp}. It expires in 5 minutes. Do not share this code.`,
     );
   }
+
+  public sendWithdrawalSuccess(
+    to: string,
+    name: string,
+    amount: number,
+    reference: string,
+  ): void {
+    void this.send(
+      to,
+      `Hi ${name}, your withdrawal of ₦${amount.toLocaleString()} (Ref: ${reference}) was successful. Funds will reflect in your bank account shortly.`,
+    );
+  }
 }
 
 export const termiiService = new TermiiService();

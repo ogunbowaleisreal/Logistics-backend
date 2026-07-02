@@ -109,22 +109,40 @@ export class OrderService {
       amount,
       serviceFee,
       VAT,
-      totalAmount: 100, // TODO: Change back to totalAmount when not testing
+      totalAmount,
     });
 
-    const { accountNumber, accountName, expiryDate, callbackURL } =
-      await safeHaven.createVirtualAccount({
-        amount: order.totalAmount!,
-        reference: order.id,
+    if (process.env["NODE_ENV"] === "development") {
+      const session = await startSession();
+      await session.withTransaction(async () => {
+        await Order.findOneAndUpdate(
+          { _id: order._id },
+          { status: "paid" },
+          { session },
+        );
+        await Business.findOneAndUpdate(
+          { _id: order.businessId, isDeleted: false },
+          { $inc: { "wallet.naira": order.amount } },
+          { session },
+        );
       });
-    order.paymentMethod = "safehaven";
-    order.virtualAccountData = {
-      accountNumber,
-      accountName,
-      bankName: "Safehaven Microfinance Bank",
-      expiryDate,
-      callbackURL,
-    };
+      await session.endSession();
+      order.status = "paid";
+    } else {
+      const { accountNumber, accountName, expiryDate, callbackURL } =
+        await safeHaven.createVirtualAccount({
+          amount: order.totalAmount!,
+          reference: order.id,
+        });
+      order.paymentMethod = "safehaven";
+      order.virtualAccountData = {
+        accountNumber,
+        accountName,
+        bankName: "Safehaven Microfinance Bank",
+        expiryDate,
+        callbackURL,
+      };
+    }
 
     if (order.personnelInformation.sender.email) {
       void emailService.sendOrderConfirmation({

@@ -14,6 +14,7 @@ import shippingRoute from "./shipping.route";
 import kycRoute from "./kyc.route";
 import generalFaqRoute from "./generalFaq.route";
 import waitlistRoute from "./waitlist.route";
+import globalShippingZoneRoute from "./globalShippingZone.route";
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use("/shipping", shippingRoute);
 router.use("/kyc", kycRoute);
 router.use("/general-faq", generalFaqRoute);
 router.use("/waitlist", waitlistRoute);
+router.use("/shipping/global-zones", globalShippingZoneRoute);
 
 export default router;

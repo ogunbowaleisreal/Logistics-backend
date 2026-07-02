@@ -17,6 +17,7 @@ import businessProfileRoute from "./businessProfile.route";
 import privacyPolicyRoute from "./privacyPolicy.route";
 import termsAndConditionsRoute from "./termsAndConditions.route";
 import withdrawalRoute from "./withdrawal.route";
+import globalShippingZoneRoute from "./globalShippingZone.route";
 
 const router = Router();
 
@@ -38,5 +39,6 @@ router.use("/kyc", kycRoute);
 router.use("/privacy-policy", privacyPolicyRoute);
 router.use("/terms-and-conditions", termsAndConditionsRoute);
 router.use("/withdrawals", withdrawalRoute);
+router.use("/shipping/global-zones", globalShippingZoneRoute);
 
 export default router;

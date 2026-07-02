@@ -16,7 +16,7 @@ export class StaffAuthenticationService {
     authenticationTokenGenerator: AuthenticationTokenGenerator,
     cacheService: CacheService,
     emailService: EmailService,
-    hasher: Hasher
+    hasher: Hasher,
   ) {
     this.authenticationTokenGenerator = authenticationTokenGenerator;
     this.cacheService = cacheService;
@@ -27,21 +27,31 @@ export class StaffAuthenticationService {
   public async login(payload: any) {
     const { businessSlug, email, password } = payload;
 
-    const business = await Business.findOne({ slug: businessSlug, status: "active", isDeleted: false });
+    const business = await Business.findOne({
+      slug: businessSlug,
+      status: "active",
+      isDeleted: false,
+    });
     if (!business) throw new AppError(404, "Business not found");
 
     const staff = await Staff.findOne({
-      businessId: (business._id as any),
+      businessId: business._id as any,
       email: email.toLowerCase(),
       isDeleted: false,
     }).populate("role");
     if (!staff) throw new AppError(400, "Invalid login credentials!");
 
-    const passwordValid = await this.hasher.verifyPassword(password, staff.password!);
+    const passwordValid = await this.hasher.verifyPassword(
+      password,
+      staff.password!,
+    );
     if (!passwordValid) throw new AppError(400, "Invalid login credentials!");
 
     if (staff.status === "suspended") {
-      throw new AppError(403, "Your account has been suspended, please contact your administrator");
+      throw new AppError(
+        403,
+        "Your account has been suspended, please contact your administrator",
+      );
     }
 
     if (staff.twoFactorAuthentication) {
@@ -49,7 +59,10 @@ export class StaffAuthenticationService {
       return { twoFactorAuthentication: true };
     }
 
-    const { accessToken, refreshToken } = await this.getAuthorizationToken(staff.id, (business._id as any).toString());
+    const { accessToken, refreshToken } = await this.getAuthorizationToken(
+      staff.id,
+      (business._id as any).toString(),
+    );
     return { staff, accessToken, refreshToken, twoFactorAuthentication: false };
   }
 
@@ -63,48 +76,84 @@ export class StaffAuthenticationService {
   public async verifyLoginOTP(payload: any) {
     const { businessSlug, email, otp } = payload;
 
-    const business = await Business.findOne({ slug: businessSlug, status: "active", isDeleted: false });
+    const business = await Business.findOne({
+      slug: businessSlug,
+      status: "active",
+      isDeleted: false,
+    });
     if (!business) throw new AppError(404, "Business not found");
 
-    const cached = await this.cacheService.getCachedStaffLoginOTP((business._id as any).toString(), email);
-    if (JSON.parse(cached).otp !== otp) throw new AppError(401, "Invalid verification code");
+    const cached = await this.cacheService.getCachedStaffLoginOTP(
+      (business._id as any).toString(),
+      email,
+    );
+    if (JSON.parse(cached).otp !== otp)
+      throw new AppError(401, "Invalid verification code");
 
     const staff = await Staff.findOne({
-      businessId: (business._id as any),
+      businessId: business._id as any,
       email: email.toLowerCase(),
       isDeleted: false,
     }).populate("role");
     if (!staff) throw new AppError(400, "Invalid login credentials!");
 
-    const { accessToken, refreshToken } = await this.getAuthorizationToken(staff.id, (business._id as any).toString());
+    const { accessToken, refreshToken } = await this.getAuthorizationToken(
+      staff.id,
+      (business._id as any).toString(),
+    );
     return { staff, accessToken, refreshToken };
   }
 
   public async forgotPassword(payload: any) {
     const { businessSlug, email } = payload;
 
-    const business = await Business.findOne({ slug: businessSlug, isDeleted: false });
+    const business = await Business.findOne({
+      slug: businessSlug,
+      isDeleted: false,
+    });
     if (!business) throw new AppError(404, "Business not found");
 
-    const staff = await Staff.findOne({ businessId: (business._id as any), email: email.toLowerCase(), isDeleted: false });
+    const staff = await Staff.findOne({
+      businessId: business._id as any,
+      email: email.toLowerCase(),
+      isDeleted: false,
+    });
     if (!staff) throw new AppError(404, "Staff not found");
 
     const otp = this.authenticationTokenGenerator.generateOTP(6);
-    await this.cacheService.cacheStaffPasswordResetOTP((business._id as any).toString(), email, otp);
-    await this.emailService.sendStaffPasswordResetOTP({ email: email.toLowerCase(), otp, firstname: staff.firstname });
+    await this.cacheService.cacheStaffPasswordResetOTP(
+      (business._id as any).toString(),
+      email,
+      otp,
+    );
+    await this.emailService.sendStaffPasswordResetOTP({
+      email: email.toLowerCase(),
+      otp,
+      firstname: staff.firstname,
+    });
     return;
   }
 
   public async resetPassword(payload: any) {
     const { businessSlug, email, otp, password } = payload;
 
-    const business = await Business.findOne({ slug: businessSlug, isDeleted: false });
+    const business = await Business.findOne({
+      slug: businessSlug,
+      isDeleted: false,
+    });
     if (!business) throw new AppError(404, "Business not found");
 
-    const staff = await Staff.findOne({ businessId: (business._id as any), email: email.toLowerCase(), isDeleted: false });
+    const staff = await Staff.findOne({
+      businessId: business._id as any,
+      email: email.toLowerCase(),
+      isDeleted: false,
+    });
     if (!staff) throw new AppError(404, "Staff not found");
 
-    const cached = await this.cacheService.getCachedStaffPasswordResetOTP((business._id as any).toString(), email);
+    const cached = await this.cacheService.getCachedStaffPasswordResetOTP(
+      (business._id as any).toString(),
+      email,
+    );
     if (JSON.parse(cached).otp !== otp) throw new AppError(401, "Invalid OTP");
 
     staff.password = await this.hasher.hashPassword(password);
@@ -114,7 +163,8 @@ export class StaffAuthenticationService {
 
   public async getAccessToken(filter: any) {
     const { refreshToken } = filter;
-    const cachedStaffId = await this.cacheService.getAuthorizationToken(refreshToken);
+    const cachedStaffId =
+      await this.cacheService.getAuthorizationToken(refreshToken);
     if (!cachedStaffId) throw new AppError(401, "Invalid refresh token");
 
     const staff = await Staff.findOne({ _id: cachedStaffId, isDeleted: false });
@@ -139,11 +189,13 @@ export class StaffAuthenticationService {
       businessId,
       type: "staff",
     });
-    const refreshToken = this.authenticationTokenGenerator.generateRefreshToken({
-      staffId,
-      businessId,
-      type: "staff",
-    });
+    const refreshToken = this.authenticationTokenGenerator.generateRefreshToken(
+      {
+        staffId,
+        businessId,
+        type: "staff",
+      },
+    );
     await this.cacheService.cacheAuthorizationToken(staffId, refreshToken);
     return { accessToken, refreshToken };
   }

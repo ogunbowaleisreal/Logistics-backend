@@ -1,26 +1,77 @@
-import { StaffRole, StaffPermissions, StaffRoleType, StaffRoleTypeValue } from "../../models/StaffRole.Model";
+import {
+  StaffRole,
+  StaffPermissions,
+  StaffRoleType,
+  StaffRoleTypeValue,
+} from "../../models/StaffRole.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModel } from "../../utilities/Pagination.Helper";
 
 const DEFAULT_ROLE_PERMISSIONS: Record<StaffRoleTypeValue, string[]> = {
   customer_service: ["GETORDERS", "UPTORDER"],
   manager: [
-    "GETORDERS", "UPTORDER",
-    "CRTSTAFF", "UPTSTAFF", "GETSTAFF", "DELSTAFF",
-    "CRTRIDER", "UPTRIDER", "GETRIDERS", "DELRIDER",
-    "GETCFG", "GETBIZPROFILE", "UPTBIZPROFILE",
+    "GETORDERS",
+    "UPTORDER",
+    "CRTSTAFF",
+    "UPTSTAFF",
+    "GETSTAFF",
+    "DELSTAFF",
+    "CRTRIDER",
+    "UPTRIDER",
+    "GETRIDERS",
+    "DELRIDER",
+    "GETCFG",
+    "GETBIZPROFILE",
+    "UPTBIZPROFILE",
+    "GETPRV",
+    "UPTPRV",
+    "GETTC",
+    "CRTTC",
+    "CRTSHIPPING",
+    "UPTSHIPPING",
+    "GETSHIPPINGS",
+    "DELSHIPPING",
   ],
   admin: [
-    "GETORDERS", "UPTORDER",
-    "CRTSTAFF", "UPTSTAFF", "GETSTAFF", "DELSTAFF",
-    "CRTRIDER", "UPTRIDER", "GETRIDERS", "DELRIDER",
-    "GETCFG", "GETBIZPROFILE", "UPTBIZPROFILE",
+    "GETORDERS",
+    "UPTORDER",
+    "CRTSTAFF",
+    "UPTSTAFF",
+    "GETSTAFF",
+    "DELSTAFF",
+    "CRTRIDER",
+    "UPTRIDER",
+    "GETRIDERS",
+    "DELRIDER",
+    "GETCFG",
+    "GETBIZPROFILE",
+    "UPTBIZPROFILE",
     "UPTCFG",
-    "CRTBANNER", "UPTBANNER", "GETBANNERS", "DELBANNER",
-    "CRTFAQ", "UPTFAQ", "GETFAQS", "DELFAQ",
-    "CRTTHEME", "UPTTHEME", "GETTHEMES", "DELTHEME",
-    "CRTBANK", "GETBANKS", "DELBANK",
-    "GETSTFROLES", "UPTSTFROLE",
+    "CRTBANNER",
+    "UPTBANNER",
+    "GETBANNERS",
+    "DELBANNER",
+    "CRTFAQ",
+    "UPTFAQ",
+    "GETFAQS",
+    "DELFAQ",
+    "CRTTHEME",
+    "UPTTHEME",
+    "GETTHEMES",
+    "DELTHEME",
+    "CRTBANK",
+    "GETBANKS",
+    "DELBANK",
+    "GETSTFROLES",
+    "UPTSTFROLE",
+    "GETPRV",
+    "UPTPRV",
+    "GETTC",
+    "CRTTC",
+    "CRTSHIPPING",
+    "UPTSHIPPING",
+    "GETSHIPPINGS",
+    "DELSHIPPING",
   ],
 };
 
@@ -31,7 +82,9 @@ const DEFAULT_ROLE_TITLES: Record<StaffRoleTypeValue, string> = {
 };
 
 export class StaffRoleService {
-  public async seedDefaultRoles(businessId: string): Promise<{ created: number; skipped: number }> {
+  public async seedDefaultRoles(
+    businessId: string,
+  ): Promise<{ created: number; skipped: number }> {
     const types = Object.values(StaffRoleType) as StaffRoleTypeValue[];
     const results = await Promise.all(
       types.map((type) =>
@@ -91,9 +144,19 @@ export class StaffRoleService {
     return await paginateModel(StaffRole, query, page, limit);
   }
 
+  public async getRoleById(businessId: string, roleId: string) {
+    const role = await StaffRole.findOne({ _id: roleId, businessId });
+    if (!role) throw new AppError(404, "Role not found");
+    return role;
+  }
+
   public async getRoleByType(businessId: string, roleType: string) {
     const validType = Object.values(StaffRoleType).find((t) => t === roleType);
-    if (!validType) throw new AppError(400, `Invalid role type. Must be one of: ${Object.values(StaffRoleType).join(", ")}`);
+    if (!validType)
+      throw new AppError(
+        400,
+        `Invalid role type. Must be one of: ${Object.values(StaffRoleType).join(", ")}`,
+      );
 
     const role = await StaffRole.findOne({ businessId, type: validType });
     if (!role) throw new AppError(404, "Role not found");
@@ -111,6 +174,8 @@ export class StaffRoleService {
   }
 
   private getPermissionsCodes(permissions: string[]): string[] {
-    return permissions.filter((p) => StaffPermissions.some((sp) => sp.code === p));
+    return permissions.filter((p) =>
+      StaffPermissions.some((sp) => sp.code === p),
+    );
   }
 }
