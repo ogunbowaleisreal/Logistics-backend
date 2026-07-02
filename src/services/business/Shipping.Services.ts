@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, startSession } from "mongoose";
 import { BusinessConfiguration } from "../../models/BusinessConfiguration.Model";
 import {
   // BusinessShippingRate, // Removed: weight-based rates replaced by flat zone amount
@@ -80,16 +80,31 @@ export class ShippingService {
     return await zone.save();
   }
 
-  public async cloneFromTemplate(businessId: string, templateId: string) {
-    const template = await GlobalShippingZone.findById(templateId).lean();
-    if (!template) throw new AppError(404, "Global shipping zone template not found");
+  public async cloneFromTemplate(businessId: string) {
+    const templates = await GlobalShippingZone.find().lean();
+    if (!templates.length)
+      throw new AppError(404, "No global shipping zone templates found");
 
-    const nameConflict = await BusinessShippingZone.exists({ businessId, name: template.name });
-    if (nameConflict)
-      throw new AppError(400, `A zone named "${template.name}" already exists for this business`);
+    const zonesToInsert = templates.map((template) => {
+      const { _id, description, __v, createdAt, updatedAt, ...fields } =
+        template as any;
+      return { ...fields, businessId };
+    });
 
-    const { _id, description, __v, createdAt, updatedAt, ...fields } = template as any;
-    return await BusinessShippingZone.create({ ...fields, businessId });
+    const session = await startSession();
+    try {
+      const createdZones = await session.withTransaction(async () => {
+        // Replaces every existing business zone with the current global templates,
+        // discarding any prior business customizations.
+        await BusinessShippingZone.deleteMany({ businessId }, { session });
+        return await BusinessShippingZone.insertMany(zonesToInsert, {
+          session,
+        });
+      });
+      return createdZones;
+    } finally {
+      await session.endSession();
+    }
   }
 
   public async deleteZone(businessId: string, zoneId: string) {

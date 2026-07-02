@@ -26,22 +26,22 @@ export const getGlobalZones = async (
   }
 };
 
-export const getGlobalZone = async (
-  req: ExtendedRequest | any,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const { templateId } = req.params;
-    const zone = await globalShippingZoneService.getZone(templateId);
-    return res.status(200).json({
-      message: "Global shipping zone fetched successfully",
-      data: zone,
-    });
-  } catch (error: any) {
-    next(error);
-  }
-};
+// export const getGlobalZone = async (
+//   req: ExtendedRequest | any,
+//   res: Response,
+//   next: NextFunction,
+// ) => {
+//   try {
+//     const { templateId } = req.params;
+//     const zone = await globalShippingZoneService.getZone(templateId);
+//     return res.status(200).json({
+//       message: "Global shipping zone fetched successfully",
+//       data: zone,
+//     });
+//   } catch (error: any) {
+//     next(error);
+//   }
+// };
 
 export const cloneFromGlobalTemplate = async (
   req: ExtendedRequest | any,
@@ -49,11 +49,10 @@ export const cloneFromGlobalTemplate = async (
   next: NextFunction,
 ) => {
   try {
-    const { templateId } = req.params;
-    const zone = await shippingService.cloneFromTemplate(getBusinessId(req), templateId);
+    const zones = await shippingService.cloneFromTemplate(getBusinessId(req));
     return res.status(201).json({
-      message: "Global zone cloned into your shipping zones successfully",
-      data: zone,
+      message: "All global zones cloned into your shipping zones successfully",
+      data: zones,
     });
   } catch (error: any) {
     next(error);

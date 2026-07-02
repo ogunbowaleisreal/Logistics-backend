@@ -12,6 +12,7 @@ export class RiderAuthenticationService {
 
   public async requestOTP(phone: string, businessSlug: string): Promise<void> {
     const businessId = await resolveBusinessIdFromSlug(businessSlug);
+
     const rider = await Rider.findOne({ phone, businessId, isDeleted: false });
 
     if (!rider) {

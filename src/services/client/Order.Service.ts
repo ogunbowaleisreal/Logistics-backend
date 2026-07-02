@@ -109,7 +109,7 @@ export class OrderService {
       amount,
       serviceFee,
       VAT,
-      totalAmount: 100, // TODO: Change back to totalAmount when not testing
+      totalAmount,
     });
 
     if (process.env["NODE_ENV"] === "development") {
