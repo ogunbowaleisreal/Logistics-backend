@@ -13,7 +13,7 @@ export class FAQService {
     const { faqID, tag, search, page, limit } = filter;
     const queryClauses: any[] = [
       {
-        $or: [{ businessId }, { businessId: { $exists: false } }],
+        businessId,
       },
     ];
 
