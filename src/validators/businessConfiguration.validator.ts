@@ -22,4 +22,5 @@ export const updateConfigurationSchema = Joi.object({
     .items(Joi.string().valid("local", "inter-state", "international"))
     .min(1)
     .optional(),
+  autoAssign: Joi.boolean().optional(),
 });

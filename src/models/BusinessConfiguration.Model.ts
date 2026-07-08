@@ -10,6 +10,7 @@ export interface IBusinessConfiguration extends Document {
     baseAmount: number;
   }[];
   shippingRegion?: ("local" | "inter-state" | "international")[];
+  autoAssign?: boolean;
   __v?: number;
 }
 
@@ -41,6 +42,10 @@ const BusinessConfigurationSchema = new Schema<IBusinessConfiguration>(
       type: [String],
       enum: ["local", "inter-state", "international"],
       default: ["local"],
+    },
+    autoAssign: {
+      type: Boolean,
+      default: false,
     },
   },
   {

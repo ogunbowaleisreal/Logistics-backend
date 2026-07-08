@@ -7,6 +7,7 @@ import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
 import { Rider } from "../../models/Rider.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
+import { BusinessConfigurationService } from "./BusinessConfiguration.Service";
 import { redisClient } from "../../config/cache";
 import { termiiService } from "../../utilities/Termii";
 import { sendOrderStatusSMS } from "../../utilities/OrderStatusSMS";
@@ -14,6 +15,7 @@ import logger from "../../../logger";
 import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
 
 const emailService = new EmailService();
+const businessConfigurationService = new BusinessConfigurationService();
 
 const VALID_STATUSES: string[] = [
   "pending",
@@ -177,11 +179,18 @@ export class OrderService {
           }
         }
         if (status === "approved") {
-          await riderAssignmentService.assignRider(
+          const configuration = await businessConfigurationService.getConfiguration(
             order.businessId.toString(),
-            order,
             session,
           );
+
+          if (configuration.autoAssign) {
+            await riderAssignmentService.assignRider(
+              order.businessId.toString(),
+              order,
+              session,
+            );
+          }
         }
 
         await order.save({ session });
