@@ -35,3 +35,19 @@ export const getPaymentMethods = async (
     next(error);
   }
 };
+
+export const getServiceFeeTiers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const configuration = await configurationService.getConfiguration();
+    return res.status(200).json({
+      message: "Service fee tiers fetched successfully",
+      data: configuration.serviceFee.tiers,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
