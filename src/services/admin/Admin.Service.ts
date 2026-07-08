@@ -20,7 +20,7 @@ export class AdminService {
     cacheService: CacheService,
     emailService: EmailService,
     hasher: Hasher,
-    roleService: RoleServices
+    roleService: RoleServices,
   ) {
     this.authenticationTokenGenerator = authenticationTokenGenerator;
     this.cacheService = cacheService;
@@ -43,7 +43,7 @@ export class AdminService {
       payload,
       {
         new: true,
-      }
+      },
     );
     if (!updatedAdmin) throw new AppError(404, "Admin not found");
     return updatedAdmin;
@@ -59,7 +59,7 @@ export class AdminService {
     const { password } = admin;
     const validOldPassword = await this.hasher.verifyPassword(
       oldPassword,
-      password!
+      password!,
     );
     if (!validOldPassword) {
       throw new AppError(404, "Admin password not found");
@@ -70,7 +70,7 @@ export class AdminService {
 
   public async updateAdmin2FA(
     adminID: string,
-    twoFactorAuthentication: boolean
+    twoFactorAuthentication: boolean,
   ) {
     const admin = await Admin.findOne({ _id: adminID });
     if (!admin) throw new AppError(400, "Admin not found");
@@ -134,16 +134,20 @@ export class AdminService {
       page,
       limit,
       { createdAt: -1 },
-      { path: "role", select: "title" }
+      { path: "role", select: "title" },
     );
     return admins;
   }
 
   public async deleteAdmin(adminID: string) {
-    const admin = await Admin.findOneAndDelete({ _id: adminID });
+    const admin = await Admin.findOne({ _id: adminID });
     if (!admin) {
       throw new AppError(404, "Admin not found!");
     }
+    if (admin.email === process.env["SUPER_ADMIN_EMAIL"]) {
+      throw new AppError(400, "You cannot delete the super admin!");
+    }
+    await Admin.deleteOne({ _id: adminID });
     return;
   }
 
@@ -152,7 +156,7 @@ export class AdminService {
 
     await this.cacheService.cachePasswordUpdateOTP(
       adminID,
-      JSON.stringify({ otp, isOTPValid: false })
+      JSON.stringify({ otp, isOTPValid: false }),
     );
     return otp;
   }
