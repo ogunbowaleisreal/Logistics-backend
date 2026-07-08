@@ -18,6 +18,7 @@ interface IBusinessShippingZone extends Document {
     amount: number;
   }[];
   weightBrackets: IWeightBracket[];
+  useWeightBrackets: boolean;
   amount?: number;
   destinationStates?: string[];
   countries?: string[];
@@ -59,6 +60,7 @@ const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
       amount: { type: Number, required: true },
     },
   ],
+  useWeightBrackets: { type: Boolean, default: false },
   amount: { type: Number },
   destinationStates: [{ type: String }],
   countries: [{ type: String }],

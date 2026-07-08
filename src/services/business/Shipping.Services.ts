@@ -25,6 +25,13 @@ export class ShippingService {
         rideType: "bike" | "bus_car" | "truck" | "cargo";
         amount: number;
       }[];
+      weightBrackets?: {
+        rideType: "bike" | "bus_car" | "truck" | "cargo";
+        minKg: number;
+        maxKg: number;
+        amount: number;
+      }[];
+      useWeightBrackets?: boolean;
       destinationStates?: string[];
       countries?: string[];
       cities?: string[];
@@ -35,7 +42,15 @@ export class ShippingService {
       name: payload.name,
     });
     if (exists) throw new AppError(400, "Zone with this name already exists");
-    return await BusinessShippingZone.create({ ...payload, businessId });
+    const useWeightBrackets =
+      payload.useWeightBrackets !== undefined
+        ? payload.useWeightBrackets
+        : Boolean(payload.weightBrackets?.length);
+    return await BusinessShippingZone.create({
+      ...payload,
+      businessId,
+      useWeightBrackets,
+    });
   }
 
   public async getZones(
@@ -58,6 +73,7 @@ export class ShippingService {
         rideType: "bike" | "bus_car" | "truck" | "cargo";
         amount: number;
       }[];
+      useWeightBrackets?: boolean;
       destinationStates?: string[];
       countries?: string[];
       cities?: string[];
@@ -73,6 +89,8 @@ export class ShippingService {
     if (payload.shippingType !== undefined)
       zone.shippingType = payload.shippingType;
     if (payload.pricing !== undefined) zone.pricing = payload.pricing;
+    if (payload.useWeightBrackets !== undefined)
+      zone.useWeightBrackets = payload.useWeightBrackets;
     if (payload.destinationStates !== undefined)
       zone.destinationStates = payload.destinationStates;
     if (payload.countries !== undefined) zone.countries = payload.countries;
@@ -88,6 +106,7 @@ export class ShippingService {
     const zonesToInsert = templates.map((template) => {
       const { _id, description, __v, createdAt, updatedAt, ...fields } =
         template as any;
+      // useWeightBrackets is included in `fields` and carries over as-is from the template.
       return { ...fields, businessId };
     });
 
@@ -306,17 +325,31 @@ export class ShippingService {
         maxKg: number;
         amount: number;
       }[];
+      useWeightBrackets: boolean;
     },
     rideType: string,
     weightKg?: number,
   ): number {
-    if (weightKg !== undefined && zone.weightBrackets?.length) {
-      const bracket = zone.weightBrackets.find(
+    if (zone.useWeightBrackets) {
+      if (weightKg === undefined) {
+        throw new AppError(
+          400,
+          "weightKg is required for this zone's weight-tiered pricing",
+        );
+      }
+      const bracket = zone.weightBrackets?.find(
         (b) =>
           b.rideType === rideType && weightKg >= b.minKg && weightKg <= b.maxKg,
       );
-      if (bracket) return bracket.amount;
+      if (!bracket) {
+        throw new AppError(
+          400,
+          `No weight bracket matches rideType '${rideType}' and weight ${weightKg}kg for this zone`,
+        );
+      }
+      return bracket.amount;
     }
+
     const entry = zone.pricing.find((p) => p.rideType === rideType);
     if (!entry)
       throw new AppError(

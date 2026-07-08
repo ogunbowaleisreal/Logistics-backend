@@ -11,6 +11,7 @@ type ZonePayload = Pick<
   | "states"
   | "pricing"
   | "weightBrackets"
+  | "useWeightBrackets"
   | "destinationStates"
   | "countries"
   | "cities"
@@ -20,7 +21,11 @@ export class GlobalShippingZoneService {
   public async createZone(payload: ZonePayload) {
     const exists = await GlobalShippingZone.findOne({ name: payload.name });
     if (exists) throw new AppError(400, "A global zone with this name already exists");
-    return await GlobalShippingZone.create(payload);
+    const useWeightBrackets =
+      payload.useWeightBrackets !== undefined
+        ? payload.useWeightBrackets
+        : Boolean(payload.weightBrackets?.length);
+    return await GlobalShippingZone.create({ ...payload, useWeightBrackets });
   }
 
   public async getZones(filter: { shippingType?: string } = {}) {
@@ -44,6 +49,7 @@ export class GlobalShippingZoneService {
     if (payload.states !== undefined) zone.states = payload.states;
     if (payload.pricing !== undefined) zone.pricing = payload.pricing;
     if (payload.weightBrackets !== undefined) zone.weightBrackets = payload.weightBrackets;
+    if (payload.useWeightBrackets !== undefined) zone.useWeightBrackets = payload.useWeightBrackets;
     if (payload.destinationStates !== undefined) zone.destinationStates = payload.destinationStates;
     if (payload.countries !== undefined) zone.countries = payload.countries;
     if (payload.cities !== undefined) zone.cities = payload.cities;

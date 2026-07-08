@@ -76,6 +76,7 @@ export class OrderService {
         rideType,
         zoneId,
         distanceInKM,
+        weightKg: orderInformation.itemWeight,
         originState,
         destinationState: orderInformation.dropoffLocation.state,
         country: orderInformation.dropoffLocation.country,
