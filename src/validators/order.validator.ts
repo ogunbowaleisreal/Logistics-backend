@@ -44,7 +44,7 @@ export const createOrderSchema = Joi.object({
     dropoffLocation: dropoffLocationSchema,
     items: Joi.array().items(Joi.string().trim().required()).min(1).required(),
     numberOfItems: Joi.number().required(),
-    itemWeight: Joi.number().required(),
+    itemWeight: Joi.number().optional(),
     value: Joi.number().required(),
   }).required(),
   personnelInformation: Joi.object({

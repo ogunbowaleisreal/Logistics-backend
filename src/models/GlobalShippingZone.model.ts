@@ -11,6 +11,7 @@ export interface IGlobalShippingZone extends Document {
     amount: number;
   }[];
   weightBrackets: IWeightBracket[];
+  useWeightBrackets: boolean;
   destinationStates?: string[];
   countries?: string[];
   cities?: string[];
@@ -48,6 +49,7 @@ const globalShippingZoneSchema = new Schema<IGlobalShippingZone>(
         amount: { type: Number, required: true },
       },
     ],
+    useWeightBrackets: { type: Boolean, default: false },
     destinationStates: [{ type: String }],
     countries: [{ type: String }],
     cities: [{ type: String }],

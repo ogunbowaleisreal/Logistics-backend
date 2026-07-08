@@ -19,6 +19,7 @@ export const createGlobalZoneSchema = Joi.object({
   pricing: Joi.array().items(pricingItemSchema).min(1).required().messages({
     "array.min": "At least one pricing entry is required",
   }),
+  useWeightBrackets: Joi.boolean().optional(),
   destinationStates: Joi.when("shippingType", {
     is: "inter-state",
     then: Joi.array().items(Joi.string()).min(1).required(),
@@ -42,6 +43,7 @@ export const updateGlobalZoneSchema = Joi.object({
   pricing: Joi.array().items(pricingItemSchema).min(1).optional().messages({
     "array.min": "At least one pricing entry is required",
   }),
+  useWeightBrackets: Joi.boolean().optional(),
   destinationStates: Joi.when("shippingType", {
     is: "inter-state",
     then: Joi.array().items(Joi.string()).min(1).required(),
