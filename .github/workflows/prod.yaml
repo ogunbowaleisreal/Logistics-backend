@@ -77,7 +77,7 @@ jobs:
 
           BASE_URL: ${{ secrets.BASE_URL }}
 
-          NODE_ENV: ${{ secrets.NODE_ENV }}
+          NODE_ENV: ${{ secrets.PROD_NODE_ENV }}
 
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
           FIREBASE_PRIVATE_KEY_ID: ${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
@@ -159,7 +159,7 @@ jobs:
 
             echo "TERMII_API_KEY=${{ secrets.TERMII_API_KEY }}" >> ${{ secrets.ENV_PATH }}
 
-            echo "NODE_ENV=${{ secrets.NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
+            echo "NODE_ENV=${{ secrets.PROD_NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
 
             echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> ${{ secrets.ENV_PATH }}
             echo "FIREBASE_PRIVATE_KEY_ID=${{ secrets.FIREBASE_PRIVATE_KEY_ID }}" >> ${{ secrets.ENV_PATH }}
