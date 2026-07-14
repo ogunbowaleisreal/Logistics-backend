@@ -6,6 +6,7 @@ import { tenantScope } from "../../utilities/TenantScope";
 import { redisClient } from "../../config/cache";
 import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
 import { sendOrderStatusSMS } from "../../utilities/OrderStatusSMS";
+import { Business } from "../../models/Business.Model";
 
 const RIDER_ALLOWED_TRANSITIONS: Record<string, string[]> = {
   approved: ["processing"],
@@ -77,8 +78,12 @@ export class OrderService {
       orderStatus: status,
       orderTrackingID: order.trackingID,
     });
+    const business = await Business.findById(businessId);
+    if (!business) {
+      throw new AppError(404, "Business not found");
+    }
 
-    void sendOrderStatusSMS(order, status);
+    void sendOrderStatusSMS(order, status, business.name);
 
     return order;
   }
