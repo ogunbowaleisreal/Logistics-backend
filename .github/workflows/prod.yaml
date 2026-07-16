@@ -85,6 +85,11 @@ jobs:
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
           FIREBASE_CLIENT_ID: ${{ secrets.FIREBASE_CLIENT_ID }}
           FIREBASE_CLIENT_X509_CERT_URL: ${{ secrets.FIREBASE_CLIENT_X509_CERT_URL }}
+
+          PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
+          PUSHER_KEY: ${{ secrets.PUSHER_KEY }}
+          PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
+          PUSHER_CLUSTER: ${{ secrets.PUSHER_CLUSTER }}
         run: |
           npm run build
 
@@ -167,6 +172,11 @@ jobs:
             echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> ${{ secrets.ENV_PATH }}
             echo "FIREBASE_CLIENT_ID=${{ secrets.FIREBASE_CLIENT_ID }}" >> ${{ secrets.ENV_PATH }}
             echo "FIREBASE_CLIENT_X509_CERT_URL=${{ secrets.FIREBASE_CLIENT_X509_CERT_URL }}" >> ${{ secrets.ENV_PATH }}
+
+            echo "PUSHER_APP_ID=${{ secrets.PUSHER_APP_ID }}" >> ${{ secrets.ENV_PATH }}
+            echo "PUSHER_KEY=${{ secrets.PUSHER_KEY }}" >> ${{ secrets.ENV_PATH }}
+            echo "PUSHER_SECRET=${{ secrets.PUSHER_SECRET }}" >> ${{ secrets.ENV_PATH }}
+            echo "PUSHER_CLUSTER=${{ secrets.PUSHER_CLUSTER }}" >> ${{ secrets.ENV_PATH }}
 
       - name: Restart Application
         uses: appleboy/ssh-action@v0.1.10

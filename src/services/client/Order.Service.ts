@@ -15,6 +15,7 @@ import { Flutterwave } from "../../utilities/Flutterwave";
 import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
+import { PusherService } from "../../utilities/Pusher";
 
 const emailService = new EmailService();
 const shippingService = new ShippingService();
@@ -22,6 +23,7 @@ const configurationService = new ConfigurationService();
 const safeHaven = new SafeHaven();
 const monnify = new Monnify();
 const flutterwave = new Flutterwave();
+const pusherService = new PusherService();
 
 function normalizeRegions(val: string | string[] | undefined): string[] {
   if (!val) return ["local"];
@@ -360,6 +362,14 @@ export class OrderService {
       });
 
       await session.endSession();
+
+      if (order) {
+        void pusherService.notifyOrderStatus(orderID, {
+          status: order.status,
+          trackingID: order.trackingID,
+          totalAmount: order.totalAmount,
+        });
+      }
 
       if (order?.status === "paid") {
         // TODO: Send order confirmation email to customer
