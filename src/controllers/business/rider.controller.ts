@@ -3,8 +3,10 @@ import { RiderService } from "../../services/business/Rider.Service";
 import AppError from "../../utilities/ErrorHandler";
 import { ExtendedRequest } from "../../utilities/Interfaces";
 import logger from "../../../logger";
+import { RiderAssignmentService } from "../../services/RiderAssignment.Service";
 
 const riderService = new RiderService();
+const riderAssignmentService = new RiderAssignmentService()
 
 export const createRider = async (
   req: ExtendedRequest | any,
@@ -64,6 +66,30 @@ export const updateRider = async (
     return res
       .status(200)
       .json({ message: "Rider updated successfully", data: rider });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const setAutoAssignRider = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  const { riderID } = req.body;
+  const businessId =
+    req.business?.businessId ??
+    req.staff?.businessId ??
+    req.query.businessId ??
+    req.body?.businessId;
+  try {
+    if (!riderID) {
+      throw new AppError(400, "riderID is required");
+    }
+    await riderAssignmentService.setAutoAssignRider(businessId, riderID);
+    return res
+      .status(200)
+      .json({ message: "Auto-assign rider set successfully" });
   } catch (error: any) {
     next(error);
   }

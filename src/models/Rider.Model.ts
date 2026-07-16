@@ -7,8 +7,9 @@ interface IRider extends Document {
   dailyCapacity: number;
   totalDeliveries?: number;
   todaysRideCount?: number;
-  rideType?: "bike" | "bus_car"  | "truck";
+  rideType?: "bike" | "bus_car" | "truck";
   status?: string;
+  autoAssign: boolean;
   isDeleted?: boolean;
   __v?: number;
 }
@@ -23,6 +24,7 @@ const RiderSchema = new Schema<IRider>(
     name: { type: String, required: true, index: true },
     phone: { type: String, required: true },
     dailyCapacity: { type: Number, required: true, min: 0 },
+    autoAssign: { type: Boolean, default: false },
     totalDeliveries: { type: Number, default: 0 },
     todaysRideCount: { type: Number, default: 0, min: 0 },
     rideType: { type: String, enum: ["bike", "bus_car", "truck"] },
