@@ -27,7 +27,7 @@ export class EmailService {
     const { email, otp } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Your LogisticsPadi Account Verification Code",
         html: verificationEmailTemplate(otp),
@@ -42,7 +42,7 @@ export class EmailService {
     const { email, otp } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Update Your LogisticsPadi Password",
         html: passwordResetOTPTemplate(otp),
@@ -57,7 +57,7 @@ export class EmailService {
     const { email } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Welcome to LogisticsPadi",
         html: welcomeEmailTemplate(),
@@ -72,7 +72,7 @@ export class EmailService {
     const { email, otp } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Important: Login 2FA",
         html: loginOTPTemplate(otp),
@@ -87,7 +87,7 @@ export class EmailService {
     const { password, email } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Welcome to LogisticsPadi",
         html: adminWelcomeEmailTemplate(email, password),
@@ -102,7 +102,7 @@ export class EmailService {
     const { email, otp, name } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Verify Your LogisticsPadi Business Account",
         html: businessEmailVerificationTemplate(name, otp),
@@ -117,7 +117,7 @@ export class EmailService {
     const { email, name } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Welcome to LogisticsPadi",
         html: businessWelcomeEmailTemplate(name),
@@ -132,7 +132,7 @@ export class EmailService {
     const { email, otp } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Important: Business Login 2FA",
         html: businessLoginOTPTemplate(otp),
@@ -147,7 +147,7 @@ export class EmailService {
     const { email, otp } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Reset Your LogisticsPadi Business Password",
         html: businessPasswordResetOTPTemplate(otp),
@@ -159,12 +159,13 @@ export class EmailService {
   }
 
   async sendStaffWelcomeEmail(payload: any): Promise<void> {
-    const { email, firstname, password } = payload;
+    const { email, firstname, password, businessName } = payload;
+    const brand = businessName || "LogisticsPadi";
     try {
       await resend.emails.send({
-        from,
+        from: `${brand} <${from}>`,
         to: email,
-        subject: "Welcome to the Team — LogisticsPadi",
+        subject: `Welcome to the Team — ${brand}`,
         html: staffWelcomeEmailTemplate(firstname, email, password),
       });
       logger.info(`Staff welcome email sent to: ${email}`);
@@ -174,12 +175,13 @@ export class EmailService {
   }
 
   async sendStaffPasswordResetOTP(payload: any): Promise<void> {
-    const { email, otp, firstname } = payload;
+    const { email, otp, firstname, businessName } = payload;
+    const brand = businessName || "LogisticsPadi";
     try {
       await resend.emails.send({
-        from,
+        from: `${brand} <${from}>`,
         to: email,
-        subject: "Reset Your LogisticsPadi Staff Password",
+        subject: `Reset Your ${brand} Staff Password`,
         html: staffPasswordResetOTPTemplate(firstname, otp),
       });
       logger.info(`Staff password reset email sent to: ${email}`);
@@ -189,10 +191,11 @@ export class EmailService {
   }
 
   async sendOrderConfirmation(payload: any): Promise<void> {
-    const { email, name, trackingID, amount } = payload;
+    const { email, name, trackingID, amount, businessName } = payload;
+    const brand = businessName || "LogisticsPadi";
     try {
       await resend.emails.send({
-        from,
+        from: `${brand} <${from}>`,
         to: email,
         subject: "Your Order Has Been Placed",
         html: orderConfirmationTemplate(name, trackingID, amount),
@@ -203,26 +206,12 @@ export class EmailService {
     }
   }
 
-  async sendWaitlistConfirmationEmail(payload: any): Promise<void> {
-    const { email, fullName } = payload;
-    try {
-      await resend.emails.send({
-        from,
-        to: email,
-        subject: "You're on the Waitlist — LogisticsPadi",
-        html: waitlistConfirmationEmailTemplate(fullName),
-      });
-      logger.info(`Waitlist confirmation email sent to: ${email}`);
-    } catch (error: any) {
-      logger.error(`Waitlist confirmation email error: ${error.message}`);
-    }
-  }
-
   async sendOrderStatusUpdate(payload: any): Promise<void> {
-    const { email, name, trackingID, status } = payload;
+    const { email, name, trackingID, status, businessName } = payload;
+    const brand = businessName || "LogisticsPadi";
     try {
       await resend.emails.send({
-        from,
+        from: `${brand} <${from}>`,
         to: email,
         subject: "Your Order Status Has Been Updated",
         html: orderStatusUpdateTemplate(name, trackingID, status),
@@ -237,7 +226,7 @@ export class EmailService {
     const { email, name, trackingID } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Proof of Payment Received — Under Review",
         html: paymentReviewNotificationTemplate(name, trackingID),
@@ -248,20 +237,44 @@ export class EmailService {
     }
   }
 
+  async sendWaitlistConfirmationEmail(payload: any): Promise<void> {
+    const { email, fullName } = payload;
+    try {
+      await resend.emails.send({
+        from: `LogisticsPadi <${from}>`,
+        to: email,
+        subject: "You're on the Waitlist — LogisticsPadi",
+        html: waitlistConfirmationEmailTemplate(fullName),
+      });
+      logger.info(`Waitlist confirmation email sent to: ${email}`);
+    } catch (error: any) {
+      logger.error(`Waitlist confirmation email error: ${error.message}`);
+    }
+  }
+
   async sendWithdrawalSuccessEmail(payload: {
     email: string;
     name: string;
     amount: number;
     reference: string;
-    bankSnapshot: { accountName: string; accountNumber: string; bankName: string };
+    bankSnapshot: {
+      accountName: string;
+      accountNumber: string;
+      bankName: string;
+    };
   }): Promise<void> {
     const { email, name, amount, reference, bankSnapshot } = payload;
     try {
       await resend.emails.send({
-        from,
+        from: `LogisticsPadi <${from}>`,
         to: email,
         subject: "Withdrawal Successful",
-        html: withdrawalSuccessEmailTemplate(name, amount, reference, bankSnapshot),
+        html: withdrawalSuccessEmailTemplate(
+          name,
+          amount,
+          reference,
+          bankSnapshot,
+        ),
       });
       logger.info(`Withdrawal success email sent to: ${email}`);
     } catch (error: any) {

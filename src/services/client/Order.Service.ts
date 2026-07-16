@@ -146,11 +146,13 @@ export class OrderService {
     }
 
     if (order.personnelInformation.sender.email) {
+      const business = await Business.findById(businessId).lean();
       void emailService.sendOrderConfirmation({
         email: order.personnelInformation.sender.email,
         name: order.personnelInformation.sender.name,
         trackingID: order.trackingID,
         amount: order.amount,
+        businessName: business?.name,
       });
     }
 

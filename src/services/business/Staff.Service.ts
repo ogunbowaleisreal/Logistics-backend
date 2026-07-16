@@ -1,4 +1,5 @@
 import { Staff } from "../../models/Staff.Model";
+import { Business } from "../../models/Business.Model";
 import AppError from "../../utilities/ErrorHandler";
 import { Hasher } from "../../utilities/Hasher";
 import { paginateModel } from "../../utilities/Pagination.Helper";
@@ -50,10 +51,13 @@ export class StaffService {
       role: roleDoc._id,
     });
 
+    const business = await Business.findById(businessId).lean();
+
     await this.emailService.sendStaffWelcomeEmail({
       email: email.toLowerCase(),
       firstname,
       password: tempPassword,
+      businessName: business?.name,
     });
 
     return staff;
