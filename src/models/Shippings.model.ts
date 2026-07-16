@@ -11,6 +11,7 @@ export interface IWeightBracket {
 interface IBusinessShippingZone extends Document {
   businessId: Types.ObjectId;
   name: string;
+  description?: string;
   shippingType: "local" | "inter-state" | "international";
   states: string[];
   pricing: {
@@ -32,6 +33,7 @@ const businessShippingZoneSchema = new Schema<IBusinessShippingZone>({
     required: true,
   },
   name: { type: String, required: true },
+  description: { type: String },
   shippingType: {
     type: String,
     enum: ["local", "inter-state", "international"],
