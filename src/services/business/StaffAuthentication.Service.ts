@@ -130,6 +130,7 @@ export class StaffAuthenticationService {
       email: email.toLowerCase(),
       otp,
       firstname: staff.firstname,
+      businessName: business.name,
     });
     return;
   }

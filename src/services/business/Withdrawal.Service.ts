@@ -1,5 +1,4 @@
-import { randomUUID } from "crypto";
-import { startSession } from "mongoose";
+import { startSession, Types } from "mongoose";
 import { Business } from "../../models/Business.Model";
 import { Bank, BankList } from "../../models/Bank.Model";
 import { Withdrawal } from "../../models/Withdrawal.Model";
@@ -9,6 +8,7 @@ import { paginateModel } from "../../utilities/Pagination.Helper";
 import { tenantScope } from "../../utilities/TenantScope";
 import { EmailService } from "../Email.Service";
 import { termiiService } from "../../utilities/Termii";
+import logger from "../../../logger";
 
 const safehaven = new SafeHaven();
 const emailService = new EmailService();
@@ -113,50 +113,11 @@ export class WithdrawalService {
       };
     }
 
-    // const nameEnquiryReference = await safehaven.makeNameEnquiry({
-    //   bankCode: bankSnapshot.bankCode,
-    //   accountNumber: bankSnapshot.accountNumber,
-    // });
+    const reference = await this.generateReference();
 
-    const reference = `WD-${randomUUID()}`;
+    const isDevelopment = process.env["NODE_ENV"] === "development";
 
-    // const safehavenResponse = await safehaven.makeTransfer({
-    //   amount,
-    //   reference,
-    //   beneficiaryAccountNumber: bankSnapshot.accountNumber,
-    //   beneficiaryBankCode: bankSnapshot.bankCode,
-    //   nameEnquiryReference,
-    // });
-
-    const session = await startSession();
-    const transaction = await session.withTransaction(async () => {
-      await Business.findByIdAndUpdate(
-        businessId,
-        { $inc: { "wallet.naira": -amount } },
-        { session },
-      );
-
-      const [withdrawal] = await Withdrawal.create(
-        [
-          {
-            businessId,
-            ...(bankId && { bankId }),
-            amount,
-            reference,
-            status: "successful",
-            bankSnapshot,
-            sessionId: "00000000000000000000000",
-          },
-        ],
-        { session },
-      );
-
-      return withdrawal;
-    });
-
-    await session.endSession();
-
-    if (process.env["NODE_ENV"] === "development") {
+    const notify = () => {
       void emailService.sendWithdrawalSuccessEmail({
         email: business.email,
         name: business.name,
@@ -172,9 +133,103 @@ export class WithdrawalService {
           reference,
         );
       }
+    };
+
+    const session = await startSession();
+    let withdrawal: any;
+    try {
+      withdrawal = await session.withTransaction(async () => {
+        await Business.findByIdAndUpdate(
+          businessId,
+          { $inc: { "wallet.naira": -amount } },
+          { session },
+        );
+
+        const [created] = await Withdrawal.create(
+          [
+            {
+              businessId,
+              ...(bankId && { bankId }),
+              amount,
+              reference,
+              status: "pending",
+              bankSnapshot,
+            },
+          ],
+          { session },
+        );
+
+        return created;
+      });
+    } finally {
+      await session.endSession();
     }
 
-    return transaction;
+    if (isDevelopment) {
+      withdrawal.sessionId = new Types.ObjectId().toString();
+      withdrawal.status = "successful";
+      await withdrawal.save();
+
+      notify();
+      return withdrawal;
+    }
+
+    let nameEnquiryReference: string;
+    try {
+      nameEnquiryReference = await safehaven.makeNameEnquiry({
+        bankCode: bankSnapshot.bankCode,
+        accountNumber: bankSnapshot.accountNumber,
+      });
+    } catch (error) {
+      // No money has moved yet, so it's safe to reverse the debit.
+      const refundSession = await startSession();
+      try {
+        await refundSession.withTransaction(async () => {
+          await Business.findByIdAndUpdate(
+            businessId,
+            { $inc: { "wallet.naira": amount } },
+            { session: refundSession },
+          );
+          await Withdrawal.findByIdAndUpdate(
+            withdrawal._id,
+            { status: "failed" },
+            { session: refundSession },
+          );
+        });
+      } finally {
+        await refundSession.endSession();
+      }
+      throw error;
+    }
+
+    let transferSucceeded = false;
+    try {
+      const transferResult = await safehaven.makeTransfer({
+        amount,
+        reference,
+        beneficiaryAccountNumber: bankSnapshot.accountNumber,
+        beneficiaryBankCode: bankSnapshot.bankCode,
+        nameEnquiryReference,
+      });
+      withdrawal.sessionId = transferResult.sessionId;
+      transferSucceeded = true;
+    } catch {
+      logger.error(
+        `Withdrawal transfer failed for ${withdrawal._id} (business ${businessId})`,
+      );
+      // Outcome is ambiguous (e.g. a timeout could mean the transfer
+      // actually went through), so the debit is intentionally left in
+      // place pending manual reconciliation rather than auto-refunded.
+    }
+
+    withdrawal.status = "processed";
+    await withdrawal.save();
+
+    if (transferSucceeded) {
+      notify();
+    }
+
+    return withdrawal;
   }
 
   public async getWithdrawals(businessId: string, filter: any) {
@@ -189,5 +244,17 @@ export class WithdrawalService {
     }
 
     return paginateModel(Withdrawal, tenantScope({}, businessId), page, limit);
+  }
+
+  private async generateReference() {
+    let reference: string;
+    do {
+      const timestamp = Date.now().toString();
+      const random = Math.floor(
+        100000000 + Math.random() * 900000000,
+      ).toString();
+      reference = `WD-${timestamp}${random}`;
+    } while (await Withdrawal.exists({ reference }));
+    return reference;
   }
 }

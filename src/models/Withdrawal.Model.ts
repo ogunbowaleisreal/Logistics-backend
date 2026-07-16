@@ -5,7 +5,7 @@ export interface IWithdrawal extends Document {
   bankId?: Schema.Types.ObjectId;
   amount: number;
   reference: string;
-  status: "pending" | "successful" | "failed" | "reversed";
+  status: "pending" | "processed" | "successful" | "failed" | "reversed";
   bankSnapshot: {
     accountName: string;
     accountNumber: string;

@@ -147,7 +147,12 @@ export class SafeHaven {
       narration: "Daily SME business payment",
     };
 
-    return this.makeRequest("post", url, transferPayload);
+    const response: any = await this.makeRequest("post", url, transferPayload);
+
+    if (response.statusCode !== 200) {
+      throw new AppError(response.statusCode, response.message);
+    }
+    return response.data;
   }
 
   public async makeNameEnquiry(payload: any): Promise<string> {

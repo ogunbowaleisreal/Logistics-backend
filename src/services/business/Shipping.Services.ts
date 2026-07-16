@@ -19,6 +19,7 @@ export class ShippingService {
     businessId: string,
     payload: {
       name: string;
+      description?: string;
       states?: string[];
       shippingType?: "local" | "inter-state" | "international";
       pricing: {
@@ -67,6 +68,7 @@ export class ShippingService {
     zoneId: string,
     payload: {
       name?: string;
+      description?: string;
       states?: string[];
       shippingType?: "local" | "inter-state" | "international";
       pricing?: {
@@ -85,6 +87,8 @@ export class ShippingService {
     });
     if (!zone) throw new AppError(404, "Zone not found");
     if (payload.name !== undefined) zone.name = payload.name;
+    if (payload.description !== undefined)
+      zone.description = payload.description;
     if (payload.states !== undefined) zone.states = payload.states;
     if (payload.shippingType !== undefined)
       zone.shippingType = payload.shippingType;
@@ -104,9 +108,8 @@ export class ShippingService {
       throw new AppError(404, "No global shipping zone templates found");
 
     const zonesToInsert = templates.map((template) => {
-      const { _id, description, __v, createdAt, updatedAt, ...fields } =
-        template as any;
-      // useWeightBrackets is included in `fields` and carries over as-is from the template.
+      const { _id, __v, createdAt, updatedAt, ...fields } = template as any;
+      // useWeightBrackets and description are included in `fields` and carry over as-is from the template.
       return { ...fields, businessId };
     });
 
