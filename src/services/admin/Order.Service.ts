@@ -1,4 +1,5 @@
 import { Order } from "../../models/Order.Model";
+import { Business } from "../../models/Business.Model";
 import { EmailService } from "../Email.Service";
 import AppError from "../../utilities/ErrorHandler";
 import { paginateModelWithPopulate } from "../../utilities/Pagination.Helper";
@@ -153,11 +154,13 @@ export class OrderService {
     }
 
     if (order.personnelInformation.sender.email) {
+      const business = await Business.findById(businessId).lean();
       void emailService.sendOrderStatusUpdate({
         email: order.personnelInformation.sender.email,
         name: order.personnelInformation.sender.name,
         trackingID: order.trackingID,
         status: order.status,
+        businessName: business?.name,
       });
     }
 

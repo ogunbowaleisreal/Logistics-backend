@@ -204,16 +204,19 @@ export class OrderService {
         orderTrackingID: order.trackingID,
       });
 
+      const business = await Business.findById(businessId).lean();
+
       if (order.personnelInformation.sender.email) {
         void emailService.sendOrderStatusUpdate({
           email: order.personnelInformation.sender.email,
           name: order.personnelInformation.sender.name,
           trackingID: order.trackingID,
           status: order.status,
+          businessName: business?.name,
         });
       }
 
-      void sendOrderStatusSMS(order, status);
+      void sendOrderStatusSMS(order, status, business?.name);
 
       if ((status === "delivered" || status === "canceled") && order.riderID) {
         void redisClient
