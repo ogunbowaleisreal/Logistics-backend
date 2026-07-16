@@ -212,8 +212,9 @@ export class OrderService {
           status: order.status,
         });
       }
+      const business = await Business.findById(businessId).lean();
 
-      void sendOrderStatusSMS(order, status);
+      void sendOrderStatusSMS(order, status, business?.name);
 
       if ((status === "delivered" || status === "canceled") && order.riderID) {
         void redisClient
