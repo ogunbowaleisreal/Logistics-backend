@@ -10,6 +10,8 @@ interface IRider extends Document {
   rideType?: "bike" | "bus_car" | "truck";
   status?: string;
   autoAssign: boolean;
+  lastAutoAssignedAt?: Date; // NEW — drives round-robin rotation
+
   isDeleted?: boolean;
   __v?: number;
 }
@@ -25,6 +27,7 @@ const RiderSchema = new Schema<IRider>(
     phone: { type: String, required: true },
     dailyCapacity: { type: Number, required: true, min: 0 },
     autoAssign: { type: Boolean, default: false },
+    lastAutoAssignedAt: { type: Date, default: null }, // NEW
     totalDeliveries: { type: Number, default: 0 },
     todaysRideCount: { type: Number, default: 0, min: 0 },
     rideType: { type: String, enum: ["bike", "bus_car", "truck"] },

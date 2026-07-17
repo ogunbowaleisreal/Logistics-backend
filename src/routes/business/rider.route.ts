@@ -11,6 +11,7 @@ import { validate } from "../../middlewares/validation.middleware";
 import {
   createRiderSchema,
   updateRiderSchema,
+  toggleAutoAssignSchema
   // setAutoAssignRiderSchema,
 } from "../../validators/rider.validator";
 
@@ -34,6 +35,7 @@ router
 router.patch(
   "/auto-assign",
   staffRoleVerification("UPTRIDER"),
+  validate(toggleAutoAssignSchema, "body"),
   //validate(setAutoAssignRiderSchema, "body"),
   setAutoAssignRider,
 );

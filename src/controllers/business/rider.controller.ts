@@ -76,17 +76,17 @@ export const setAutoAssignRider = async (
   res: Response,
   next: NextFunction,
 ) => {
-  const { riderID } = req.body;
+  const { riderID, enabled } = req.body;
   const businessId =
     req.business?.businessId ??
     req.staff?.businessId ??
     req.query.businessId ??
     req.body?.businessId;
   try {
-    if (!riderID) {
-      throw new AppError(400, "riderID is required");
+    if (!riderID || typeof enabled !== "boolean") {
+      throw new AppError(400, "riderID and enabled (boolean) are required");
     }
-    await riderAssignmentService.setAutoAssignRider(businessId, riderID);
+    await riderAssignmentService.toggleAutoAssign(businessId, riderID, enabled);
     return res
       .status(200)
       .json({ message: "Auto-assign rider set successfully" });
