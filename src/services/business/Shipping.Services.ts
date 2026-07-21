@@ -32,12 +32,20 @@ export class ShippingService {
         maxKg: number;
         amount: number;
       }[];
+      amount?: number;
       useWeightBrackets?: boolean;
       destinationStates?: string[];
       countries?: string[];
       cities?: string[];
     },
   ) {
+    if (payload.shippingType == "international") {
+      if (!payload.amount) throw new AppError(400, "International type requires amount")
+      payload.pricing = [{
+        rideType: "cargo",
+        amount: payload.amount as number
+      }]
+    }
     const exists = await BusinessShippingZone.findOne({
       businessId,
       name: payload.name,
