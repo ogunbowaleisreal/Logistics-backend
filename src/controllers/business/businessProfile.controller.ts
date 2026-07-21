@@ -60,3 +60,23 @@ export const updateSupport = async (
     return res.status(500).json({ message: error.message });
   }
 };
+
+export const updateProfile = async (
+  req: Request | any,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const businessId = req.staff?.businessId ?? req.business?.businessId;
+    const data = await businessProfileService.updateProfile(
+      businessId,
+      req.body,
+    );
+    return res
+      .status(200)
+      .json({ message: "Business profile updated successfully", data });
+  } catch (error: any) {
+    if (error instanceof AppError)
+      return res.status(error.statusCode).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
+  }
+};

@@ -8,6 +8,8 @@ type SupportsPayload = {
   whatsapp?: Partial<IBusiness["supports"]["whatsapp"]>;
 };
 
+type ProfilePayload = Partial<Pick<IBusiness, "phone" | "logo" | "about">>;
+
 export class BusinessProfileService {
   public async getProfile(businessId: string) {
     const business = await Business.findById(businessId);
@@ -48,4 +50,22 @@ export class BusinessProfileService {
     if (!business) throw new AppError(404, "Business not found");
     return business.supports;
   }
+
+
+
+  public async updateProfile(businessId: string, payload: ProfilePayload) {
+    const update: Record<string, any> = {};
+    for (const [key, value] of Object.entries(payload)) {
+      if (value !== undefined) update[key] = value;
+    }
+    const business = await Business.findByIdAndUpdate(
+      businessId,
+      { $set: update },
+      { new: true, select: "phone logo about" },
+    );
+    if (!business) throw new AppError(404, "Business not found");
+    return business;
+  }
+
+  // public async updateProfile
 }
