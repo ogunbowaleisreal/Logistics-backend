@@ -7,6 +7,7 @@ export interface IBusiness extends Document {
   email: string;
   phone?: string;
   password?: string;
+  about?: string;
   authProvider?: "local" | "google";
   googleUid?: string;
   isProfileComplete?: boolean;
@@ -61,6 +62,7 @@ const BusinessSchema = new Schema<IBusiness>(
     googleUid: { type: String, unique: true, sparse: true },
     isProfileComplete: { type: Boolean, default: true },
     logo: { type: String },
+    about: { type: String, default: "" },
     status: {
       type: String,
       enum: ["active", "suspended", "pending"],

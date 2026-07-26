@@ -6,6 +6,7 @@ import {
 import {
   updateSocialLinks,
   updateSupport,
+  updateProfile
 } from "../../controllers/business/businessProfile.controller";
 import {
   businessVerification,
@@ -24,7 +25,7 @@ router
     validate(updateConfigurationSchema, "body"),
     updateConfiguration,
   );
-
+router.patch("/", businessVerification, updateProfile);
 router.patch("/social-links", businessVerification, updateSocialLinks);
 router.patch("/support", businessVerification, updateSupport);
 

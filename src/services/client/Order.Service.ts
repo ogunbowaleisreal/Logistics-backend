@@ -350,6 +350,11 @@ export class OrderService {
           if (!business) {
             throw new AppError(404, "Account not found");
           }
+          await riderAssignmentService.assignAutoRider(
+            updatedOrder.businessId.toString(),
+            updatedOrder,
+            session,
+          );
 
           // await riderAssignmentService.assignRider(
           //   updatedOrder.businessId.toString(),

@@ -18,3 +18,8 @@ export const updateRiderSchema = Joi.object({
   status: Joi.string().valid("active", "suspended").optional(),
   rideType: Joi.string().valid("bike", "bus_car", "truck").optional(),
 });
+
+export const toggleAutoAssignSchema = Joi.object({
+  riderID: Joi.string().required(),
+  enabled: Joi.boolean().required(),
+});
