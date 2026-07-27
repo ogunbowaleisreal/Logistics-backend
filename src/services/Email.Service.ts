@@ -191,14 +191,14 @@ export class EmailService {
   }
 
   async sendOrderConfirmation(payload: any): Promise<void> {
-    const { email, name, trackingID, amount, businessName } = payload;
+    const { email, name, trackingID, amount, businessName, businessSlug } = payload;
     const brand = businessName || "LogisticsPadi";
     try {
       await resend.emails.send({
         from: `${brand} <${from}>`,
         to: email,
         subject: "Your Order Has Been Placed",
-        html: orderConfirmationTemplate(name, trackingID, amount),
+        html: orderConfirmationTemplate(name, trackingID, amount, businessSlug),
       });
       logger.info(`Order confirmation email sent to: ${email}`);
     } catch (error: any) {
