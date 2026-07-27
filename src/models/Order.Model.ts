@@ -38,6 +38,7 @@ export interface IOrder extends Document {
   amount: number;
   serviceFee?: number;
   VAT?: number;
+  smallOrderCharge: number;
   totalAmount: number;
   virtualAccountData?: {
     accountNumber?: string;
@@ -130,6 +131,7 @@ const OrderSchema = new Schema<IOrder>(
     amount: { type: Number, min: 0, required: true },
     serviceFee: { type: Number, min: 0 },
     VAT: { type: Number, min: 0 },
+    smallOrderCharge: { type: Number, min: 0 },
     totalAmount: { type: Number, min: 0, required: true },
     virtualAccountData: {
       accountNumber: { type: String },

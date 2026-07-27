@@ -86,7 +86,7 @@ export class OrderService {
       },
     );
 
-    const { amount, serviceFee, VAT, totalAmount } =
+    const { amount, serviceFee, VAT, totalAmount, smallOrderCharge } =
       await this.computeOrderFees({
         calculatedShippingFee,
       });
@@ -112,6 +112,7 @@ export class OrderService {
       amount,
       serviceFee,
       VAT,
+      smallOrderCharge,
       totalAmount,
     });
 
@@ -155,6 +156,7 @@ export class OrderService {
         trackingID: order.trackingID,
         amount: order.amount,
         businessName: business?.name,
+        businessSlug: business?.slug,
       });
     }
 
@@ -494,6 +496,34 @@ export class OrderService {
     );
   }
 
+  // private async computeOrderFees(payload: any) {
+  //   const { calculatedShippingFee } = payload;
+  //   const { serviceFee, VAT } = await configurationService.getConfiguration();
+
+  //   const matchedTier = serviceFee.tiers.find(
+  //     (tier) =>
+  //       calculatedShippingFee >= tier.minAmount &&
+  //       (tier.maxAmount === null || calculatedShippingFee <= tier.maxAmount),
+  //   );
+  //   const rawFee = matchedTier
+  //     ? (matchedTier.percentage / 100) * calculatedShippingFee
+  //     : 0;
+  //   payload.serviceFee = Math.min(rawFee, serviceFee.cap);
+
+  //   if (VAT.type === "percentage") {
+  //     payload.VAT = (VAT.value / 100) * calculatedShippingFee;
+  //   } else {
+  //     payload.VAT = VAT.value;
+  //   }
+
+  //   return {
+  //     amount: calculatedShippingFee - payload.serviceFee,
+  //     serviceFee: payload.serviceFee,
+  //     VAT: payload.VAT,
+  //     totalAmount: calculatedShippingFee + payload.VAT,
+  //   };
+  // }
+
   private async computeOrderFees(payload: any) {
     const { calculatedShippingFee } = payload;
     const { serviceFee, VAT } = await configurationService.getConfiguration();
@@ -514,11 +544,17 @@ export class OrderService {
       payload.VAT = VAT.value;
     }
 
+    // NEW: flat charge based on shipping fee threshold, goes to the business
+    const smallOrderCharge = calculatedShippingFee < 10000 ? 50 : 100;
+    payload.smallOrderCharge = smallOrderCharge;
+
     return {
-      amount: calculatedShippingFee - payload.serviceFee,
+      amount:
+        calculatedShippingFee - payload.serviceFee + smallOrderCharge,
       serviceFee: payload.serviceFee,
       VAT: payload.VAT,
-      totalAmount: calculatedShippingFee + payload.VAT,
+      smallOrderCharge,
+      totalAmount: calculatedShippingFee + payload.VAT + smallOrderCharge,
     };
   }
 
