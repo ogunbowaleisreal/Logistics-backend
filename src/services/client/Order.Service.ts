@@ -147,9 +147,9 @@ export class OrderService {
         callbackURL,
       };
     }
-
+    const business = await Business.findById(businessId).lean();
     if (order.personnelInformation.sender.email) {
-      const business = await Business.findById(businessId).lean();
+
       void emailService.sendOrderConfirmation({
         email: order.personnelInformation.sender.email,
         name: order.personnelInformation.sender.name,
@@ -159,6 +159,23 @@ export class OrderService {
         businessSlug: business?.slug,
       });
     }
+
+    void emailService.sendOrderConfirmationToBusiness({
+      email: business?.email, // wherever the business's notification email lives
+      trackingID: order.trackingID,
+      amount: order.amount,
+      businessName: business?.name,
+      businessSlug: business?.slug,
+      shippingType,
+      pickupLocation: orderInformation.pickupLocation,
+      dropoffLocation: orderInformation.dropoffLocation,
+      zone: zoneId,
+      senderName: personnelInformation.sender.name,
+      receiverName: personnelInformation.receiver.name,
+    });
+
+
+
 
     return order;
   }

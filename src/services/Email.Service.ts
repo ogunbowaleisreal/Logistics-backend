@@ -13,6 +13,7 @@ import {
   staffWelcomeEmailTemplate,
   staffPasswordResetOTPTemplate,
   orderConfirmationTemplate,
+  orderConfirmationToBusinessTemplate,
   waitlistConfirmationEmailTemplate,
   orderStatusUpdateTemplate,
   paymentReviewNotificationTemplate,
@@ -203,6 +204,61 @@ export class EmailService {
       logger.info(`Order confirmation email sent to: ${email}`);
     } catch (error: any) {
       logger.error(`Order confirmation email error: ${error.message}`);
+    }
+  }
+
+  // async sendOrderConfirmationToBusiness(payload: any): Promise<void> {
+  //   const { email, name, trackingID, amount, businessName } = payload;
+  //   const brand = businessName || "LogisticsPadi";
+  //   try {
+  //     await resend.emails.send({
+  //       from: `${brand} <${from}>`,
+  //       to: email,
+  //       subject: "An Order Has Been Placed",
+  //       html: orderConfirmationToBusinessTemplate(name, trackingID, amount),
+  //     });
+  //     logger.info(`Order confirmation email sent to: ${email}`);
+  //   } catch (error: any) {
+  //     logger.error(`Order confirmation email error: ${error.message}`);
+  //   }
+  // }
+
+  async sendOrderConfirmationToBusiness(payload: any): Promise<void> {
+    const {
+      email,
+      trackingID,
+      amount,
+      businessName,
+      businessSlug,
+      shippingType,
+      pickupLocation,
+      dropoffLocation,
+      zone,
+      senderName,
+      receiverName,
+    } = payload;
+    const brand = businessName || "LogisticsPadi";
+    try {
+      await resend.emails.send({
+        from: `${brand} <${from}>`,
+        to: email,
+        subject: "An Order Has Been Placed",
+        html: orderConfirmationToBusinessTemplate({
+          businessName: brand,
+          trackingID,
+          amount,
+          shippingType,
+          pickupLocation,
+          dropoffLocation,
+          zone,
+          senderName,
+          receiverName,
+          businessSlug,
+        }),
+      });
+      logger.info(`Order confirmation email sent to business: ${email}`);
+    } catch (error: any) {
+      logger.error(`Order confirmation (business) email error: ${error.message}`);
     }
   }
 

@@ -364,6 +364,57 @@ export function orderConfirmationTemplate(
   });
 }
 
+export function orderConfirmationToBusinessTemplate(params: {
+  businessName: string;
+  trackingID: string;
+  amount: string;
+  shippingType: string;
+  pickupLocation: string;
+  dropoffLocation: string;
+  zone: string;
+  senderName: string;
+  receiverName: string;
+  businessSlug?: string;
+}): string {
+  const {
+    businessName,
+    trackingID,
+    amount,
+    shippingType,
+    pickupLocation,
+    dropoffLocation,
+    zone,
+    senderName,
+    receiverName,
+    businessSlug,
+  } = params;
+
+  return emailLayout({
+    previewText: "A new order has been placed",
+    bodyHtml: `
+      ${heading(`New Order — ${businessName} 📦`)}
+      ${paragraph("A new order has just been placed on your platform. Here are the details:")}
+      ${infoTable([
+      { label: "Tracking ID", value: trackingID },
+      { label: "Shipping Type", value: shippingType },
+      { label: "Zone", value: zone },
+      { label: "Pickup Location", value: pickupLocation },
+      { label: "Dropoff Location", value: dropoffLocation },
+      { label: "Sender", value: senderName },
+      { label: "Receiver", value: receiverName },
+      { label: "Amount", value: amount },
+    ])}
+      ${businessSlug
+        ? ctaButton(
+          "View Order",
+          `https://logisticspadi.com/${businessSlug}/orders/${trackingID}`
+        )
+        : ""
+      }
+    `,
+  });
+}
+
 
 
 export function waitlistConfirmationEmailTemplate(fullName: string): string {
