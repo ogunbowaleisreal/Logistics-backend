@@ -2,7 +2,7 @@ import axios from "axios";
 import logger from "../../logger";
 
 const TERMII_SMS_URL = "https://api.ng.termii.com/api/sms/send";
-const BRAND_NAME = "Delivery";
+const BRAND_NAME = "LogisticsPadi";
 
 class TermiiService {
   private async send(to: string, message: string): Promise<void> {

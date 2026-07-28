@@ -10,11 +10,11 @@
 // Brand tokens
 // ---------------------------------------------------------------------------
 const COLORS = {
-  primary: "#6D28D9", // deep purple - headers, buttons
-  primaryDark: "#5B21B6", // gradient end
-  accent: "#8B5CF6", // lighter purple - highlights, links
-  accentSoft: "#EDE9FE", // pill/badge backgrounds
-  bg: "#F5F3FF", // page background (lavender)
+  primary: "#6D28D9",
+  primaryDark: "#5B21B6",
+  accent: "#8B5CF6",
+  accentSoft: "#EDE9FE",
+  bg: "#F5F3FF",
   card: "#FFFFFF",
   text: "#1F2937",
   muted: "#6B7280",
@@ -32,15 +32,26 @@ const FONT_STACK =
 function emailLayout(opts: {
   previewText?: string;
   bodyHtml: string;
+  brand?: string;   // display name (falls back to "LogisticsPadi")
+  logoUrl?: string; // falls back to 📦 emoji badge if missing
 }): string {
-  const { previewText = "", bodyHtml } = opts;
+  const {
+    previewText = "",
+    bodyHtml,
+    logoUrl,
+    brand = "LogisticsPadi",
+  } = opts;
+
+  const logoHtml = logoUrl
+    ? `<img src="${logoUrl}" alt="${brand}" width="28" height="28" style="display:inline-block;border-radius:8px;vertical-align:middle;margin-right:10px;object-fit:cover;" />`
+    : `<span style="display:inline-block;width:28px;height:28px;background-color:rgba(255,255,255,0.18);border-radius:8px;text-align:center;line-height:28px;font-size:15px;margin-right:10px;vertical-align:middle;">📦</span>`;
 
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>LogisticsPadi</title>
+<title>${brand}</title>
 </head>
 <body style="margin:0;padding:0;background-color:${COLORS.bg};font-family:${FONT_STACK};">
   <!-- preview text (hidden) -->
@@ -57,8 +68,8 @@ function emailLayout(opts: {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="left" style="vertical-align:middle;">
-                    <span style="display:inline-block;width:28px;height:28px;background-color:rgba(255,255,255,0.18);border-radius:8px;text-align:center;line-height:28px;font-size:15px;margin-right:10px;vertical-align:middle;">📦</span>
-                    <span style="color:#FFFFFF;font-size:20px;font-weight:700;vertical-align:middle;letter-spacing:-0.3px;">Logistics<span style="color:#D8CCFB;">padi</span></span>
+                    ${logoHtml}
+                    <span style="color:#FFFFFF;font-size:20px;font-weight:700;vertical-align:middle;letter-spacing:-0.3px;">${brand}</span>
                   </td>
                 </tr>
               </table>
@@ -76,10 +87,10 @@ function emailLayout(opts: {
           <tr>
             <td style="padding:24px 32px;border-top:1px solid ${COLORS.border};">
               <p style="margin:0 0 6px 0;font-size:12px;color:${COLORS.muted};">
-                This is an automated message from LogisticsPadi. Please do not reply directly to this email.
+                This is an automated message from ${brand}. Please do not reply directly to this email.
               </p>
               <p style="margin:0;font-size:12px;color:${COLORS.muted};">
-                &copy; ${new Date().getFullYear()} LogisticsPadi. All rights reserved.
+                &copy; ${new Date().getFullYear()} ${brand}. All rights reserved.
               </p>
             </td>
           </tr>
@@ -121,29 +132,18 @@ function expiryNote(text: string): string {
   return `<p style="margin:0 0 8px 0;font-size:13px;color:${COLORS.muted};">${text}</p>`;
 }
 
-// function ctaButton(label: string): string {
-//     return `
-//   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 8px 0;">
-//     <tr>
-//       <td align="center">
-//         <span style="display:inline-block;background:linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%);color:#FFFFFF;font-size:14px;font-weight:600;padding:12px 28px;border-radius:10px;">
-//           ${label}
-//         </span>
-//       </td>
-//     </tr>
-//   </table>`;
-// }
 
 function ctaButton(label: string, url?: string): string {
   return `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 8px 0;">
     <tr>
       <td align="center">
-        <a
-          href="${url}"
+        
+          <a href="${url ?? "#"}"
           target="_blank"
           style="
             display:inline-block;
+            background-color:${COLORS.primaryDark};
             background:linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%);
             color:#FFFFFF;
             font-size:14px;
@@ -160,6 +160,7 @@ function ctaButton(label: string, url?: string): string {
     </tr>
   </table>`;
 }
+
 
 function infoTable(rows: { label: string; value: string }[]): string {
   const rowsHtml = rows
@@ -199,58 +200,86 @@ function statusPill(status: string): string {
 // Templates — one per EmailService method
 // ---------------------------------------------------------------------------
 
-export function verificationEmailTemplate(otp: string): string {
+export function verificationEmailTemplate(
+  otp: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "Verify your LogisticsPadi account",
+    previewText: "Verify your account",
     bodyHtml: `
       ${heading("Verify your account")}
-      ${paragraph("Use the code below to verify your LogisticsPadi account. This helps us keep your account secure.")}
+      ${paragraph("Use the code below to verify your account. This helps us keep your account secure.")}
       ${otpBox(otp)}
       ${expiryNote("If you didn't request this code, you can safely ignore this email.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function passwordResetOTPTemplate(otp: string): string {
+export function passwordResetOTPTemplate(
+  otp: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "Reset your LogisticsPadi password",
+    previewText: "Reset your password",
     bodyHtml: `
       ${heading("Reset your password")}
       ${paragraph("We received a request to update your password. Use the code below to continue.")}
       ${otpBox(otp)}
       ${expiryNote("If you didn't request a password change, please ignore this email or contact support.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function welcomeEmailTemplate(): string {
+export function welcomeEmailTemplate(
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "Welcome to LogisticsPadi",
+    previewText: "Welcome",
     bodyHtml: `
-      ${heading("Welcome to LogisticsPadi 🎉")}
+      ${heading(`Welcome to ${brand || "LogisticsPadi"} 🎉`)}
       ${paragraph("Your account is ready to go. You can now create orders, track deliveries in real time, and manage your logistics all in one place.")}
       ${ctaButton("Go to Dashboard")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function loginOTPTemplate(otp: string): string {
+export function loginOTPTemplate(
+  otp: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "Your LogisticsPadi login code",
+    previewText: "Your login code",
     bodyHtml: `
       ${heading("Login verification")}
       ${paragraph("Enter the code below to complete your sign-in.")}
       ${otpBox(otp)}
       ${expiryNote("Didn't try to log in? Secure your account and contact support immediately.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function adminWelcomeEmailTemplate(email: string, password: string): string {
+export function adminWelcomeEmailTemplate(
+  email: string,
+  password: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "Your LogisticsPadi admin account is ready",
+    previewText: "Your admin account is ready",
     bodyHtml: `
-      ${heading("Welcome to LogisticsPadi")}
+      ${heading(`Welcome to ${brand || "LogisticsPadi"}`)}
       ${paragraph("An admin account has been created for you. Here are your login details:")}
       ${credentialsBox([
       { label: "Email", value: email },
@@ -259,22 +288,35 @@ export function adminWelcomeEmailTemplate(email: string, password: string): stri
       ${paragraph("For your security, please log in and change your password as soon as possible.")}
       ${ctaButton("Log In")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function businessEmailVerificationTemplate(name: string, otp: string): string {
+export function businessEmailVerificationTemplate(
+  name: string,
+  otp: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "Verify your LogisticsPadi business account",
+    previewText: "Verify your business account",
     bodyHtml: `
       ${heading(`Hi ${name},`)}
-      ${paragraph("Use the code below to verify your business account and unlock full access to LogisticsPadi.")}
+      ${paragraph("Use the code below to verify your business account and unlock full access.")}
       ${otpBox(otp)}
       ${expiryNote("This code expires in 5 minutes.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function businessWelcomeEmailTemplate(name: string): string {
+export function businessWelcomeEmailTemplate(
+  name: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
     previewText: "Your business account is active",
     bodyHtml: `
@@ -282,10 +324,16 @@ export function businessWelcomeEmailTemplate(name: string): string {
       ${paragraph("Your business account has been successfully verified and is now active. You're all set to start managing shipments, riders, and orders.")}
       ${ctaButton("Go to Dashboard")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function businessLoginOTPTemplate(otp: string): string {
+export function businessLoginOTPTemplate(
+  otp: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
     previewText: "Your business login code",
     bodyHtml: `
@@ -294,10 +342,16 @@ export function businessLoginOTPTemplate(otp: string): string {
       ${otpBox(otp)}
       ${expiryNote("Didn't try to log in? Please secure your account and contact support.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function businessPasswordResetOTPTemplate(otp: string): string {
+export function businessPasswordResetOTPTemplate(
+  otp: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
     previewText: "Reset your business password",
     bodyHtml: `
@@ -306,16 +360,20 @@ export function businessPasswordResetOTPTemplate(otp: string): string {
       ${otpBox(otp)}
       ${expiryNote("This code expires in 15 minutes.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
 export function staffWelcomeEmailTemplate(
   firstname: string,
   email: string,
-  password: string
+  password: string,
+  brand?: string,
+  logoUrl?: string
 ): string {
   return emailLayout({
-    previewText: "Welcome to the LogisticsPadi team",
+    previewText: "Welcome to the team",
     bodyHtml: `
       ${heading(`Welcome to the team, ${firstname} 👋`)}
       ${paragraph("Your staff account has been created. Here are your login details:")}
@@ -326,12 +384,16 @@ export function staffWelcomeEmailTemplate(
       ${paragraph("Please log in and change your password as soon as possible.")}
       ${ctaButton("Log In")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
 export function staffPasswordResetOTPTemplate(
   firstname: string,
-  otp: string
+  otp: string,
+  brand?: string,
+  logoUrl?: string
 ): string {
   return emailLayout({
     previewText: "Reset your staff password",
@@ -341,6 +403,8 @@ export function staffPasswordResetOTPTemplate(
       ${otpBox(otp)}
       ${expiryNote("This code expires in 15 minutes.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
@@ -348,7 +412,10 @@ export function orderConfirmationTemplate(
   name: string,
   trackingID: string,
   amount: string,
-  brandName: string
+  status: string,
+  brandName: string,   // slug — used only for the tracking URL
+  brand?: string,        // display name
+  logoUrl?: string
 ): string {
   return emailLayout({
     previewText: "Your order has been placed",
@@ -358,26 +425,31 @@ export function orderConfirmationTemplate(
       ${infoTable([
       { label: "Tracking ID", value: trackingID },
       { label: "Amount", value: amount },
+      { label: "Status", value: status },
     ])}
       ${ctaButton("Track Order", `https://logisticspadi.com/${brandName}/track-order/${trackingID}`)}
     `,
+    brand,
+    logoUrl,
   });
 }
 
-export function orderConfirmationToBusinessTemplate(params: {
-  businessName: string;
-  trackingID: string;
-  amount: string;
-  shippingType: string;
-  pickupLocation: string;
-  dropoffLocation: string;
-  zone: string;
-  senderName: string;
-  receiverName: string;
-  businessSlug?: string;
-}): string {
+export function orderConfirmationToBusinessTemplate(
+  params: {
+    trackingID: string;
+    amount: string;
+    shippingType: string;
+    pickupLocation: string;
+    dropoffLocation: string;
+    zone: string;
+    senderName: string;
+    receiverName: string;
+    businessSlug?: string; // used only for the "View Order" URL
+  },
+  brand?: string,
+  logoUrl?: string
+): string {
   const {
-    businessName,
     trackingID,
     amount,
     shippingType,
@@ -392,7 +464,7 @@ export function orderConfirmationToBusinessTemplate(params: {
   return emailLayout({
     previewText: "A new order has been placed",
     bodyHtml: `
-      ${heading(`New Order — ${businessName} 📦`)}
+      ${heading(`New Order — ${brand || "LogisticsPadi"} 📦`)}
       ${paragraph("A new order has just been placed on your platform. Here are the details:")}
       ${infoTable([
       { label: "Tracking ID", value: trackingID },
@@ -406,49 +478,64 @@ export function orderConfirmationToBusinessTemplate(params: {
     ])}
       ${businessSlug
         ? ctaButton(
-          "View Order",
+          "Track Order",
           `https://logisticspadi.com/${businessSlug}/orders/${trackingID}`
         )
         : ""
       }
     `,
+    brand,
+    logoUrl,
   });
 }
 
-
-
-export function waitlistConfirmationEmailTemplate(fullName: string): string {
+export function waitlistConfirmationEmailTemplate(
+  fullName: string,
+  brand?: string,
+  logoUrl?: string
+): string {
   return emailLayout({
-    previewText: "You're on the LogisticsPadi waitlist",
+    previewText: "You're on the waitlist",
     bodyHtml: `
       ${heading(`You're on the list, ${fullName} 🎉`)}
-      ${paragraph("Thank you for requesting early access to LogisticsPadi. You're officially on the waitlist — we'll notify you as soon as your spot is ready.")}
+      ${paragraph("Thank you for requesting early access. You're officially on the waitlist — we'll notify you as soon as your spot is ready.")}
     `,
+    brand,
+    logoUrl,
   });
 }
 
 export function orderStatusUpdateTemplate(
   name: string,
   trackingID: string,
-  status: string
+  status: string,
+  amount: string,
+  slug: string,        // slug — used only for the tracking URL
+  brand?: string,       // display name
+  logoUrl?: string
 ): string {
   return emailLayout({
     previewText: "Your order status has been updated",
     bodyHtml: `
       ${heading(`Hi ${name},`)}
-      ${paragraph("Your order status has just been updated.")}
+      ${paragraph("Your order is now " + status.toLowerCase() + ".")}
       ${infoTable([
       { label: "Tracking ID", value: trackingID },
       { label: "Status", value: statusPill(status) },
+      { label: "Amount", value: amount },
     ])}
-      ${ctaButton("Track Order")}
+      ${ctaButton("Track Order", `https://logisticspadi.com/${slug}/track-order/${trackingID}`)}
     `,
+    brand,
+    logoUrl,
   });
 }
 
 export function paymentReviewNotificationTemplate(
   name: string,
-  trackingID: string
+  trackingID: string,
+  brand?: string,
+  logoUrl?: string
 ): string {
   return emailLayout({
     previewText: "Your proof of payment is under review",
@@ -457,6 +544,8 @@ export function paymentReviewNotificationTemplate(
       ${paragraph("We've received your proof of payment and it is now under review. We'll notify you as soon as it's confirmed.")}
       ${infoTable([{ label: "Tracking ID", value: trackingID }])}
     `,
+    brand,
+    logoUrl,
   });
 }
 
@@ -468,7 +557,9 @@ export function withdrawalSuccessEmailTemplate(
     accountName: string;
     accountNumber: string;
     bankName: string;
-  }
+  },
+  brand?: string,
+  logoUrl?: string
 ): string {
   return emailLayout({
     previewText: "Your withdrawal was successful",
@@ -485,5 +576,7 @@ export function withdrawalSuccessEmailTemplate(
     ])}
       ${ctaButton("View Transactions")}
     `,
+    brand,
+    logoUrl,
   });
 }

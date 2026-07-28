@@ -58,6 +58,7 @@ export class StaffService {
       firstname,
       password: tempPassword,
       businessName: business?.name,
+      businessLogo: business?.logo,
     });
 
     return staff;

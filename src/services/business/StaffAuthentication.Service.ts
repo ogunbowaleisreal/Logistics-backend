@@ -131,6 +131,7 @@ export class StaffAuthenticationService {
       otp,
       firstname: staff.firstname,
       businessName: business.name,
+      businessLogo: business.logo,
     });
     return;
   }

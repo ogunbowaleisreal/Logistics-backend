@@ -61,7 +61,7 @@ const BusinessSchema = new Schema<IBusiness>(
     },
     googleUid: { type: String, unique: true, sparse: true },
     isProfileComplete: { type: Boolean, default: true },
-    logo: { type: String },
+    logo: { type: String, default: null },
     about: { type: String, default: "" },
     status: {
       type: String,

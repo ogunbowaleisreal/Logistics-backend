@@ -16,6 +16,7 @@ import { startSession } from "mongoose";
 import { Business } from "../../models/Business.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
 import { PusherService } from "../../utilities/Pusher";
+import { BusinessShippingZone } from "../../models/Shippings.model";
 
 const emailService = new EmailService();
 const shippingService = new ShippingService();
@@ -154,29 +155,38 @@ export class OrderService {
         email: order.personnelInformation.sender.email,
         name: order.personnelInformation.sender.name,
         trackingID: order.trackingID,
-        amount: order.amount,
+        amount: order.totalAmount,
         businessName: business?.name,
         businessSlug: business?.slug,
+        businessLogo: business?.logo,
+        status: order.status
       });
     }
+
+    const dropoff = orderInformation.dropoffLocation;
+    const dropoffLocation = [
+      dropoff.address,
+      dropoff.city,
+      dropoff.state,
+      dropoff.country,
+    ]
+      .filter(Boolean)
+      .join(", ");
 
     void emailService.sendOrderConfirmationToBusiness({
       email: business?.email, // wherever the business's notification email lives
       trackingID: order.trackingID,
-      amount: order.amount,
+      amount: order.totalAmount,
       businessName: business?.name,
       businessSlug: business?.slug,
       shippingType,
-      pickupLocation: orderInformation.pickupLocation,
-      dropoffLocation: orderInformation.dropoffLocation,
-      zone: zoneId,
+      pickupLocation: orderInformation.pickupLocation.address,
+      dropoffLocation,
+      zone: zoneId ? (await BusinessShippingZone.findById(zoneId).lean())?.name : "Local",
       senderName: personnelInformation.sender.name,
       receiverName: personnelInformation.receiver.name,
+      businessLogo: business?.logo
     });
-
-
-
-
     return order;
   }
 

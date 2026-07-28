@@ -213,6 +213,8 @@ export class OrderService {
           trackingID: order.trackingID,
           status: order.status,
           businessName: business?.name,
+          slug: business?.slug,
+          amount: order.totalAmount
         });
       }
 
