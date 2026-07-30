@@ -17,7 +17,7 @@ class TermiiService {
       await axios.post(
         TERMII_SMS_URL,
         {
-          to,
+          to: this.toInternationalFormat(to),
           from: "BillPadi",
           sms: message,
           type: "plain",
@@ -31,11 +31,30 @@ class TermiiService {
         },
       );
     } catch (error: any) {
+      console.log(error)
       logger.error(
         `Termii SMS send failed for ${to}: ${error?.message || "Unknown error"}`,
       );
     }
   }
+
+  private toInternationalFormat(phone: string, countryCode = "234"): string {
+    // strip spaces, dashes, plus signs
+    let cleaned = phone.replace(/[\s\-+]/g, "");
+
+    // already in international format (starts with country code)
+    if (cleaned.startsWith(countryCode)) {
+      return cleaned;
+    }
+
+    // strip leading 0 (local format) then prepend country code
+    if (cleaned.startsWith("0")) {
+      cleaned = cleaned.slice(1);
+    }
+
+    return `${countryCode}${cleaned}`;
+  }
+
 
   public sendOrderPaid(
     to: string,
