@@ -1,112 +1,1172 @@
+import logger from "../../logger";
+
+const GRAPH_API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
+const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN as string;
+const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID as string;
+const WABA_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID as string;
+
+// Scoped to the phone number — used for sending messages
+const BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`;
+// Scoped to the WABA — used for template management (create/list/delete)
+const WABA_BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}/${WABA_ID}`;
+
+// ---- Shared types ----
+
+export type WhatsAppResponse = {
+    messaging_product: "whatsapp";
+    contacts: { input: string; wa_id: string }[];
+    messages: { id: string; message_status?: string }[];
+} | null;
+
+interface TemplateComponent {
+    type: "header" | "body" | "button";
+    sub_type?: "quick_reply" | "url";
+    index?: string;
+    parameters: Record<string, any>[];
+}
+
+interface InteractiveButton {
+    id: string;
+    title: string; // max 20 chars per WhatsApp limits
+}
+
+interface InteractiveListRow {
+    id: string;
+    title: string;
+    description?: string;
+}
+
+interface InteractiveListSection {
+    title: string;
+    rows: InteractiveListRow[];
+}
+
+// ---- Template management types ----
+// Note the UPPERCASE keys here — this is Meta's template *creation* spec
+// (POST /{waba_id}/message_templates), which is a different shape from the
+// lowercase send-message spec above. Easy thing to trip on.
+
+interface TemplateBodyComponent {
+    type: "BODY";
+    text?: string; // omit for AUTHENTICATION templates — body text is fixed by Meta
+    add_security_recommendation?: boolean; // AUTHENTICATION only
+    example?: { body_text: string[][] };
+}
+
+interface TemplateHeaderComponent {
+    type: "HEADER";
+    format: "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT";
+    text?: string;
+    example?: { header_text?: string[]; header_handle?: string[] };
+}
+
+interface TemplateFooterComponent {
+    type: "FOOTER";
+    text?: string; // free-text footer
+    code_expiration_minutes?: number; // AUTHENTICATION only, 1-90
+}
+
+interface TemplateButtonsComponent {
+    type: "BUTTONS";
+    buttons: Array<
+        | { type: "OTP"; otp_type: "COPY_CODE" | "ONE_TAP"; supported_apps?: any[] }
+        | { type: "QUICK_REPLY"; text: string }
+        | { type: "URL"; text: string; url: string; example?: string[] }
+        | { type: "PHONE_NUMBER"; text: string; phone_number: string }
+    >;
+}
+
+type TemplateCreateComponent =
+    | TemplateHeaderComponent
+    | TemplateBodyComponent
+    | TemplateFooterComponent
+    | TemplateButtonsComponent;
+
+export interface CreateTemplatePayload {
+    name: string; // lowercase, numbers, underscores only e.g. "order_status_update"
+    language: string; // e.g. "en", "en_US"
+    category: "AUTHENTICATION" | "UTILITY" | "MARKETING";
+    components: TemplateCreateComponent[];
+}
+
+export type CreateTemplateResponse = {
+    id: string;
+    status: string; // e.g. "PENDING" — templates need Meta approval before use
+    category: string;
+} | null;
+
+export interface ListTemplatesParams {
+    limit?: number; // default 25 per Meta, max 100 per page
+    name?: string; // filter by exact template name
+    after?: string; // pagination cursor from paging.cursors.after
+}
+
+export type ListTemplatesResponse = {
+    data: Array<{
+        id: string;
+        name: string;
+        language: string;
+        status: string;
+        category: string;
+        components: Record<string, any>[];
+    }>;
+    paging?: { cursors?: { before?: string; after?: string }; next?: string };
+} | null;
+
+export class WhatsAppService {
+    /**
+     * Low-level sender every public method funnels through. Keeping this
+     * private and generic is what makes the class "abstract" / reusable —
+     * new message types can be added as one-liners on top of this.
+     */
+    private async send(
+        payload: Record<string, any>,
+        withRecipientType = true
+    ): Promise<WhatsAppResponse> {
+        try {
+            const response = await fetch(`${BASE_URL}/messages`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${ACCESS_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    messaging_product: "whatsapp",
+                    ...(withRecipientType ? { recipient_type: "individual" } : {}),
+                    ...payload,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                logger.error(`WhatsApp API error: ${JSON.stringify(data)}`);
+                return null;
+            }
+
+            logger.info(`WhatsApp message sent: ${data?.messages?.[0]?.id}`);
+            return data as WhatsAppResponse;
+        } catch (error: any) {
+            logger.error(`WhatsApp send error: ${error.message}`);
+            return null;
+        }
+    }
+
+    // ---- Plain text ----
+
+    /**
+     * Free-form text message. Only deliverable inside the 24-hour customer
+     * service window (i.e. after the user has messaged you, or opted in).
+     * Outside that window, use sendTemplateMessage instead.
+     */
+    async sendTextMessage(payload: {
+        to: string;
+        body: string;
+        previewUrl?: boolean;
+    }): Promise<WhatsAppResponse> {
+        const { to, body, previewUrl = false } = payload;
+        return this.send({
+            to,
+            type: "text",
+            text: { preview_url: previewUrl, body },
+        });
+    }
+
+    // ---- Template messages (required to open a conversation / after 24h window) ----
+
+    /**
+     * Sends a pre-approved template message. `components` follows the Cloud
+     * API template component spec (header/body/button parameters) and is
+     * optional for templates with no variables.
+     */
+    async sendTemplateMessage(payload: {
+        to: string;
+        templateName: string;
+        languageCode?: string; // e.g. "en_US"
+        components?: TemplateComponent[];
+    }): Promise<WhatsAppResponse> {
+        const { to, templateName, languageCode = "en_US", components = [] } = payload;
+        return this.send({
+            to,
+            type: "template",
+            template: {
+                name: templateName,
+                language: { code: languageCode },
+                ...(components.length ? { components } : {}),
+            },
+        });
+    }
+
+    // ---- Media messages ----
+    // Media can be referenced either by a public `link` or by a `media id`
+    // obtained from the Media upload endpoint — both forms are supported here.
+
+    async sendImageMessage(payload: {
+        to: string;
+        link?: string;
+        mediaId?: string;
+        caption?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, link, mediaId, caption } = payload;
+        return this.send({
+            to,
+            type: "image",
+            image: { ...(link ? { link } : { id: mediaId }), ...(caption ? { caption } : {}) },
+        });
+    }
+
+    async sendDocumentMessage(payload: {
+        to: string;
+        link?: string;
+        mediaId?: string;
+        caption?: string;
+        filename?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, link, mediaId, caption, filename } = payload;
+        return this.send({
+            to,
+            type: "document",
+            document: {
+                ...(link ? { link } : { id: mediaId }),
+                ...(caption ? { caption } : {}),
+                ...(filename ? { filename } : {}),
+            },
+        });
+    }
+
+    async sendVideoMessage(payload: {
+        to: string;
+        link?: string;
+        mediaId?: string;
+        caption?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, link, mediaId, caption } = payload;
+        return this.send({
+            to,
+            type: "video",
+            video: { ...(link ? { link } : { id: mediaId }), ...(caption ? { caption } : {}) },
+        });
+    }
+
+    async sendAudioMessage(payload: {
+        to: string;
+        link?: string;
+        mediaId?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, link, mediaId } = payload;
+        return this.send({
+            to,
+            type: "audio",
+            audio: link ? { link } : { id: mediaId },
+        });
+    }
+
+    async sendStickerMessage(payload: {
+        to: string;
+        link?: string;
+        mediaId?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, link, mediaId } = payload;
+        return this.send({
+            to,
+            type: "sticker",
+            sticker: link ? { link } : { id: mediaId },
+        });
+    }
+
+    // ---- Location ----
+
+    async sendLocationMessage(payload: {
+        to: string;
+        latitude: number;
+        longitude: number;
+        name?: string;
+        address?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, latitude, longitude, name, address } = payload;
+        return this.send({
+            to,
+            type: "location",
+            location: { latitude, longitude, name, address },
+        });
+    }
+
+    // ---- Contacts ----
+
+    async sendContactMessage(payload: {
+        to: string;
+        contacts: Record<string, any>[]; // follows Cloud API "contacts" object spec
+    }): Promise<WhatsAppResponse> {
+        const { to, contacts } = payload;
+        return this.send({ to, type: "contacts", contacts });
+    }
+
+    // ---- Interactive messages ----
+
+    /** Up to 3 quick-reply buttons. */
+    async sendInteractiveButtonsMessage(payload: {
+        to: string;
+        bodyText: string;
+        buttons: InteractiveButton[];
+        headerText?: string;
+        footerText?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, bodyText, buttons, headerText, footerText } = payload;
+        return this.send({
+            to,
+            type: "interactive",
+            interactive: {
+                type: "button",
+                ...(headerText ? { header: { type: "text", text: headerText } } : {}),
+                body: { text: bodyText },
+                ...(footerText ? { footer: { text: footerText } } : {}),
+                action: {
+                    buttons: buttons.map((b) => ({
+                        type: "reply",
+                        reply: { id: b.id, title: b.title },
+                    })),
+                },
+            },
+        });
+    }
+
+    /** Dropdown-style list of selectable options, grouped into sections. */
+    async sendInteractiveListMessage(payload: {
+        to: string;
+        bodyText: string;
+        buttonText: string;
+        sections: InteractiveListSection[];
+        headerText?: string;
+        footerText?: string;
+    }): Promise<WhatsAppResponse> {
+        const { to, bodyText, buttonText, sections, headerText, footerText } = payload;
+        return this.send({
+            to,
+            type: "interactive",
+            interactive: {
+                type: "list",
+                ...(headerText ? { header: { type: "text", text: headerText } } : {}),
+                body: { text: bodyText },
+                ...(footerText ? { footer: { text: footerText } } : {}),
+                action: { button: buttonText, sections },
+            },
+        });
+    }
+
+    // ---- Read receipts ----
+
+    /** Marks an inbound message as read (blue ticks) given its wamid. */
+    async markMessageAsRead(messageId: string): Promise<WhatsAppResponse> {
+        return this.send(
+            {
+                status: "read",
+                message_id: messageId,
+            },
+            false // read receipts don't take recipient_type / to
+        );
+    }
+
+    // ---- Template management (WABA-scoped, not phone-number-scoped) ----
+    // These hit WABA_BASE_URL (`/{waba_id}/message_templates`), not BASE_URL.
+    // Newly created templates start in PENDING status and are not sendable
+    // via sendTemplateMessage until Meta approves them (usually minutes,
+    // occasionally up to 24h). Poll listTemplates or listen for the
+    // message_template_status_update webhook to know when a template is live.
+
+    /**
+     * Creates a new message template for review/approval by Meta.
+     * Returns { id, status, category } on success — status will be "PENDING".
+     */
+    async createTemplate(
+        payload: CreateTemplatePayload
+    ): Promise<CreateTemplateResponse> {
+        try {
+            const response = await fetch(`${WABA_BASE_URL}/message_templates`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${ACCESS_TOKEN}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                logger.error(`WhatsApp template create error: ${JSON.stringify(data)}`);
+                return null;
+            }
+
+            logger.info(`WhatsApp template created: ${payload.name} (${data?.id})`);
+            return data as CreateTemplateResponse;
+        } catch (error: any) {
+            logger.error(`WhatsApp template create error: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
+     * Lists templates on the WABA, optionally filtered by name and paginated.
+     * Useful for checking a template's approval `status` before sending it.
+     */
+    async listTemplates(
+        params: ListTemplatesParams = {}
+    ): Promise<ListTemplatesResponse> {
+        const { limit = 25, name, after } = params;
+        try {
+            const query = new URLSearchParams({ limit: String(limit) });
+            if (name) query.set("name", name);
+            if (after) query.set("after", after);
+
+            const response = await fetch(
+                `${WABA_BASE_URL}/message_templates?${query.toString()}`,
+                {
+                    method: "GET",
+                    headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                logger.error(`WhatsApp template list error: ${JSON.stringify(data)}`);
+                return null;
+            }
+
+            return data as ListTemplatesResponse;
+        } catch (error: any) {
+            logger.error(`WhatsApp template list error: ${error.message}`);
+            return null;
+        }
+    }
+
+    /**
+     * Deletes a template by name (deletes ALL language variants of that name).
+     * Pass `templateId` as well if you only want to delete one specific
+     * language/id variant instead of every language version of the name.
+     */
+    async deleteTemplate(
+        name: string,
+        templateId?: string
+    ): Promise<boolean> {
+        try {
+            const query = new URLSearchParams({ name });
+            if (templateId) query.set("hsm_id", templateId);
+
+            const response = await fetch(
+                `${WABA_BASE_URL}/message_templates?${query.toString()}`,
+                {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${ACCESS_TOKEN}` },
+                }
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                logger.error(`WhatsApp template delete error: ${JSON.stringify(data)}`);
+                return false;
+            }
+
+            logger.info(`WhatsApp template deleted: ${name}`);
+            return true;
+        } catch (error: any) {
+            logger.error(`WhatsApp template delete error: ${error.message}`);
+            return false;
+        }
+    }
+}
+
+export default new WhatsAppService();
+
+
+// import logger from "../../logger";
+
 // /**
-//  * whatsappService.js
+//  * WhatsAppService
+//  * ----------------
+//  * A thin, reusable wrapper around Meta's official WhatsApp Cloud API
+//  * (Graph API `/messages` endpoint). Modeled after EmailService so it can be
+//  * dropped into any project the same way — instantiate once, call a method
+//  * per message type.
 //  *
-//  * Core service for sending WhatsApp template messages via Meta's Cloud API.
-//  * Use this for logistics-style alerts: "delivery has arrived", "rider is on the way", etc.
+//  * Docs used:
+//  * - https://developers.facebook.com/docs/whatsapp/cloud-api/reference/messages/
+//  * - https://developers.facebook.com/docs/whatsapp/cloud-api/guides/send-messages
 //  *
-//  * Docs: https://developers.facebook.com/docs/whatsapp/cloud-api
+//  * Required env vars:
+//  *   WHATSAPP_ACCESS_TOKEN     - permanent or temporary access token
+//  *   WHATSAPP_PHONE_NUMBER_ID  - the "from" phone number ID (not the phone number itself)
+//  *   WHATSAPP_BUSINESS_ACCOUNT_ID - your WABA ID, needed only for template management
+//  *                                  (create/list/delete templates) — find it in
+//  *                                  Meta App Dashboard > WhatsApp > API Setup
+//  *   WHATSAPP_API_VERSION      - optional, defaults to "v23.0"
+//  *
+//  * Every send-* method returns the parsed Graph API response (which includes
+//  * `messages[0].id` — the wamid — useful for tracking delivery via webhooks)
+//  * or null if the call failed, and never throws — same fire-and-forget
+//  * pattern as EmailService, so callers don't need try/catch everywhere.
 //  */
 
-// require('dotenv').config();
-// const axios = require('axios');
+// const GRAPH_API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
+// const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN as string;
+// const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID as string;
+// const WABA_ID = process.env.WHATSAPP_BUSINESS_ACCOUNT_ID as string;
 
-// const {
-//     WHATSAPP_ACCESS_TOKEN,
-//     WHATSAPP_PHONE_NUMBER_ID,
-// } = process.env;
+// // Scoped to the phone number — used for sending messages
+// const BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`;
+// // Scoped to the WABA — used for template management (create/list/delete)
+// const WABA_BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}/${WABA_ID}`;
 
-// const GRAPH_API_VERSION = 'v21.0';
-// const BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}/${WHATSAPP_PHONE_NUMBER_ID}/messages`;
+// // ---- Shared types ----
 
-// const client = axios.create({
-//     baseURL: BASE_URL,
-//     headers: {
-//         Authorization: `Bearer ${WHATSAPP_ACCESS_TOKEN}`,
-//         'Content-Type': 'application/json',
-//     },
-// });
+// export type WhatsAppResponse = {
+//   messaging_product: "whatsapp";
+//   contacts: { input: string; wa_id: string }[];
+//   messages: { id: string; message_status?: string }[];
+// } | null;
 
-// /**
-//  * Send a pre-approved template message.
-//  *
-//  * @param {string} to - Recipient's WhatsApp number in international format, no "+" (e.g. "2348012345678")
-//  * @param {string} templateName - Name of the approved template (e.g. "delivery_status_update")
-//  * @param {string} languageCode - Template language code (e.g. "en_US")
-//  * @param {Array<string>} bodyParams - Values to fill the template's {{1}}, {{2}}... placeholders, in order
-//  * @returns {Promise<object>} API response data
-//  */
-// async function sendTemplateMessage(to, templateName, languageCode = 'en_US', bodyParams = []) {
-//     const payload = {
-//         messaging_product: 'whatsapp',
-//         to,
-//         type: 'template',
-//         template: {
-//             name: templateName,
-//             language: { code: languageCode },
-//             components: bodyParams.length
-//                 ? [
-//                     {
-//                         type: 'body',
-//                         parameters: bodyParams.map((text) => ({ type: 'text', text: String(text) })),
-//                     },
-//                 ]
-//                 : [],
+// interface TemplateComponent {
+//   type: "header" | "body" | "button";
+//   sub_type?: "quick_reply" | "url";
+//   index?: string;
+//   parameters: Record<string, any>[];
+// }
+
+// interface InteractiveButton {
+//   id: string;
+//   title: string; // max 20 chars per WhatsApp limits
+// }
+
+// interface InteractiveListRow {
+//   id: string;
+//   title: string;
+//   description?: string;
+// }
+
+// interface InteractiveListSection {
+//   title: string;
+//   rows: InteractiveListRow[];
+// }
+
+// // ---- Template management types ----
+// // Note the UPPERCASE keys here — this is Meta's template *creation* spec
+// // (POST /{waba_id}/message_templates), which is a different shape from the
+// // lowercase send-message spec above. Easy thing to trip on.
+
+// interface TemplateBodyComponent {
+//   type: "BODY";
+//   text?: string; // omit for AUTHENTICATION templates — body text is fixed by Meta
+//   add_security_recommendation?: boolean; // AUTHENTICATION only
+//   example?: { body_text: string[][] };
+// }
+
+// interface TemplateHeaderComponent {
+//   type: "HEADER";
+//   format: "TEXT" | "IMAGE" | "VIDEO" | "DOCUMENT";
+//   text?: string;
+//   example?: { header_text?: string[]; header_handle?: string[] };
+// }
+
+// interface TemplateFooterComponent {
+//   type: "FOOTER";
+//   text?: string; // free-text footer
+//   code_expiration_minutes?: number; // AUTHENTICATION only, 1-90
+// }
+
+// interface TemplateButtonsComponent {
+//   type: "BUTTONS";
+//   buttons: Array<
+//     | { type: "OTP"; otp_type: "COPY_CODE" | "ONE_TAP"; supported_apps?: any[] }
+//     | { type: "QUICK_REPLY"; text: string }
+//     | { type: "URL"; text: string; url: string; example?: string[] }
+//     | { type: "PHONE_NUMBER"; text: string; phone_number: string }
+//   >;
+// }
+
+// type TemplateCreateComponent =
+//   | TemplateHeaderComponent
+//   | TemplateBodyComponent
+//   | TemplateFooterComponent
+//   | TemplateButtonsComponent;
+
+// export interface CreateTemplatePayload {
+//   name: string; // lowercase, numbers, underscores only e.g. "order_status_update"
+//   language: string; // e.g. "en", "en_US"
+//   category: "AUTHENTICATION" | "UTILITY" | "MARKETING";
+//   components: TemplateCreateComponent[];
+// }
+
+// export class WhatsAppService {
+//   /**
+//    * Low-level sender every public method funnels through. Keeping this
+//    * private and generic is what makes the class "abstract" / reusable —
+//    * new message types can be added as one-liners on top of this.
+//    */
+//   private async send(
+//     payload: Record<string, any>,
+//     withRecipientType = true
+//   ): Promise<WhatsAppResponse> {
+//     try {
+//       const response = await fetch(`${BASE_URL}/messages`, {
+//         method: "POST",
+//         headers: {
+//           Authorization: `Bearer ${ACCESS_TOKEN}`,
+//           "Content-Type": "application/json",
 //         },
-//     };
+//         body: JSON.stringify({
+//           messaging_product: "whatsapp",
+//           ...(withRecipientType ? { recipient_type: "individual" } : {}),
+//           ...payload,
+//         }),
+//       });
 
-//     try {
-//         const response = await client.post('', payload);
-//         return response.data;
-//     } catch (err) {
-//         const details = err.response?.data || err.message;
-//         console.error('WhatsApp send failed:', JSON.stringify(details, null, 2));
-//         throw new Error(`WhatsApp API error: ${JSON.stringify(details)}`);
+//       const data = await response.json();
+
+//       if (!response.ok) {
+//         logger.error(`WhatsApp API error: ${JSON.stringify(data)}`);
+//         return null;
+//       }
+
+//       logger.info(`WhatsApp message sent: ${data?.messages?.[0]?.id}`);
+//       return data as WhatsAppResponse;
+//     } catch (error: any) {
+//       logger.error(`WhatsApp send error: ${error.message}`);
+//       return null;
 //     }
+//   }
+
+//   // ---- Plain text ----
+
+//   /**
+//    * Free-form text message. Only deliverable inside the 24-hour customer
+//    * service window (i.e. after the user has messaged you, or opted in).
+//    * Outside that window, use sendTemplateMessage instead.
+//    */
+//   async sendTextMessage(payload: {
+//     to: string;
+//     body: string;
+//     previewUrl?: boolean;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, body, previewUrl = false } = payload;
+//     return this.send({
+//       to,
+//       type: "text",
+//       text: { preview_url: previewUrl, body },
+//     });
+//   }
+
+//   // ---- Template messages (required to open a conversation / after 24h window) ----
+
+//   /**
+//    * Sends a pre-approved template message. `components` follows the Cloud
+//    * API template component spec (header/body/button parameters) and is
+//    * optional for templates with no variables.
+//    */
+//   async sendTemplateMessage(payload: {
+//     to: string;
+//     templateName: string;
+//     languageCode?: string; // e.g. "en_US"
+//     components?: TemplateComponent[];
+//   }): Promise<WhatsAppResponse> {
+//     const { to, templateName, languageCode = "en_US", components = [] } = payload;
+//     return this.send({
+//       to,
+//       type: "template",
+//       template: {
+//         name: templateName,
+//         language: { code: languageCode },
+//         ...(components.length ? { components } : {}),
+//       },
+//     });
+//   }
+
+//   // ---- Media messages ----
+//   // Media can be referenced either by a public `link` or by a `media id`
+//   // obtained from the Media upload endpoint — both forms are supported here.
+
+//   async sendImageMessage(payload: {
+//     to: string;
+//     link?: string;
+//     mediaId?: string;
+//     caption?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, link, mediaId, caption } = payload;
+//     return this.send({
+//       to,
+//       type: "image",
+//       image: { ...(link ? { link } : { id: mediaId }), ...(caption ? { caption } : {}) },
+//     });
+//   }
+
+//   async sendDocumentMessage(payload: {
+//     to: string;
+//     link?: string;
+//     mediaId?: string;
+//     caption?: string;
+//     filename?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, link, mediaId, caption, filename } = payload;
+//     return this.send({
+//       to,
+//       type: "document",
+//       document: {
+//         ...(link ? { link } : { id: mediaId }),
+//         ...(caption ? { caption } : {}),
+//         ...(filename ? { filename } : {}),
+//       },
+//     });
+//   }
+
+//   async sendVideoMessage(payload: {
+//     to: string;
+//     link?: string;
+//     mediaId?: string;
+//     caption?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, link, mediaId, caption } = payload;
+//     return this.send({
+//       to,
+//       type: "video",
+//       video: { ...(link ? { link } : { id: mediaId }), ...(caption ? { caption } : {}) },
+//     });
+//   }
+
+//   async sendAudioMessage(payload: {
+//     to: string;
+//     link?: string;
+//     mediaId?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, link, mediaId } = payload;
+//     return this.send({
+//       to,
+//       type: "audio",
+//       audio: link ? { link } : { id: mediaId },
+//     });
+//   }
+
+//   async sendStickerMessage(payload: {
+//     to: string;
+//     link?: string;
+//     mediaId?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, link, mediaId } = payload;
+//     return this.send({
+//       to,
+//       type: "sticker",
+//       sticker: link ? { link } : { id: mediaId },
+//     });
+//   }
+
+//   // ---- Location ----
+
+//   async sendLocationMessage(payload: {
+//     to: string;
+//     latitude: number;
+//     longitude: number;
+//     name?: string;
+//     address?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, latitude, longitude, name, address } = payload;
+//     return this.send({
+//       to,
+//       type: "location",
+//       location: { latitude, longitude, name, address },
+//     });
+//   }
+
+//   // ---- Contacts ----
+
+//   async sendContactMessage(payload: {
+//     to: string;
+//     contacts: Record<string, any>[]; // follows Cloud API "contacts" object spec
+//   }): Promise<WhatsAppResponse> {
+//     const { to, contacts } = payload;
+//     return this.send({ to, type: "contacts", contacts });
+//   }
+
+//   // ---- Interactive messages ----
+
+//   /** Up to 3 quick-reply buttons. */
+//   async sendInteractiveButtonsMessage(payload: {
+//     to: string;
+//     bodyText: string;
+//     buttons: InteractiveButton[];
+//     headerText?: string;
+//     footerText?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, bodyText, buttons, headerText, footerText } = payload;
+//     return this.send({
+//       to,
+//       type: "interactive",
+//       interactive: {
+//         type: "button",
+//         ...(headerText ? { header: { type: "text", text: headerText } } : {}),
+//         body: { text: bodyText },
+//         ...(footerText ? { footer: { text: footerText } } : {}),
+//         action: {
+//           buttons: buttons.map((b) => ({
+//             type: "reply",
+//             reply: { id: b.id, title: b.title },
+//           })),
+//         },
+//       },
+//     });
+//   }
+
+//   /** Dropdown-style list of selectable options, grouped into sections. */
+//   async sendInteractiveListMessage(payload: {
+//     to: string;
+//     bodyText: string;
+//     buttonText: string;
+//     sections: InteractiveListSection[];
+//     headerText?: string;
+//     footerText?: string;
+//   }): Promise<WhatsAppResponse> {
+//     const { to, bodyText, buttonText, sections, headerText, footerText } = payload;
+//     return this.send({
+//       to,
+//       type: "interactive",
+//       interactive: {
+//         type: "list",
+//         ...(headerText ? { header: { type: "text", text: headerText } } : {}),
+//         body: { text: bodyText },
+//         ...(footerText ? { footer: { text: footerText } } : {}),
+//         action: { button: buttonText, sections },
+//       },
+//     });
+//   }
+
+//   // ---- Read receipts ----
+
+//   /** Marks an inbound message as read (blue ticks) given its wamid. */
+//   async markMessageAsRead(messageId: string): Promise<WhatsAppResponse> {
+//     return this.send(
+//       {
+//         status: "read",
+//         message_id: messageId,
+//       },
+//       false // read receipts don't take recipient_type / to
+//     );
+//   }
 // }
+
+// export default new WhatsAppService();
+
+
+// import logger from "../../logger";
 
 // /**
-//  * Send a free-form text message.
-//  * Only works if the recipient messaged you within the last 24 hours
-//  * (i.e. an open customer service window). Otherwise Meta will reject it —
-//  * use sendTemplateMessage() instead.
+//  * WhatsAppService
+//  * ----------------
+//  * A thin, reusable wrapper around Meta's official WhatsApp Cloud API
+//  * (Graph API `/messages` endpoint). Modeled after EmailService so it can be
+//  * dropped into any project the same way — instantiate once, call a method
+//  * per message type.
 //  *
-//  * @param {string} to - Recipient's WhatsApp number, no "+"
-//  * @param {string} text - Message body
+//  * Docs used:
+//  * - https://developers.facebook.com/docs/whatsapp/cloud-api/reference/messages/
+//  * - https://developers.facebook.com/docs/whatsapp/cloud-api/guides/send-messages
+//  *
+//  * Required env vars:
+//  *   WHATSAPP_ACCESS_TOKEN     - permanent or temporary access token
+//  *   WHATSAPP_PHONE_NUMBER_ID  - the "from" phone number ID (not the phone number itself)
+//  *   WHATSAPP_API_VERSION      - optional, defaults to "v23.0"
+//  *
+//  * Every send-* method returns the parsed Graph API response (which includes
+//  * `messages[0].id` — the wamid — useful for tracking delivery via webhooks)
+//  * or null if the call failed, and never throws — same fire-and-forget
+//  * pattern as EmailService, so callers don't need try/catch everywhere.
 //  */
-// async function sendFreeformText(to, text) {
-//     const payload = {
-//         messaging_product: 'whatsapp',
-//         to,
-//         type: 'text',
-//         text: { body: text },
-//     };
 
-//     try {
-//         const response = await client.post('', payload);
-//         return response.data;
-//     } catch (err) {
-//         const details = err.response?.data || err.message;
-//         console.error('WhatsApp send failed:', JSON.stringify(details, null, 2));
-//         throw new Error(`WhatsApp API error: ${JSON.stringify(details)}`);
+// const GRAPH_API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
+// const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN as string;
+// const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID as string;
+// const BASE_URL = `https://graph.facebook.com/${GRAPH_API_VERSION}/${PHONE_NUMBER_ID}`;
+
+// // ---- Shared types ----
+
+// export type WhatsAppResponse = {
+//     messaging_product: "whatsapp";
+//     contacts: { input: string; wa_id: string }[];
+//     messages: { id: string; message_status?: string }[];
+// } | null;
+
+// interface TemplateComponent {
+//     type: "header" | "body" | "button";
+//     sub_type?: "quick_reply" | "url";
+//     index?: string;
+//     parameters: Record<string, any>[];
+// }
+
+// interface InteractiveButton {
+//     id: string;
+//     title: string; // max 20 chars per WhatsApp limits
+// }
+
+// interface InteractiveListRow {
+//     id: string;
+//     title: string;
+//     description?: string;
+// }
+
+// interface InteractiveListSection {
+//     title: string;
+//     rows: InteractiveListRow[];
+// }
+
+// export class WhatsAppService {
+//     /**
+//      * Low-level sender every public method funnels through. Keeping this
+//      * private and generic is what makes the class "abstract" / reusable —
+//      * new message types can be added as one-liners on top of this.
+//      */
+//     private async send(
+//         payload: Record<string, any>,
+//         withRecipientType = true
+//     ): Promise<WhatsAppResponse> {
+//         try {
+//             const response = await fetch(`${BASE_URL}/messages`, {
+//                 method: "POST",
+//                 headers: {
+//                     Authorization: `Bearer ${ACCESS_TOKEN}`,
+//                     "Content-Type": "application/json",
+//                 },
+//                 body: JSON.stringify({
+//                     messaging_product: "whatsapp",
+//                     ...(withRecipientType ? { recipient_type: "individual" } : {}),
+//                     ...payload,
+//                 }),
+//             });
+
+//             const data = await response.json();
+
+//             if (!response.ok) {
+//                 logger.error(`WhatsApp API error: ${JSON.stringify(data)}`);
+//                 return null;
+//             }
+
+//             logger.info(`WhatsApp message sent: ${data?.messages?.[0]?.id}`);
+//             return data as WhatsAppResponse;
+//         } catch (error: any) {
+//             logger.error(`WhatsApp send error: ${error.message}`);
+//             return null;
+//         }
+//     }
+
+//     // ---- Plain text ----
+
+//     /**
+//      * Free-form text message. Only deliverable inside the 24-hour customer
+//      * service window (i.e. after the user has messaged you, or opted in).
+//      * Outside that window, use sendTemplateMessage instead.
+//      */
+//     async sendTextMessage(payload: {
+//         to: string;
+//         body: string;
+//         previewUrl?: boolean;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, body, previewUrl = false } = payload;
+//         return this.send({
+//             to,
+//             type: "text",
+//             text: { preview_url: previewUrl, body },
+//         });
+//     }
+
+//     // ---- Template messages (required to open a conversation / after 24h window) ----
+
+//     /**
+//      * Sends a pre-approved template message. `components` follows the Cloud
+//      * API template component spec (header/body/button parameters) and is
+//      * optional for templates with no variables.
+//      */
+//     async sendTemplateMessage(payload: {
+//         to: string;
+//         templateName: string;
+//         languageCode?: string; // e.g. "en_US"
+//         components?: TemplateComponent[];
+//     }): Promise<WhatsAppResponse> {
+//         const { to, templateName, languageCode = "en_US", components = [] } = payload;
+//         return this.send({
+//             to,
+//             type: "template",
+//             template: {
+//                 name: templateName,
+//                 language: { code: languageCode },
+//                 ...(components.length ? { components } : {}),
+//             },
+//         });
+//     }
+
+//     // ---- Media messages ----
+//     // Media can be referenced either by a public `link` or by a `media id`
+//     // obtained from the Media upload endpoint — both forms are supported here.
+
+//     async sendImageMessage(payload: {
+//         to: string;
+//         link?: string;
+//         mediaId?: string;
+//         caption?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, link, mediaId, caption } = payload;
+//         return this.send({
+//             to,
+//             type: "image",
+//             image: { ...(link ? { link } : { id: mediaId }), ...(caption ? { caption } : {}) },
+//         });
+//     }
+
+//     async sendDocumentMessage(payload: {
+//         to: string;
+//         link?: string;
+//         mediaId?: string;
+//         caption?: string;
+//         filename?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, link, mediaId, caption, filename } = payload;
+//         return this.send({
+//             to,
+//             type: "document",
+//             document: {
+//                 ...(link ? { link } : { id: mediaId }),
+//                 ...(caption ? { caption } : {}),
+//                 ...(filename ? { filename } : {}),
+//             },
+//         });
+//     }
+
+//     async sendVideoMessage(payload: {
+//         to: string;
+//         link?: string;
+//         mediaId?: string;
+//         caption?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, link, mediaId, caption } = payload;
+//         return this.send({
+//             to,
+//             type: "video",
+//             video: { ...(link ? { link } : { id: mediaId }), ...(caption ? { caption } : {}) },
+//         });
+//     }
+
+//     async sendAudioMessage(payload: {
+//         to: string;
+//         link?: string;
+//         mediaId?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, link, mediaId } = payload;
+//         return this.send({
+//             to,
+//             type: "audio",
+//             audio: link ? { link } : { id: mediaId },
+//         });
+//     }
+
+//     async sendStickerMessage(payload: {
+//         to: string;
+//         link?: string;
+//         mediaId?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, link, mediaId } = payload;
+//         return this.send({
+//             to,
+//             type: "sticker",
+//             sticker: link ? { link } : { id: mediaId },
+//         });
+//     }
+
+//     // ---- Location ----
+
+//     async sendLocationMessage(payload: {
+//         to: string;
+//         latitude: number;
+//         longitude: number;
+//         name?: string;
+//         address?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, latitude, longitude, name, address } = payload;
+//         return this.send({
+//             to,
+//             type: "location",
+//             location: { latitude, longitude, name, address },
+//         });
+//     }
+
+//     // ---- Contacts ----
+
+//     async sendContactMessage(payload: {
+//         to: string;
+//         contacts: Record<string, any>[]; // follows Cloud API "contacts" object spec
+//     }): Promise<WhatsAppResponse> {
+//         const { to, contacts } = payload;
+//         return this.send({ to, type: "contacts", contacts });
+//     }
+
+//     // ---- Interactive messages ----
+
+//     /** Up to 3 quick-reply buttons. */
+//     async sendInteractiveButtonsMessage(payload: {
+//         to: string;
+//         bodyText: string;
+//         buttons: InteractiveButton[];
+//         headerText?: string;
+//         footerText?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, bodyText, buttons, headerText, footerText } = payload;
+//         return this.send({
+//             to,
+//             type: "interactive",
+//             interactive: {
+//                 type: "button",
+//                 ...(headerText ? { header: { type: "text", text: headerText } } : {}),
+//                 body: { text: bodyText },
+//                 ...(footerText ? { footer: { text: footerText } } : {}),
+//                 action: {
+//                     buttons: buttons.map((b) => ({
+//                         type: "reply",
+//                         reply: { id: b.id, title: b.title },
+//                     })),
+//                 },
+//             },
+//         });
+//     }
+
+//     /** Dropdown-style list of selectable options, grouped into sections. */
+//     async sendInteractiveListMessage(payload: {
+//         to: string;
+//         bodyText: string;
+//         buttonText: string;
+//         sections: InteractiveListSection[];
+//         headerText?: string;
+//         footerText?: string;
+//     }): Promise<WhatsAppResponse> {
+//         const { to, bodyText, buttonText, sections, headerText, footerText } = payload;
+//         return this.send({
+//             to,
+//             type: "interactive",
+//             interactive: {
+//                 type: "list",
+//                 ...(headerText ? { header: { type: "text", text: headerText } } : {}),
+//                 body: { text: bodyText },
+//                 ...(footerText ? { footer: { text: footerText } } : {}),
+//                 action: { button: buttonText, sections },
+//             },
+//         });
+//     }
+
+//     // ---- Read receipts ----
+
+//     /** Marks an inbound message as read (blue ticks) given its wamid. */
+//     async markMessageAsRead(messageId: string): Promise<WhatsAppResponse> {
+//         return this.send(
+//             {
+//                 status: "read",
+//                 message_id: messageId,
+//             },
+//             false // read receipts don't take recipient_type / to
+//         );
 //     }
 // }
 
-// // --- Convenience wrappers for your specific logistics alerts ---
-// // These assume you've created and had these templates approved in
-// // WhatsApp Manager > Message Templates. Adjust names/params to match
-// // whatever you actually register.
-
-// async function sendRiderEnRouteAlert(to, orderId, riderName, eta) {
-//     return sendTemplateMessage(to, 'rider_en_route', 'en_US', [orderId, riderName, eta]);
-// }
-
-// async function sendDeliveryArrivedAlert(to, orderId) {
-//     return sendTemplateMessage(to, 'delivery_arrived', 'en_US', [orderId]);
-// }
-
-// module.exports = {
-//     sendTemplateMessage,
-//     sendFreeformText,
-//     sendRiderEnRouteAlert,
-//     sendDeliveryArrivedAlert,
-// };
+// export default new WhatsAppService();
