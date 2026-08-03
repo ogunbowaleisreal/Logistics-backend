@@ -17,6 +17,7 @@ import { Business } from "../../models/Business.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
 import { PusherService } from "../../utilities/Pusher";
 import { BusinessShippingZone } from "../../models/Shippings.model";
+import { WhatsAppService } from "../../utilities/Whatsapp.Services";
 
 const emailService = new EmailService();
 const shippingService = new ShippingService();
@@ -25,6 +26,7 @@ const safeHaven = new SafeHaven();
 const monnify = new Monnify();
 const flutterwave = new Flutterwave();
 const pusherService = new PusherService();
+const whatsappService = new WhatsAppService();
 
 function normalizeRegions(val: string | string[] | undefined): string[] {
   if (!val) return ["local"];
