@@ -30,11 +30,23 @@ export class BusinessAuthenticationService {
 
   public async register(payload: any) {
     const { name, username, email, phone, password } = payload;
+    const normalizedEmail = email.toLowerCase();
 
     const existing = await Business.findOne({
-      $or: [{ email: email.toLowerCase() }, { phone }, { username }],
+      $or: [{ email: normalizedEmail }, { phone }, { username }],
     });
-    if (existing) throw new AppError(409, "Business already exists");
+
+    if (existing) {
+      if (existing.email === normalizedEmail) {
+        throw new AppError(409, "Email is already in use");
+      }
+      if (existing.phone === phone) {
+        throw new AppError(409, "Phone number is already in use");
+      }
+      if (existing.username === username) {
+        throw new AppError(409, "Username is already taken");
+      }
+    }
 
     const slug = await this.generateUniqueSlug(username);
     const hashedPassword = await this.hasher.hashPassword(password);
