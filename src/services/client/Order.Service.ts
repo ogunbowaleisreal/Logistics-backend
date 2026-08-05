@@ -17,7 +17,7 @@ import { Business } from "../../models/Business.Model";
 import { riderAssignmentService } from "../RiderAssignment.Service";
 import { PusherService } from "../../utilities/Pusher";
 import { BusinessShippingZone } from "../../models/Shippings.model";
-import { WhatsAppService } from "../../utilities/Whatsapp.Services";
+import { WhatsAppService, toWhatsAppNumber } from "../../utilities/Whatsapp.Services";
 
 const emailService = new EmailService();
 const shippingService = new ShippingService();
@@ -106,10 +106,12 @@ export class OrderService {
           name: personnelInformation.sender.name,
           email: personnelInformation.sender.email,
           phone: personnelInformation.sender.phone,
+          countryCode: personnelInformation.sender.countryCode
         },
         receiver: {
           name: personnelInformation.receiver.name,
           phone: personnelInformation.receiver.phone,
+          countryCode: personnelInformation.receiver.countryCode
         },
       },
       amount,
@@ -189,6 +191,60 @@ export class OrderService {
       receiverName: personnelInformation.receiver.name,
       businessLogo: business?.logo
     });
+
+    if (shippingType === "international") {
+      const senderPhone = personnelInformation.sender.phone;
+      // ASSUMPTION: frontend sends an ISO alpha-2 country code
+      // (e.g. "NG", "GB", "US") on the sender object. Adjust this
+      // path if it's actually named/located differently in
+      // IOrderPayload — e.g. personnelInformation.sender.countryCode
+      // vs a top-level payload.senderCountryCode, etc.
+      const senderCountryCode = personnelInformation.sender.countryCode;
+      //console.log(senderPhone, senderCountryCode);
+      if (!senderPhone || !senderCountryCode) {
+        console.warn(
+          `Order ${order.trackingID}: missing sender phone or country code — skipping WhatsApp confirmation`
+        );
+      } else {
+        const formattedNumber = toWhatsAppNumber(senderCountryCode, senderPhone);
+
+        if (!formattedNumber) {
+          console.warn(
+            `Order ${order.trackingID}: invalid sender phone "${senderPhone}" for country "${senderCountryCode}" — skipping WhatsApp confirmation`
+          );
+        } else {
+          void whatsappService.sendOrderConfirmationTemplate({
+            to: formattedNumber,
+            customerName: personnelInformation.sender.name,
+            orderStatus: order.status,
+            trackingId: order.trackingID,
+            amount: order.totalAmount ?? 0,
+            // TODO: confirm this matches your real tracking URL pattern
+            trackingLink: `https://logisticspadi.com/${business?.slug}/track/${order.trackingID}`,
+          });
+        }
+      }
+    }
+
+    // //    if (shippingType === "international") {
+    // const senderPhone = personnelInformation.sender.phone;
+    // if (senderPhone) {
+    //   const normPhone = toWhatsAppNumber(senderPhone);
+    //   console.log(`Sending WhatsApp confirmation to ${normPhone}`);
+    //   void whatsappService.sendOrderConfirmationTemplate({
+    //     to: toWhatsAppNumber(senderPhone),
+    //     customerName: personnelInformation.sender.name,
+    //     orderStatus: order.status,
+    //     trackingId: order.trackingID,
+    //     amount: order.totalAmount ?? 0,
+    //     trackingLink: `https://logisticspadi.com/${business?.slug}/track-order/${order.trackingID}`,
+    //   });
+    // } else {
+    //   console.warn(
+    //     `International order ${order.trackingID} has no sender phone — skipping WhatsApp confirmation`
+    //   );
+    // }
+    // //   }
     return order;
   }
 

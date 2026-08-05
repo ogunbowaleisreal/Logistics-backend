@@ -1,4 +1,5 @@
 import logger from "../../logger";
+import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
 
 const GRAPH_API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
 const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN as string;
@@ -23,6 +24,26 @@ interface TemplateComponent {
     sub_type?: "quick_reply" | "url";
     index?: string;
     parameters: Record<string, any>[];
+}
+
+export interface OrderConfirmationTemplateParams {
+    to: string;
+    customerName: string;
+    orderStatus: string;
+    trackingId: string;
+    amount: string | number;
+    trackingLink: string;
+    languageCode?: string;
+}
+
+export interface OrderStatusUpdateTemplateParams {
+    to: string;
+    customerName: string;
+    orderStatus: string;
+    trackingId: string;
+    amount: string | number;
+    trackingLink: string;
+    languageCode?: string;
 }
 
 interface InteractiveButton {
@@ -366,6 +387,73 @@ export class WhatsAppService {
         );
     }
 
+    async sendOrderConfirmationTemplate(
+        payload: OrderConfirmationTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const {
+            to,
+            customerName,
+            orderStatus,
+            trackingId,
+            amount,
+            trackingLink,
+            languageCode = "en",
+        } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "order_confirmation",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "customer_name", text: customerName },
+                        { type: "text", parameter_name: "order_status", text: orderStatus },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "amount", text: String(amount) },
+                        { type: "text", parameter_name: "tracking_link", text: trackingLink },
+                    ],
+                },
+            ],
+        });
+    }
+
+    async sendOrderStatusUpdateTemplate(
+        payload: OrderStatusUpdateTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const {
+            to,
+            customerName,
+            orderStatus,
+            trackingId,
+            amount,
+            trackingLink,
+            languageCode = "en",
+        } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "order_status_update",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "customer_name", text: customerName },
+                        { type: "text", parameter_name: "order_status", text: orderStatus },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "amount", text: String(amount) },
+                        { type: "text", parameter_name: "tracking_link", text: trackingLink },
+                    ],
+                },
+            ],
+        });
+    }
+
+
+    // Small helper — WhatsApp wants E.164 digits only, no leading '+'
+
     // ---- Template management (WABA-scoped, not phone-number-scoped) ----
     // These hit WABA_BASE_URL (`/{waba_id}/message_templates`), not BASE_URL.
     // Newly created templates start in PENDING status and are not sendable
@@ -479,3 +567,22 @@ export class WhatsAppService {
 
 export default new WhatsAppService();
 
+// export function toWhatsAppNumber(phone: string): string {
+//     return phone.replace(/[^\d]/g, "");
+// }
+
+export function toWhatsAppNumber(
+    countryCode: string,
+    localNumber: string
+): string | null {
+    const phoneNumber = parsePhoneNumberFromString(
+        localNumber,
+        countryCode as CountryCode
+    );
+
+    if (!phoneNumber || !phoneNumber.isValid()) {
+        return null;
+    }
+
+    return phoneNumber.number.replace("+", "");
+}

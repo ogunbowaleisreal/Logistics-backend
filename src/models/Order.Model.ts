@@ -28,8 +28,8 @@ export interface IOrder extends Document {
     value: number;
   };
   personnelInformation: {
-    sender: { name: string; email?: string; phone: string };
-    receiver: { name: string; phone: string };
+    sender: { name: string; email?: string; phone: string, countryCode?: string };
+    receiver: { name: string; phone: string, countryCode?: string };
   };
   status: string;
   paymentMethod: string;
@@ -94,10 +94,12 @@ const OrderSchema = new Schema<IOrder>(
         name: { type: String },
         email: { type: String },
         phone: { type: String },
+        countryCode: { type: String },
       },
       receiver: {
         name: { type: String },
         phone: { type: String },
+        countryCode: { type: String },
       },
     },
     riderID: { type: Schema.Types.ObjectId, ref: "Rider" },
