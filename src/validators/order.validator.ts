@@ -19,11 +19,13 @@ const senderSchema = Joi.object({
   name: Joi.string().trim().required(),
   email: Joi.string().trim().email().optional(),
   phone: Joi.string().trim().required(),
+  countryCode: Joi.string().trim().optional(),
 }).required();
 
 const receiverSchema = Joi.object({
   name: Joi.string().trim().required(),
   phone: Joi.string().trim().required(),
+  countryCode: Joi.string().trim().optional(),
 }).required();
 
 export const createOrderSchema = Joi.object({

@@ -74,10 +74,12 @@ export interface IOrderPayload {
       name: string;
       email?: string;
       phone: string;
+      countryCode?: string;
     };
     receiver: {
       name: string;
       phone: string;
+      countryCode?: string;
     };
   };
   // paymentMethod: "cash" | "card";

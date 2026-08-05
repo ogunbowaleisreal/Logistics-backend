@@ -13,8 +13,9 @@ import { termiiService } from "../../utilities/Termii";
 import { sendOrderStatusSMS } from "../../utilities/OrderStatusSMS";
 import logger from "../../../logger";
 import { orderStatusUpdateEventEmitter } from "../../utilities/OrderStatusEvent";
-
+import { WhatsAppService, toWhatsAppNumber } from "../../utilities/Whatsapp.Services";
 const emailService = new EmailService();
+const whatsappService = new WhatsAppService();
 const businessConfigurationService = new BusinessConfigurationService();
 
 const VALID_STATUSES: string[] = [
@@ -216,6 +217,33 @@ export class OrderService {
           slug: business?.slug,
           amount: order.totalAmount
         });
+      }
+
+      if (order.shippingType === "international") {
+        const senderPhone = order.personnelInformation.sender.phone;
+        const senderCountryCode = order.personnelInformation.sender.countryCode;
+        if (!senderPhone || !senderCountryCode) {
+          logger.warn(
+            `Order ${order.trackingID}: missing sender phone or country code — skipping WhatsApp status update`
+          );
+        } else {
+          const formattedNumber = toWhatsAppNumber(senderCountryCode, senderPhone);
+
+          if (!formattedNumber) {
+            logger.warn(
+              `Order ${order.trackingID}: invalid sender phone "${senderPhone}" for country "${senderCountryCode}" — skipping WhatsApp status update`
+            );
+          } else {
+            void whatsappService.sendOrderStatusUpdateTemplate({
+              to: formattedNumber,
+              customerName: order.personnelInformation.sender.name,
+              orderStatus: order.status,
+              trackingId: order.trackingID,
+              amount: order.totalAmount ?? 0,
+              trackingLink: `https://logisticspadi.com/${business?.slug}/track-order/${order.trackingID}`,
+            });
+          }
+        }
       }
 
       void sendOrderStatusSMS(order, status, business?.name);

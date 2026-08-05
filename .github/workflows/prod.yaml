@@ -90,6 +90,12 @@ jobs:
           PUSHER_KEY: ${{ secrets.PUSHER_KEY }}
           PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
           PUSHER_CLUSTER: ${{ secrets.PUSHER_CLUSTER }}
+
+          WHATSAPP_ACCESS_TOKEN: ${{ secrets.WHATSAPP_ACCESS_TOKEN }}
+          WHATSAPP_PHONE_NUMBER_ID: ${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}
+          WHATSAPP_BUSINESS_ACCOUNT_ID: ${{ secrets.WHATSAPP_BUSINESS_ACCOUNT_ID }}
+          WHATSAPP_API_VERSION: ${{ secrets.WHATSAPP_API_VERSION }}
+          WHATSAPP_WEBHOOK_VERIFY_TOKEN: ${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}
         run: |
           npm run build
 
@@ -178,6 +184,12 @@ jobs:
             echo "PUSHER_SECRET=${{ secrets.PUSHER_SECRET }}" >> ${{ secrets.ENV_PATH }}
             echo "PUSHER_CLUSTER=${{ secrets.PUSHER_CLUSTER }}" >> ${{ secrets.ENV_PATH }}
 
+            echo "WHATSAPP_ACCESS_TOKEN=${{ secrets.WHATSAPP_ACCESS_TOKEN }}" >> ${{ secrets.ENV_PATH }}
+            echo "WHATSAPP_PHONE_NUMBER_ID=${{ secrets.WHATSAPP_PHONE_NUMBER_ID }}" >> ${{ secrets.ENV_PATH }}
+            echo "WHATSAPP_BUSINESS_ACCOUNT_ID=${{ secrets.WHATSAPP_BUSINESS_ACCOUNT_ID }}" >> ${{ secrets.ENV_PATH }}
+            echo "WHATSAPP_API_VERSION=${{ secrets.WHATSAPP_API_VERSION }}" >> ${{ secrets.ENV_PATH }}
+            echo "WHATSAPP_WEBHOOK_VERIFY_TOKEN=${{ secrets.WHATSAPP_WEBHOOK_VERIFY_TOKEN }}" >> ${{ secrets.ENV_PATH }}
+
       - name: Restart Application
         uses: appleboy/ssh-action@v0.1.10
         with:
@@ -191,3 +203,196 @@ jobs:
             cd ${{ secrets.PROJECT_PATH }}
             pm2 restart 0
             pm2 save
+# name: Deployment
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
+
+#     if: github.event_name == 'push'
+
+#     steps:
+#       - name: Checkout Repository
+#         uses: actions/checkout@v2
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v2
+#         with:
+#           node-version: "22"
+
+#       - name: Install Dependencies
+#         run: npm install
+
+#       - name: Build Project
+#         env:
+#           PORT: ${{ secrets.PORT }}
+#           MONGODB_URI: ${{ secrets.MONGODB_URI }}
+#           REDIS_SERVER_URL: ${{ secrets.REDIS_SERVER_URL }}
+
+#           SUPER_ADMIN_EMAIL: ${{ secrets.SUPER_ADMIN_EMAIL }}
+#           SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+#           SUPER_ADMIN_PHONE: ${{ secrets.SUPER_ADMIN_PHONE }}
+#           SUPER_ADMIN_FIRSTNAME: ${{ secrets.SUPER_ADMIN_FIRSTNAME }}
+#           SUPER_ADMIN_LASTNAME: ${{ secrets.SUPER_ADMIN_LASTNAME }}
+
+#           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+#           RESEND_SENDER: ${{ secrets.RESEND_SENDER }}
+
+#           IMAGE_KIT_PUBLIC_KEY: ${{ secrets.IMAGE_KIT_PUBLIC_KEY }}
+#           IMAGE_KIT_PRIVATE_KEY: ${{ secrets.IMAGE_KIT_PRIVATE_KEY }}
+#           IMAGE_KIT_URL_ENDPOINT: ${{ secrets.IMAGE_KIT_URL_ENDPOINT }}
+
+#           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+#           PAYSTACK_SECRET_KEY: ${{ secrets.PAYSTACK_SECRET_KEY }}
+
+#           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+#           JWT_DURATION: ${{ secrets.JWT_DURATION }}
+#           JWT_SECRET_REFRESH: ${{ secrets.JWT_SECRET_REFRESH }}
+#           JWT_REFRESH_DURATION: ${{ secrets.JWT_REFRESH_DURATION }}
+
+#           SAFEHAVEN_BASE_URL: ${{ secrets.SAFEHAVEN_BASE_URL }}
+#           SAFEHAVEN_CLIENT_ID: ${{ secrets.SAFEHAVEN_CLIENT_ID }}
+#           SAFEHAVEN_CLIENT_ASSERTION: ${{ secrets.SAFEHAVEN_CLIENT_ASSERTION }}
+#           SAFEHAVEN_FUNDING_WEBHOOK_URL: ${{ secrets.SAFEHAVEN_FUNDING_WEBHOOK_URL }}
+#           SAFEHAVEN_SETTLEMENT_BANK_CODE: ${{ secrets.SAFEHAVEN_SETTLEMENT_BANK_CODE }}
+#           SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER: ${{ secrets.SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER }}
+#           SAFEHAVEN_VIRTUAL_ACCOUNT_VALIDITY: ${{ secrets.SAFEHAVEN_VIRTUAL_ACCOUNT_VALIDITY }}
+#           SAFEHAVEN_BANK_NAME: ${{ secrets.SAFEHAVEN_BANK_NAME }}
+
+#           MONNIFY_BASE_URL: ${{ secrets.MONNIFY_BASE_URL }}
+#           MONNIFY_API_KEY: ${{ secrets.MONNIFY_API_KEY }}
+#           MONNIFY_SECRET_KEY: ${{ secrets.MONNIFY_SECRET_KEY }}
+#           MONNIFY_CONTRACT_CODE: ${{ secrets.MONNIFY_CONTRACT_CODE }}
+#           MONNIFY_WALLET_ACCOUNT_NUMBER: ${{ secrets.MONNIFY_WALLET_ACCOUNT_NUMBER }}
+
+#           FLUTTERWAVE_SECRET_HASH: ${{ secrets.FLUTTERWAVE_SECRET_HASH }}
+#           FLW_ENCRYPTION_KEY: ${{ secrets.FLW_ENCRYPTION_KEY }}
+#           FLUTTERWAVE_PUBLIC_KEY: ${{ secrets.FLUTTERWAVE_PUBLIC_KEY }}
+#           FLUTTERWAVE_SECRET_KEY: ${{ secrets.FLUTTERWAVE_SECRET_KEY }}
+#           FLUTTERWAVE_REDIRECT_URL: ${{ secrets.FLUTTERWAVE_REDIRECT_URL }}
+
+#           ENCRYPTION_KEY: ${{ secrets.ENCRYPTION_KEY }}
+
+#           TERMII_API_KEY: ${{ secrets.TERMII_API_KEY }}
+
+#           BASE_URL: ${{ secrets.BASE_URL }}
+
+#           NODE_ENV: ${{ secrets.PROD_NODE_ENV }}
+
+#           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+#           FIREBASE_PRIVATE_KEY_ID: ${{ secrets.FIREBASE_PRIVATE_KEY_ID }}
+#           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY }}
+#           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL }}
+#           FIREBASE_CLIENT_ID: ${{ secrets.FIREBASE_CLIENT_ID }}
+#           FIREBASE_CLIENT_X509_CERT_URL: ${{ secrets.FIREBASE_CLIENT_X509_CERT_URL }}
+
+#           PUSHER_APP_ID: ${{ secrets.PUSHER_APP_ID }}
+#           PUSHER_KEY: ${{ secrets.PUSHER_KEY }}
+#           PUSHER_SECRET: ${{ secrets.PUSHER_SECRET }}
+#           PUSHER_CLUSTER: ${{ secrets.PUSHER_CLUSTER }}
+#         run: |
+#           npm run build
+
+#       - name: Deploy to Server
+#         uses: appleboy/scp-action@v0.1.7
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           port: ${{ secrets.SSH_PORT }}
+#           key: ${{ secrets.SSH_KEY }}
+#           source: "./*"
+#           target: ${{ secrets.PROJECT_PATH }}
+
+#       - name: Create .env file on server
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: ${{ secrets.SSH_PORT }}
+#           script: |
+#             rm -rf ${{ secrets.ENV_PATH }}
+#             echo "PORT=${{ secrets.PORT }}" >> ${{ secrets.ENV_PATH }}
+#             echo "MONGODB_URI=${{ secrets.MONGODB_URI }}" >> ${{ secrets.ENV_PATH }}
+#             echo "REDIS_SERVER_URL=${{ secrets.REDIS_SERVER_URL }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "SUPER_ADMIN_EMAIL=${{ secrets.SUPER_ADMIN_EMAIL }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SUPER_ADMIN_PASSWORD=${{ secrets.SUPER_ADMIN_PASSWORD }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SUPER_ADMIN_PHONE=${{ secrets.SUPER_ADMIN_PHONE }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SUPER_ADMIN_FIRSTNAME=${{ secrets.SUPER_ADMIN_FIRSTNAME }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SUPER_ADMIN_LASTNAME=${{ secrets.SUPER_ADMIN_LASTNAME }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "RESEND_SENDER=${{ secrets.RESEND_SENDER }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "IMAGE_KIT_PUBLIC_KEY=${{ secrets.IMAGE_KIT_PUBLIC_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "IMAGE_KIT_PRIVATE_KEY=${{ secrets.IMAGE_KIT_PRIVATE_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "IMAGE_KIT_URL_ENDPOINT=${{ secrets.IMAGE_KIT_URL_ENDPOINT }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "ADMIN_PASSWORD=${{ secrets.ADMIN_PASSWORD }}" >> ${{ secrets.ENV_PATH }}
+#             echo "PAYSTACK_SECRET_KEY=${{ secrets.PAYSTACK_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> ${{ secrets.ENV_PATH }}
+#             echo "JWT_DURATION=${{ secrets.JWT_DURATION }}" >> ${{ secrets.ENV_PATH }}
+#             echo "JWT_SECRET_REFRESH=${{ secrets.JWT_SECRET_REFRESH }}" >> ${{ secrets.ENV_PATH }}
+#             echo "JWT_REFRESH_DURATION=${{ secrets.JWT_REFRESH_DURATION }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "SAFEHAVEN_BASE_URL=${{ secrets.SAFEHAVEN_BASE_URL }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_CLIENT_ID=${{ secrets.SAFEHAVEN_CLIENT_ID }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_CLIENT_ASSERTION=${{ secrets.SAFEHAVEN_CLIENT_ASSERTION }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_FUNDING_WEBHOOK_URL=${{ secrets.SAFEHAVEN_FUNDING_WEBHOOK_URL }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_SETTLEMENT_BANK_CODE=${{ secrets.SAFEHAVEN_SETTLEMENT_BANK_CODE }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER=${{ secrets.SAFEHAVEN_SETTLEMENT_ACCOUNT_NUMBER }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_VIRTUAL_ACCOUNT_VALIDITY=${{ secrets.SAFEHAVEN_VIRTUAL_ACCOUNT_VALIDITY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "SAFEHAVEN_BANK_NAME=${{ secrets.SAFEHAVEN_BANK_NAME }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "MONNIFY_BASE_URL=${{ secrets.MONNIFY_BASE_URL }}" >> ${{ secrets.ENV_PATH }}
+#             echo "MONNIFY_API_KEY=${{ secrets.MONNIFY_API_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "MONNIFY_SECRET_KEY=${{ secrets.MONNIFY_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "MONNIFY_CONTRACT_CODE=${{ secrets.MONNIFY_CONTRACT_CODE }}" >> ${{ secrets.ENV_PATH }}
+#             echo "MONNIFY_WALLET_ACCOUNT_NUMBER=${{ secrets.MONNIFY_WALLET_ACCOUNT_NUMBER }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "FLUTTERWAVE_SECRET_HASH=${{ secrets.FLUTTERWAVE_SECRET_HASH }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FLW_ENCRYPTION_KEY=${{ secrets.FLW_ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FLUTTERWAVE_PUBLIC_KEY=${{ secrets.FLUTTERWAVE_PUBLIC_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FLUTTERWAVE_SECRET_KEY=${{ secrets.FLUTTERWAVE_SECRET_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FLUTTERWAVE_REDIRECT_URL=${{ secrets.FLUTTERWAVE_REDIRECT_URL }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "ENCRYPTION_KEY=${{ secrets.ENCRYPTION_KEY }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "BASE_URL=${{ secrets.BASE_URL }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "TERMII_API_KEY=${{ secrets.TERMII_API_KEY }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "NODE_ENV=${{ secrets.PROD_NODE_ENV }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FIREBASE_PRIVATE_KEY_ID=${{ secrets.FIREBASE_PRIVATE_KEY_ID }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FIREBASE_PRIVATE_KEY=${{ secrets.FIREBASE_PRIVATE_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FIREBASE_CLIENT_EMAIL=${{ secrets.FIREBASE_CLIENT_EMAIL }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FIREBASE_CLIENT_ID=${{ secrets.FIREBASE_CLIENT_ID }}" >> ${{ secrets.ENV_PATH }}
+#             echo "FIREBASE_CLIENT_X509_CERT_URL=${{ secrets.FIREBASE_CLIENT_X509_CERT_URL }}" >> ${{ secrets.ENV_PATH }}
+
+#             echo "PUSHER_APP_ID=${{ secrets.PUSHER_APP_ID }}" >> ${{ secrets.ENV_PATH }}
+#             echo "PUSHER_KEY=${{ secrets.PUSHER_KEY }}" >> ${{ secrets.ENV_PATH }}
+#             echo "PUSHER_SECRET=${{ secrets.PUSHER_SECRET }}" >> ${{ secrets.ENV_PATH }}
+#             echo "PUSHER_CLUSTER=${{ secrets.PUSHER_CLUSTER }}" >> ${{ secrets.ENV_PATH }}
+
+#       - name: Restart Application
+#         uses: appleboy/ssh-action@v0.1.10
+#         with:
+#           host: ${{ secrets.SSH_HOST }}
+#           username: ${{ secrets.SSH_USER }}
+#           key: ${{ secrets.SSH_KEY }}
+#           port: ${{ secrets.SSH_PORT }}
+#           script: |
+#             export NVM_DIR="$HOME/.nvm"
+#             source $NVM_DIR/nvm.sh
+#             cd ${{ secrets.PROJECT_PATH }}
+#             pm2 restart 0
+#             pm2 save
