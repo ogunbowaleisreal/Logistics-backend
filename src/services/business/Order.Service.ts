@@ -25,7 +25,7 @@ const VALID_STATUSES: string[] = [
   "processing",
   "in-transit",
   "delivered",
-  "canceled",
+  "cancelled",
   "failed",
 ];
 
@@ -219,32 +219,7 @@ export class OrderService {
         });
       }
 
-      if (order.shippingType === "international") {
-        const senderPhone = order.personnelInformation.sender.phone;
-        const senderCountryCode = order.personnelInformation.sender.countryCode;
-        if (!senderPhone || !senderCountryCode) {
-          logger.warn(
-            `Order ${order.trackingID}: missing sender phone or country code — skipping WhatsApp status update`
-          );
-        } else {
-          const formattedNumber = toWhatsAppNumber(senderCountryCode, senderPhone);
-
-          if (!formattedNumber) {
-            logger.warn(
-              `Order ${order.trackingID}: invalid sender phone "${senderPhone}" for country "${senderCountryCode}" — skipping WhatsApp status update`
-            );
-          } else {
-            void whatsappService.sendOrderStatusUpdateTemplate({
-              to: formattedNumber,
-              customerName: order.personnelInformation.sender.name,
-              orderStatus: order.status,
-              trackingId: order.trackingID,
-              amount: order.totalAmount ?? 0,
-              trackingLink: `https://logisticspadi.com/${business?.slug}/track-order/${order.trackingID}`,
-            });
-          }
-        }
-      }
+      void whatsappService.sendWhatsAppStatusNotification(order, business);
 
       void sendOrderStatusSMS(order, status, business?.name);
 
@@ -261,6 +236,141 @@ export class OrderService {
       await session.endSession();
     }
   }
+
+  // ---- New private method, add it anywhere else inside the OrderService
+  // class — e.g. right below updateOrderStatus, before getOrders or after it,
+  // doesn't matter as long as it's a method on the same class. ----
+
+
+
+  // public async updateOrderStatus(businessId: string, payload: any) {
+  //   const { orderID, status } = payload;
+
+  //   const session = await startSession();
+
+  //   try {
+  //     const order = await session.withTransaction(async () => {
+  //       const existingOrder = await Order.findOne(
+  //         tenantScope({ _id: orderID }, businessId),
+  //       ).session(session);
+
+  //       if (!existingOrder) {
+  //         throw new AppError(404, "Order not found");
+  //       }
+
+  //       const { status: currentStatus } = existingOrder;
+
+  //       if (currentStatus === status) {
+  //         return existingOrder;
+  //       }
+
+  //       if (!VALID_STATUSES.includes(status)) {
+  //         throw new AppError(400, "Invalid order status");
+  //       }
+
+  //       const order = await Order.findOneAndUpdate(
+  //         tenantScope({ _id: orderID }, businessId),
+  //         { status },
+  //         { new: true, session },
+  //       );
+
+  //       if (!order) {
+  //         throw new AppError(404, "Order not found");
+  //       }
+
+  //       if (status === "paid") {
+  //         const business = await Business.findOneAndUpdate(
+  //           { _id: order.businessId, isDeleted: false },
+  //           { $inc: { "wallet.naira": order.amount } },
+  //           { session },
+  //         );
+
+  //         if (!business) {
+  //           throw new AppError(404, "Account not found");
+  //         }
+  //       }
+  //       if (status === "approved") {
+  //         const configuration = await businessConfigurationService.getConfiguration(
+  //           order.businessId.toString(),
+  //           session,
+  //         );
+
+  //         if (configuration.autoAssign) {
+  //           await riderAssignmentService.assignRider(
+  //             order.businessId.toString(),
+  //             order,
+  //             session,
+  //           );
+  //         }
+  //       }
+
+  //       await order.save({ session });
+
+  //       return order;
+  //     });
+
+  //     orderStatusUpdateEventEmitter.emit("business-update-order-status", {
+  //       businessId: businessId,
+  //       orderStatus: order.status,
+  //       orderTrackingID: order.trackingID,
+  //     });
+
+  //     const business = await Business.findById(businessId).lean();
+
+  //     if (order.personnelInformation.sender.email) {
+  //       void emailService.sendOrderStatusUpdate({
+  //         email: order.personnelInformation.sender.email,
+  //         name: order.personnelInformation.sender.name,
+  //         trackingID: order.trackingID,
+  //         status: order.status,
+  //         businessName: business?.name,
+  //         slug: business?.slug,
+  //         amount: order.totalAmount
+  //       });
+  //     }
+
+  //     if (order.shippingType === "international") {
+  //       const senderPhone = order.personnelInformation.sender.phone;
+  //       const senderCountryCode = order.personnelInformation.sender.countryCode;
+  //       if (!senderPhone || !senderCountryCode) {
+  //         logger.warn(
+  //           `Order ${order.trackingID}: missing sender phone or country code — skipping WhatsApp status update`
+  //         );
+  //       } else {
+  //         const formattedNumber = toWhatsAppNumber(senderCountryCode, senderPhone);
+
+  //         if (!formattedNumber) {
+  //           logger.warn(
+  //             `Order ${order.trackingID}: invalid sender phone "${senderPhone}" for country "${senderCountryCode}" — skipping WhatsApp status update`
+  //           );
+  //         } else {
+  //           void whatsappService.sendOrderStatusUpdateTemplate({
+  //             to: formattedNumber,
+  //             customerName: order.personnelInformation.sender.name,
+  //             orderStatus: order.status,
+  //             trackingId: order.trackingID,
+  //             amount: order.totalAmount ?? 0,
+  //             trackingLink: `https://logisticspadi.com/${business?.slug}/track-order/${order.trackingID}`,
+  //           });
+  //         }
+  //       }
+  //     }
+
+  //     void sendOrderStatusSMS(order, status, business?.name);
+
+  //     if ((status === "delivered" || status === "canceled") && order.riderID) {
+  //       void redisClient
+  //         .del(`rider-stats:${order.riderID}`)
+  //         .catch((error: any) =>
+  //           logger.warn(error?.message || "Redis delete failed"),
+  //         );
+  //     }
+
+  //     return order;
+  //   } finally {
+  //     await session.endSession();
+  //   }
+  // }
 
   public async changeRider(
     businessId: string,

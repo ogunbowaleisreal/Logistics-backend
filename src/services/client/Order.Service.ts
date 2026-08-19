@@ -213,15 +213,24 @@ export class OrderService {
             `Order ${order.trackingID}: invalid sender phone "${senderPhone}" for country "${senderCountryCode}" — skipping WhatsApp confirmation`
           );
         } else {
+
           void whatsappService.sendOrderConfirmationTemplate({
             to: formattedNumber,
             customerName: personnelInformation.sender.name,
             orderStatus: order.status,
             trackingId: order.trackingID,
             amount: order.totalAmount ?? 0,
-            // TODO: confirm this matches your real tracking URL pattern
-            trackingLink: `https://logisticspadi.com/${business?.slug}/track/${order.trackingID}`,
+            trackingLinkSuffix: `${business?.slug}/track-order/${order.trackingID}`,
           });
+          // void whatsappService.sendOrderConfirmationTemplate({
+          //   to: formattedNumber,
+          //   customerName: personnelInformation.sender.name,
+          //   orderStatus: order.status,
+          //   trackingId: order.trackingID,
+          //   amount: order.totalAmount ?? 0,
+          //   // TODO: confirm this matches your real tracking URL pattern
+          //   trackingLink: `https://logisticspadi.com/${business?.slug}/track-order/${order.trackingID}`,
+          // });
         }
       }
     }
