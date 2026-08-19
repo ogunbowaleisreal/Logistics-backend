@@ -1,5 +1,6 @@
 import logger from "../../logger";
 import { parsePhoneNumberFromString, CountryCode } from "libphonenumber-js";
+import { Rider } from "../models/Rider.Model";
 
 const GRAPH_API_VERSION = process.env.WHATSAPP_API_VERSION || "v23.0";
 const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN as string;
@@ -19,6 +20,8 @@ export type WhatsAppResponse = {
     messages: { id: string; message_status?: string }[];
 } | null;
 
+
+
 interface TemplateComponent {
     type: "header" | "body" | "button";
     sub_type?: "quick_reply" | "url";
@@ -32,9 +35,11 @@ export interface OrderConfirmationTemplateParams {
     orderStatus: string;
     trackingId: string;
     amount: string | number;
-    trackingLink: string;
+    trackingLinkSuffix: string;
     languageCode?: string;
 }
+
+
 
 export interface OrderStatusUpdateTemplateParams {
     to: string;
@@ -43,6 +48,69 @@ export interface OrderStatusUpdateTemplateParams {
     trackingId: string;
     amount: string | number;
     trackingLink: string;
+    languageCode?: string;
+}
+
+export interface OrderApprovedTemplateParams {
+    to: string;
+    customerName: string;
+    trackingId: string;
+    receiverName: string;
+    deliveryAddress: string;
+    businessName: string;
+    languageCode?: string;
+}
+
+export interface OrderProcessingTemplateParams {
+    to: string;
+    customerName: string;
+    trackingId: string;
+    receiverName: string;
+    deliveryAddress: string;
+    businessName: string;
+    languageCode?: string;
+}
+
+export interface OrderInTransitTemplateParams {
+    to: string;
+    customerName: string;
+    trackingId: string;
+    receiverName: string;
+    riderName: string;
+    businessName: string;
+    trackingLinkSuffix: string;
+    languageCode?: string;
+}
+
+export interface OrderDeliveredTemplateParams {
+    to: string;
+    customerName: string;
+    trackingId: string;
+    receiverName: string;
+    deliveredAt: string;
+    businessName: string;
+    languageCode?: string;
+}
+
+export interface DeliveryInTransitTemplateParams {
+    to: string;
+    receiverName: string;
+    senderName: string;
+    trackingId: string;
+    riderName: string;
+    riderPhone: string;
+    businessName: string;
+    trackingLinkSuffix: string;
+    languageCode?: string;
+}
+
+export interface DeliveryCompletedTemplateParams {
+    to: string;
+    receiverName: string;
+    senderName: string;
+    trackingId: string;
+    deliveredAt: string;
+    businessName: string;
     languageCode?: string;
 }
 
@@ -387,6 +455,142 @@ export class WhatsAppService {
         );
     }
 
+    async sendWhatsAppStatusNotification(order: any, business: any) {
+        if (order.shippingType !== "international") return;
+
+        const sender = order.personnelInformation.sender;
+        const receiver = order.personnelInformation.receiver;
+        const trackingLinkSuffix = `${business?.slug}/track-order/${order.trackingID}`;
+        const businessName = business?.name ?? "Logistics Padi"; // fallback if somehow missing
+
+        const senderNumber =
+            sender.phone && sender.countryCode
+                ? toWhatsAppNumber(sender.countryCode, sender.phone)
+                : null;
+        const receiverNumber =
+            receiver.phone && receiver.countryCode
+                ? toWhatsAppNumber(receiver.countryCode, receiver.phone)
+                : null;
+
+        if (sender.phone && sender.countryCode && !senderNumber) {
+            logger.warn(
+                `Order ${order.trackingID}: invalid sender phone "${sender.phone}" for country "${sender.countryCode}" — skipping WhatsApp`
+            );
+        }
+        if (receiver.phone && receiver.countryCode && !receiverNumber) {
+            logger.warn(
+                `Order ${order.trackingID}: invalid receiver phone "${receiver.phone}" for country "${receiver.countryCode}" — skipping WhatsApp`
+            );
+        }
+
+        switch (order.status) {
+            case "approved": {
+                if (!senderNumber) break;
+                void this.sendOrderApprovedTemplate({
+                    to: senderNumber,
+                    customerName: sender.name,
+                    trackingId: order.trackingID,
+                    receiverName: receiver.name,
+                    deliveryAddress: order.orderInformation?.dropoffLocation?.address ?? "",
+                    businessName,
+                });
+                break;
+            }
+
+            case "processing": {
+                if (!senderNumber) break;
+                void this.sendOrderProcessingTemplate({
+                    to: senderNumber,
+                    customerName: sender.name,
+                    trackingId: order.trackingID,
+                    receiverName: receiver.name,
+                    deliveryAddress: order.orderInformation?.dropoffLocation?.address ?? "",
+                    businessName,
+                });
+                break;
+            }
+
+            case "in-transit": {
+                let riderName = "Not yet assigned";
+                let riderPhone = "N/A";
+                if (order.riderID) {
+                    const rider = await Rider.findById(order.riderID).lean();
+                    riderName = rider?.name || "Not yet assigned";
+                    riderPhone = rider?.phone || "N/A";
+                }
+                if (riderName === "Not yet assigned") {
+                    logger.warn(
+                        `Order ${order.trackingID}: no rider assigned yet — WhatsApp in-transit templates will show placeholder rider info`
+                    );
+                }
+                // if (!riderName) {
+                //     logger.warn(
+                //         `Order ${order.trackingID}: no rider assigned yet — WhatsApp in-transit templates will show blank rider info`
+                //     );
+                // }
+
+                if (senderNumber) {
+                    void this.sendOrderInTransitTemplate({
+                        to: senderNumber,
+                        customerName: sender.name,
+                        trackingId: order.trackingID,
+                        receiverName: receiver.name,
+                        riderName,
+                        businessName,
+                        trackingLinkSuffix,
+                    });
+                }
+
+                if (receiverNumber) {
+                    void this.sendDeliveryInTransitTemplate({
+                        to: receiverNumber,
+                        receiverName: receiver.name,
+                        senderName: sender.name,
+                        trackingId: order.trackingID,
+                        riderName,
+                        riderPhone,
+                        businessName,
+                        trackingLinkSuffix,
+                    });
+                }
+                break;
+            }
+
+            case "delivered": {
+                const deliveredAt = new Date().toLocaleString("en-NG", {
+                    dateStyle: "medium",
+                    timeStyle: "short",
+                });
+
+                if (senderNumber) {
+                    void this.sendOrderDeliveredTemplate({
+                        to: senderNumber,
+                        customerName: sender.name,
+                        trackingId: order.trackingID,
+                        receiverName: receiver.name,
+                        deliveredAt,
+                        businessName,
+                    });
+                }
+
+                if (receiverNumber) {
+                    void this.sendDeliveryCompletedTemplate({
+                        to: receiverNumber,
+                        receiverName: receiver.name,
+                        senderName: sender.name,
+                        trackingId: order.trackingID,
+                        deliveredAt,
+                        businessName,
+                    });
+                }
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
     async sendOrderConfirmationTemplate(
         payload: OrderConfirmationTemplateParams
     ): Promise<WhatsAppResponse> {
@@ -396,7 +600,7 @@ export class WhatsAppService {
             orderStatus,
             trackingId,
             amount,
-            trackingLink,
+            trackingLinkSuffix,
             languageCode = "en",
         } = payload;
 
@@ -412,8 +616,14 @@ export class WhatsAppService {
                         { type: "text", parameter_name: "order_status", text: orderStatus },
                         { type: "text", parameter_name: "tracking_id", text: trackingId },
                         { type: "text", parameter_name: "amount", text: String(amount) },
-                        { type: "text", parameter_name: "tracking_link", text: trackingLink },
+                        //   { type: "text", parameter_name: "tracking_link", text: trackingLinkSuffix },
                     ],
+                },
+                {
+                    type: "button",
+                    sub_type: "url",
+                    index: "0",
+                    parameters: [{ type: "text", text: trackingLinkSuffix }],
                 },
             ],
         });
@@ -450,6 +660,316 @@ export class WhatsAppService {
             ],
         });
     }
+
+
+    async sendOrderApprovedTemplate(
+        payload: OrderApprovedTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const { to, customerName, trackingId, receiverName, deliveryAddress, businessName, languageCode = "en" } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "order_approved",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "customer_name", text: customerName },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "receiver_name", text: receiverName },
+                        { type: "text", parameter_name: "delivery_address", text: deliveryAddress },
+                        { type: "text", parameter_name: "business_name", text: businessName },
+                    ],
+                },
+            ],
+        });
+    }
+
+    async sendOrderProcessingTemplate(
+        payload: OrderProcessingTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const { to, customerName, trackingId, receiverName, deliveryAddress, businessName, languageCode = "en" } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "order_processing",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "customer_name", text: customerName },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "receiver_name", text: receiverName },
+                        { type: "text", parameter_name: "delivery_address", text: deliveryAddress },
+                        { type: "text", parameter_name: "business_name", text: businessName },
+                    ],
+                },
+            ],
+        });
+    }
+
+    async sendOrderInTransitTemplate(
+        payload: OrderInTransitTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const { to, customerName, trackingId, receiverName, riderName, businessName, trackingLinkSuffix, languageCode = "en" } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "order_in_transit",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "customer_name", text: customerName },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "receiver_name", text: receiverName },
+                        { type: "text", parameter_name: "rider_name", text: riderName },
+                        { type: "text", parameter_name: "business_name", text: businessName },
+                    ],
+                },
+                {
+                    type: "button",
+                    sub_type: "url",
+                    index: "0",
+                    parameters: [{ type: "text", text: trackingLinkSuffix }],
+                },
+            ],
+        });
+    }
+
+    async sendOrderDeliveredTemplate(
+        payload: OrderDeliveredTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const { to, customerName, trackingId, receiverName, deliveredAt, businessName, languageCode = "en" } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "order_delivered",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "customer_name", text: customerName },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "receiver_name", text: receiverName },
+                        { type: "text", parameter_name: "delivered_at", text: deliveredAt },
+                        { type: "text", parameter_name: "business_name", text: businessName },
+                    ],
+                },
+            ],
+        });
+    }
+
+    async sendDeliveryInTransitTemplate(
+        payload: DeliveryInTransitTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const { to, receiverName, senderName, trackingId, riderName, riderPhone, businessName, trackingLinkSuffix, languageCode = "en" } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "delivery_in_transit",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "receiver_name", text: receiverName },
+                        { type: "text", parameter_name: "sender_name", text: senderName },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "rider_name", text: riderName },
+                        { type: "text", parameter_name: "rider_phone", text: riderPhone },
+                        { type: "text", parameter_name: "business_name", text: businessName },
+                    ],
+                },
+                {
+                    type: "button",
+                    sub_type: "url",
+                    index: "0",
+                    parameters: [{ type: "text", text: trackingLinkSuffix }],
+                },
+            ],
+        });
+    }
+
+    async sendDeliveryCompletedTemplate(
+        payload: DeliveryCompletedTemplateParams
+    ): Promise<WhatsAppResponse> {
+        const { to, receiverName, senderName, trackingId, deliveredAt, businessName, languageCode = "en" } = payload;
+
+        return this.sendTemplateMessage({
+            to,
+            templateName: "delivery_completed",
+            languageCode,
+            components: [
+                {
+                    type: "body",
+                    parameters: [
+                        { type: "text", parameter_name: "receiver_name", text: receiverName },
+                        { type: "text", parameter_name: "sender_name", text: senderName },
+                        { type: "text", parameter_name: "tracking_id", text: trackingId },
+                        { type: "text", parameter_name: "delivered_at", text: deliveredAt },
+                        { type: "text", parameter_name: "business_name", text: businessName },
+                    ],
+                },
+            ],
+        });
+    }
+
+
+    // async sendOrderApprovedTemplate(
+    //     payload: OrderApprovedTemplateParams
+    // ): Promise<WhatsAppResponse> {
+    //     const { to, customerName, trackingId, receiverName, deliveryAddress, languageCode = "en" } = payload;
+
+    //     return this.sendTemplateMessage({
+    //         to,
+    //         templateName: "order_approved",
+    //         languageCode,
+    //         components: [
+    //             {
+    //                 type: "body",
+    //                 parameters: [
+    //                     { type: "text", parameter_name: "customer_name", text: customerName },
+    //                     { type: "text", parameter_name: "tracking_id", text: trackingId },
+    //                     { type: "text", parameter_name: "receiver_name", text: receiverName },
+    //                     { type: "text", parameter_name: "delivery_address", text: deliveryAddress },
+    //                 ],
+    //             },
+    //         ],
+    //     });
+    // }
+
+    // async sendOrderProcessingTemplate(
+    //     payload: OrderProcessingTemplateParams
+    // ): Promise<WhatsAppResponse> {
+    //     const { to, customerName, trackingId, receiverName, deliveryAddress, languageCode = "en" } = payload;
+
+    //     return this.sendTemplateMessage({
+    //         to,
+    //         templateName: "order_processing",
+    //         languageCode,
+    //         components: [
+    //             {
+    //                 type: "body",
+    //                 parameters: [
+    //                     { type: "text", parameter_name: "customer_name", text: customerName },
+    //                     { type: "text", parameter_name: "tracking_id", text: trackingId },
+    //                     { type: "text", parameter_name: "receiver_name", text: receiverName },
+    //                     { type: "text", parameter_name: "delivery_address", text: deliveryAddress },
+    //                 ],
+    //             },
+    //         ],
+    //     });
+    // }
+
+    // async sendOrderInTransitTemplate(
+    //     payload: OrderInTransitTemplateParams
+    // ): Promise<WhatsAppResponse> {
+    //     const { to, customerName, trackingId, receiverName, riderName, trackingLinkSuffix, languageCode = "en" } = payload;
+
+    //     return this.sendTemplateMessage({
+    //         to,
+    //         templateName: "order_in_transit",
+    //         languageCode,
+    //         components: [
+    //             {
+    //                 type: "body",
+    //                 parameters: [
+    //                     { type: "text", parameter_name: "customer_name", text: customerName },
+    //                     { type: "text", parameter_name: "tracking_id", text: trackingId },
+    //                     { type: "text", parameter_name: "receiver_name", text: receiverName },
+    //                     { type: "text", parameter_name: "rider_name", text: riderName },
+    //                 ],
+    //             },
+    //             {
+    //                 type: "button",
+    //                 sub_type: "url",
+    //                 index: "0",
+    //                 parameters: [{ type: "text", text: trackingLinkSuffix }],
+    //             },
+    //         ],
+    //     });
+    // }
+
+    // async sendOrderDeliveredTemplate(
+    //     payload: OrderDeliveredTemplateParams
+    // ): Promise<WhatsAppResponse> {
+    //     const { to, customerName, trackingId, receiverName, deliveredAt, languageCode = "en" } = payload;
+
+    //     return this.sendTemplateMessage({
+    //         to,
+    //         templateName: "order_delivered",
+    //         languageCode,
+    //         components: [
+    //             {
+    //                 type: "body",
+    //                 parameters: [
+    //                     { type: "text", parameter_name: "customer_name", text: customerName },
+    //                     { type: "text", parameter_name: "tracking_id", text: trackingId },
+    //                     { type: "text", parameter_name: "receiver_name", text: receiverName },
+    //                     { type: "text", parameter_name: "delivered_at", text: deliveredAt },
+    //                 ],
+    //             },
+    //         ],
+    //     });
+    // }
+
+    // async sendDeliveryInTransitTemplate(
+    //     payload: DeliveryInTransitTemplateParams
+    // ): Promise<WhatsAppResponse> {
+    //     const { to, receiverName, senderName, trackingId, riderName, riderPhone, trackingLinkSuffix, languageCode = "en" } = payload;
+
+    //     return this.sendTemplateMessage({
+    //         to,
+    //         templateName: "delivery_in_transit",
+    //         languageCode,
+    //         components: [
+    //             {
+    //                 type: "body",
+    //                 parameters: [
+    //                     { type: "text", parameter_name: "receiver_name", text: receiverName },
+    //                     { type: "text", parameter_name: "sender_name", text: senderName },
+    //                     { type: "text", parameter_name: "tracking_id", text: trackingId },
+    //                     { type: "text", parameter_name: "rider_name", text: riderName },
+    //                     { type: "text", parameter_name: "rider_phone", text: riderPhone },
+    //                 ],
+    //             },
+    //             {
+    //                 type: "button",
+    //                 sub_type: "url",
+    //                 index: "0",
+    //                 parameters: [{ type: "text", text: trackingLinkSuffix }],
+    //             },
+    //         ],
+    //     });
+    // }
+
+    // async sendDeliveryCompletedTemplate(
+    //     payload: DeliveryCompletedTemplateParams
+    // ): Promise<WhatsAppResponse> {
+    //     const { to, receiverName, senderName, trackingId, deliveredAt, languageCode = "en" } = payload;
+
+    //     return this.sendTemplateMessage({
+    //         to,
+    //         templateName: "delivery_completed",
+    //         languageCode,
+    //         components: [
+    //             {
+    //                 type: "body",
+    //                 parameters: [
+    //                     { type: "text", parameter_name: "receiver_name", text: receiverName },
+    //                     { type: "text", parameter_name: "sender_name", text: senderName },
+    //                     { type: "text", parameter_name: "tracking_id", text: trackingId },
+    //                     { type: "text", parameter_name: "delivered_at", text: deliveredAt },
+    //                 ],
+    //             },
+    //         ],
+    //     });
+    // }
 
 
     // Small helper — WhatsApp wants E.164 digits only, no leading '+'

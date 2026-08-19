@@ -17,7 +17,8 @@ router
   .get(businessVerification, getBanks)
   .delete(businessVerification, deleteBank);
 
-router.patch("/default", businessVerification, setDefaultBank);
+router.patch("/default", businessVerification,
+  setDefaultBank);
 
 
 router
