@@ -43,6 +43,7 @@ export interface IBusiness extends Document {
     };
   };
   isDeleted: boolean;
+  createdAt: Date;
   __v?: number;
 }
 

@@ -18,6 +18,7 @@ import {
   orderStatusUpdateTemplate,
   paymentReviewNotificationTemplate,
   withdrawalSuccessEmailTemplate,
+  newBusinessRegisteredAdminTemplate
 } from "../utilities/EmailTemplates";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -114,6 +115,37 @@ export class EmailService {
       logger.info(`Business verification email sent to: ${email}`);
     } catch (error: any) {
       logger.error(`Business verification email error: ${error.message}`);
+    }
+  }
+
+  async sendNewBusinessAdminNotification(business: {
+    name: string;
+    username?: string;
+    slug?: string;
+    email: string;
+    phone?: string;
+    status: string;
+    kycStatus?: string;
+    authProvider?: string;
+    createdAt: Date;
+  }): Promise<void> {
+    const adminEmail = process.env.SUPER_ADMIN_EMAIL;
+
+    if (!adminEmail) {
+      logger.error("SUPER_ADMIN_EMAIL is not set; skipping admin notification email");
+      return;
+    }
+
+    try {
+      await resend.emails.send({
+        from: `LogisticsPadi <${from}>`,
+        to: adminEmail,
+        subject: `New Business Registered: ${business.name}`,
+        html: newBusinessRegisteredAdminTemplate(business),
+      });
+      logger.info(`Admin notified of new business registration: ${business.name}`);
+    } catch (error: any) {
+      logger.error(`Admin business notification email error: ${error.message}`);
     }
   }
 
