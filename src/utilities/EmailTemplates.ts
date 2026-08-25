@@ -329,6 +329,79 @@ export function businessWelcomeEmailTemplate(
   });
 }
 
+export function newBusinessRegisteredAdminTemplate(
+  business: {
+    name: string;
+    username?: string;
+    slug?: string;
+    email: string;
+    phone?: string;
+    status: string;
+    kycStatus?: string;
+    authProvider?: string;
+    createdAt: Date;
+  },
+  brand?: string,
+  logoUrl?: string
+): string {
+  const {
+    name,
+    username,
+    slug,
+    email,
+    phone,
+    status,
+    kycStatus,
+    authProvider,
+    createdAt,
+  } = business;
+
+  return emailLayout({
+    previewText: `New business registered: ${name}`,
+    bodyHtml: `
+      ${heading(`New Business Registration`)}
+      ${paragraph(`A new business just signed up on LogisticsPadi and is awaiting review.`)}
+      ${detailsBox([
+      { label: "Business Name", value: name },
+      { label: "Username", value: username || "—" },
+      { label: "Slug", value: slug || "—" },
+      { label: "Email", value: email },
+      { label: "Phone", value: phone || "—" },
+      { label: "Auth Provider", value: authProvider || "local" },
+      { label: "Status", value: status },
+      { label: "KYC Status", value: kycStatus || "not-submitted" },
+      { label: "Registered At", value: createdAt.toUTCString() },
+    ])}
+      ${paragraph("Please review this business in the admin dashboard.")}
+    `,
+    brand: brand || "LogisticsPadi",
+    logoUrl,
+  });
+}
+
+function detailsBox(
+  rows: { label: string; value: string }[]
+): string {
+  return `
+    <table cellpadding="0" cellspacing="0" style="width:100%; margin: 20px 0; border-collapse: collapse;">
+      ${rows
+      .map(
+        (row) => `
+        <tr>
+          <td style="padding: 10px 14px; background:#f9fafb; border:1px solid #eee; font-size:14px; color:#666; width:40%;">
+            ${row.label}
+          </td>
+          <td style="padding: 10px 14px; background:#fff; border:1px solid #eee; font-size:14px; color:#111; font-weight:600;">
+            ${row.value}
+          </td>
+        </tr>
+      `
+      )
+      .join("")}
+    </table>
+  `;
+}
+
 export function businessLoginOTPTemplate(
   otp: string,
   brand?: string,

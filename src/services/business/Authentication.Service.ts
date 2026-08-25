@@ -67,6 +67,17 @@ export class BusinessAuthenticationService {
     const otp = this.authenticationTokenGenerator.generateOTP(6);
     await this.cacheService.cacheBizEmailVerificationOTP(email, otp);
     await this.emailService.sendBusinessEmailVerification({ email, otp, name });
+    await this.emailService.sendNewBusinessAdminNotification({
+      name: business.name,
+      username: business.username,
+      slug: business.slug,
+      email: business.email,
+      phone: business.phone,
+      status: business.status,
+      kycStatus: business.kycStatus,
+      authProvider: business.authProvider,
+      createdAt: business.createdAt,
+    });
 
     return business;
   }
