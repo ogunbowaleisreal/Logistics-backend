@@ -86,3 +86,81 @@ export const deleteGlobalZone = async (
     next(error);
   }
 };
+
+export const bulkUpsertGlobalWeightBrackets = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
+    const brackets = await globalShippingZoneService.bulkUpsertWeightBrackets(
+      id,
+      req.body.brackets,
+    );
+    return res.status(200).json({
+      message: "Global weight brackets updated successfully",
+      data: brackets,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const getGlobalWeightBrackets = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id } = req.params;
+    const brackets = await globalShippingZoneService.getWeightBrackets(id);
+    return res.status(200).json({
+      message: "Global weight brackets fetched successfully",
+      data: brackets,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const updateGlobalWeightBracket = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id, bracketId } = req.params;
+    const brackets = await globalShippingZoneService.updateWeightBracket(
+      id,
+      bracketId,
+      req.body,
+    );
+    return res.status(200).json({
+      message: "Global weight bracket updated successfully",
+      data: brackets,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+export const deleteGlobalWeightBracket = async (
+  req: ExtendedRequest | any,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    const { id, bracketId } = req.params;
+    const brackets = await globalShippingZoneService.deleteWeightBracket(
+      id,
+      bracketId,
+    );
+    return res.status(200).json({
+      message: "Global weight bracket deleted successfully",
+      data: brackets,
+    });
+  } catch (error: any) {
+    next(error);
+  }
+};

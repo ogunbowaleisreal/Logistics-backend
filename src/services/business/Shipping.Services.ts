@@ -6,6 +6,10 @@ import {
 } from "../../models/Shippings.model";
 import { GlobalShippingZone } from "../../models/GlobalShippingZone.model";
 import AppError from "../../utilities/ErrorHandler";
+import {
+  validateNoInternalOverlaps,
+  assertNoOverlapWithExisting,
+} from "../../utilities/weightBrackets.util";
 
 // interface IRateInput {
 //   key: string;
@@ -154,6 +158,69 @@ export class ShippingService {
     return a.minKg <= b.maxKg && a.maxKg >= b.minKg;
   }
 
+  // public async bulkUpsertWeightBrackets(
+  //   businessId: string,
+  //   zoneId: string,
+  //   incoming: {
+  //     rideType: "bike" | "bus_car" | "truck";
+  //     minKg: number;
+  //     maxKg: number;
+  //     amount: number;
+  //   }[],
+  // ) {
+  //   const zone = await BusinessShippingZone.findOne({
+  //     _id: zoneId,
+  //     businessId,
+  //   });
+  //   if (!zone) throw new AppError(404, "Zone not found");
+
+  //   // Check for overlaps within the incoming array itself
+  //   for (let i = 0; i < incoming.length; i++) {
+  //     for (let j = i + 1; j < incoming.length; j++) {
+  //       const a = incoming[i];
+  //       const b = incoming[j];
+  //       if (
+  //         a.rideType === b.rideType &&
+  //         !(a.minKg === b.minKg && a.maxKg === b.maxKg) &&
+  //         this.bracketsOverlap(a, b)
+  //       ) {
+  //         throw new AppError(
+  //           400,
+  //           `Overlapping weight brackets in request for rideType '${a.rideType}'`,
+  //         );
+  //       }
+  //     }
+  //   }
+
+  //   for (const bracket of incoming) {
+  //     const existingIndex = zone.weightBrackets.findIndex(
+  //       (b) =>
+  //         b.rideType === bracket.rideType &&
+  //         b.minKg === bracket.minKg &&
+  //         b.maxKg === bracket.maxKg,
+  //     );
+
+  //     if (existingIndex !== -1) {
+  //       zone.weightBrackets[existingIndex].amount = bracket.amount;
+  //     } else {
+  //       const overlaps = zone.weightBrackets.some(
+  //         (b) =>
+  //           b.rideType === bracket.rideType && this.bracketsOverlap(b, bracket),
+  //       );
+  //       if (overlaps) {
+  //         throw new AppError(
+  //           400,
+  //           `Overlapping weight bracket exists for rideType '${bracket.rideType}' (${bracket.minKg}–${bracket.maxKg} kg)`,
+  //         );
+  //       }
+  //       zone.weightBrackets.push(bracket);
+  //     }
+  //   }
+
+  //   await zone.save();
+  //   return zone.weightBrackets;
+  // }
+
   public async bulkUpsertWeightBrackets(
     businessId: string,
     zoneId: string,
@@ -170,23 +237,7 @@ export class ShippingService {
     });
     if (!zone) throw new AppError(404, "Zone not found");
 
-    // Check for overlaps within the incoming array itself
-    for (let i = 0; i < incoming.length; i++) {
-      for (let j = i + 1; j < incoming.length; j++) {
-        const a = incoming[i];
-        const b = incoming[j];
-        if (
-          a.rideType === b.rideType &&
-          !(a.minKg === b.minKg && a.maxKg === b.maxKg) &&
-          this.bracketsOverlap(a, b)
-        ) {
-          throw new AppError(
-            400,
-            `Overlapping weight brackets in request for rideType '${a.rideType}'`,
-          );
-        }
-      }
-    }
+    validateNoInternalOverlaps(incoming);
 
     for (const bracket of incoming) {
       const existingIndex = zone.weightBrackets.findIndex(
@@ -199,16 +250,7 @@ export class ShippingService {
       if (existingIndex !== -1) {
         zone.weightBrackets[existingIndex].amount = bracket.amount;
       } else {
-        const overlaps = zone.weightBrackets.some(
-          (b) =>
-            b.rideType === bracket.rideType && this.bracketsOverlap(b, bracket),
-        );
-        if (overlaps) {
-          throw new AppError(
-            400,
-            `Overlapping weight bracket exists for rideType '${bracket.rideType}' (${bracket.minKg}–${bracket.maxKg} kg)`,
-          );
-        }
+        assertNoOverlapWithExisting(zone.weightBrackets, bracket);
         zone.weightBrackets.push(bracket);
       }
     }
