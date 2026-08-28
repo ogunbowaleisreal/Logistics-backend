@@ -20,6 +20,9 @@ import publicRoute from "./routes/public/index.route";
 import AppError from "./utilities/ErrorHandler";
 import { v4 as uuidv4 } from "uuid";
 import { startRiderResetJob } from "./jobs/RiderReset.Job";
+import { startAnnouncementCron } from "./jobs/announcementCron";
+// ...
+
 
 class App {
   public app: Application;
@@ -30,6 +33,7 @@ class App {
     this.setupDB();
     this.setupCache();
     startRiderResetJob();
+    startAnnouncementCron();
     this.setupRoutes();
   }
 

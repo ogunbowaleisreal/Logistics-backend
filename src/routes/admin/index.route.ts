@@ -1,6 +1,7 @@
 import { Router } from "express";
 import adminRoute from "./admin.route";
 import adminAuthRoute from "./authentication.route";
+import announcementRoutes from "./announcememt.route"
 import roleRoute from "./role.route";
 import faqRoute from "./faq.route";
 import bannerRoute from "./banner.route";
@@ -21,6 +22,7 @@ const router = Router();
 router.use("/", adminRoute);
 router.use("/auth", adminAuthRoute);
 router.use("/roles", roleRoute);
+router.use("/announcements", announcementRoutes);
 router.use("/faq", faqRoute);
 router.use("/banners", bannerRoute);
 router.use("/banks", bankRoute);

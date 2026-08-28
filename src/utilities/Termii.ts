@@ -5,12 +5,46 @@ const TERMII_SMS_URL = "https://api.ng.termii.com/api/sms/send";
 const BRAND_NAME = "LogisticsPadi";
 
 class TermiiService {
-  private async send(to: string, message: string): Promise<void> {
+  // private async send(to: string, message: string): Promise<void> {
+  //   const apiKey = process.env.TERMII_API_KEY;
+
+  //   if (!apiKey) {
+  //     logger.error("TERMII_API_KEY is not configured; skipping SMS send");
+  //     return;
+  //   }
+
+  //   try {
+  //     await axios.post(
+  //       TERMII_SMS_URL,
+  //       {
+  //         to: this.toInternationalFormat(to),
+  //         from: "BillPadi",
+  //         sms: message,
+  //         type: "plain",
+  //         api_key: apiKey,
+  //         channel: "generic",
+  //       },
+  //       {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       },
+  //     );
+  //   } catch (error: any) {
+  //     console.log(error)
+  //     logger.error(
+  //       `Termii SMS send failed for ${to}: ${error?.message || "Unknown error"}`,
+  //     );
+  //   }
+  // }
+
+  // change this method's signature and catch block:
+  private async send(to: string, message: string): Promise<boolean> {
     const apiKey = process.env.TERMII_API_KEY;
 
     if (!apiKey) {
       logger.error("TERMII_API_KEY is not configured; skipping SMS send");
-      return;
+      return false;
     }
 
     try {
@@ -30,12 +64,53 @@ class TermiiService {
           },
         },
       );
+      return true;
     } catch (error: any) {
       console.log(error)
       logger.error(
         `Termii SMS send failed for ${to}: ${error?.message || "Unknown error"}`,
       );
+      return false;
     }
+  }
+
+  // add this new public method anywhere in the class:
+  public async sendBulk(
+    recipients: string[],
+    message: string,
+    options?: { concurrency?: number; delayMs?: number }
+  ): Promise<{ success: number; failed: number; errors: string[] }> {
+    const concurrency = options?.concurrency ?? 10;
+    const delayMs = options?.delayMs ?? 400;
+    const errors: string[] = [];
+    let success = 0;
+
+    for (let i = 0; i < recipients.length; i += concurrency) {
+      const batch = recipients.slice(i, i + concurrency);
+
+      const results = await Promise.allSettled(
+        batch.map((to) => this.send(to, message))
+      );
+
+      results.forEach((result, idx) => {
+        if (result.status === "fulfilled" && result.value) {
+          success++;
+        } else {
+          errors.push(batch[idx]);
+        }
+      });
+
+      // brief pause between batches so we don't hammer Termii's rate limit
+      if (i + concurrency < recipients.length) {
+        await new Promise((res) => setTimeout(res, delayMs));
+      }
+    }
+
+    logger.info(
+      `Termii bulk SMS complete: ${success} sent, ${errors.length} failed`
+    );
+
+    return { success, failed: errors.length, errors };
   }
 
   private toInternationalFormat(phone: string, countryCode = "234"): string {

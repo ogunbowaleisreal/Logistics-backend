@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { adminVerification } from "../../middlewares/authorization.middleware";
+import { roleVerification } from "../../middlewares/authorization.middleware";
 import { validate } from "../../middlewares/validation.middleware";
 import {
   createGlobalZoneSchema,
@@ -23,20 +23,28 @@ const router = Router();
 
 router
   .route("/")
-  .get(adminVerification, getGlobalZones)
-  .post(adminVerification, validate(createGlobalZoneSchema, "body"), createGlobalZone);
+  .get(roleVerification("GETGBLZONE"), getGlobalZones)
+  .post(
+    roleVerification("CRTGBLZONE"),
+    validate(createGlobalZoneSchema, "body"),
+    createGlobalZone,
+  );
 
 router
   .route("/:id")
-  .get(adminVerification, getGlobalZone)
-  .patch(adminVerification, validate(updateGlobalZoneSchema, "body"), updateGlobalZone)
-  .delete(adminVerification, deleteGlobalZone);
+  .get(roleVerification("GETGBLZONE"), getGlobalZone)
+  .patch(
+    roleVerification("UPTGBLZONE"),
+    validate(updateGlobalZoneSchema, "body"),
+    updateGlobalZone,
+  )
+  .delete(roleVerification("DELGBLZONE"), deleteGlobalZone);
 
 router
   .route("/:id/weight-brackets")
-  .get(adminVerification, getGlobalWeightBrackets)
+  .get(roleVerification("GETGBLBRACKET"), getGlobalWeightBrackets)
   .post(
-    adminVerification,
+    roleVerification("UPTGBLBRACKET"),
     validate(bulkUpsertGlobalWeightBracketsSchema, "body"),
     bulkUpsertGlobalWeightBrackets,
   );
@@ -44,11 +52,10 @@ router
 router
   .route("/:id/weight-brackets/:bracketId")
   .patch(
-    adminVerification,
+    roleVerification("UPTGBLBRACKET"),
     validate(updateGlobalWeightBracketSchema, "body"),
     updateGlobalWeightBracket,
   )
-  .delete(adminVerification, deleteGlobalWeightBracket);
+  .delete(roleVerification("DELGBLBRACKET"), deleteGlobalWeightBracket);
 
 export default router;
-

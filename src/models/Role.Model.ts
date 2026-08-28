@@ -21,6 +21,22 @@ export const Permissions = [
   { code: "GETBUSINESS", name: "GET BUSINESSES" },
   { code: "UPTBUSINESS", name: "UPDATE BUSINESS STATUS" },
   { code: "DELBUSINESS", name: "DELETE BUSINESS" },
+
+  // Announcement
+  { code: "CREATEANNOUNCEMENT", name: "CREATE ANNOUNCEMENT" },
+  { code: "GETANNOUNCEMENT", name: "GET ANNOUNCEMENTS" },
+  { code: "SENDANNOUNCEMENT", name: "SEND ANNOUNCEMENT" },
+  { code: "RESENDANNOUNCEMENT", name: "RESEND ANNOUNCEMENT" },
+  { code: "DELANNOUNCEMENT", name: "DELETE ANNOUNCEMENT" },
+
+  // Global Shipping Zones
+  { code: "CRTGBLZONE", name: "CREATE GLOBAL SHIPPING ZONE" },
+  { code: "GETGBLZONE", name: "GET GLOBAL SHIPPING ZONES" },
+  { code: "UPTGBLZONE", name: "UPDATE GLOBAL SHIPPING ZONE" },
+  { code: "DELGBLZONE", name: "DELETE GLOBAL SHIPPING ZONE" },
+  { code: "GETGBLBRACKET", name: "GET GLOBAL WEIGHT BRACKETS" },
+  { code: "UPTGBLBRACKET", name: "CREATE OR UPDATE GLOBAL WEIGHT BRACKET" },
+  { code: "DELGBLBRACKET", name: "DELETE GLOBAL WEIGHT BRACKET" },
 ];
 
 // Interface for the Role document
