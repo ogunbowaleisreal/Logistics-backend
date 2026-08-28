@@ -123,7 +123,7 @@ const AnnouncementSchema = new Schema<IAnnouncement>(
 
         createdBy: {
             type: Schema.Types.ObjectId,
-            ref: "Admin",
+            ref: "Admins",
             required: true,
         },
 
