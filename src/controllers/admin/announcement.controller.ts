@@ -11,7 +11,7 @@ export const createAnnouncement = async (
     const { adminID } = req.admin;
 
     try {
-        const announcement = await announcementService.createAnnouncement({
+        const announcement = await announcementService.createAdminAnnouncement({
             ...req.body,
             createdBy: adminID,
         });

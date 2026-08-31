@@ -129,6 +129,22 @@ export class StaffRoleService {
     return await role.save();
   }
 
+  public async addPermissionsToExistingRoles(
+    additions: Partial<Record<StaffRoleTypeValue, string[]>>,
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+
+    for (const [type, permissions] of Object.entries(additions)) {
+      const result = await StaffRole.updateMany(
+        { type },
+        { $addToSet: { permissions: { $each: permissions } } },
+      );
+      updated += result.modifiedCount;
+    }
+
+    return { updated };
+  }
+
   public async getRoles(businessId: string, filter: any) {
     const { roleId, title, page, limit } = filter;
 

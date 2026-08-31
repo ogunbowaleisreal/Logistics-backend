@@ -37,6 +37,10 @@ export const Permissions = [
   { code: "GETGBLBRACKET", name: "GET GLOBAL WEIGHT BRACKETS" },
   { code: "UPTGBLBRACKET", name: "CREATE OR UPDATE GLOBAL WEIGHT BRACKET" },
   { code: "DELGBLBRACKET", name: "DELETE GLOBAL WEIGHT BRACKET" },
+
+  //Platform Configuration
+  { code: "GETPLATFORMCFG", name: "GET PLATFORM CONFIGURATION" },
+  { code: "UPTPLATFORMCFG", name: "UPDATE PLATFORM CONFIGURATION" },
 ];
 
 // Interface for the Role document

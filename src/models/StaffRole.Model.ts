@@ -74,6 +74,13 @@ export const StaffPermissions = [
   { code: "UPTSHIPPING", name: "UPDATE SHIPPING" },
   { code: "GETSHIPPINGS", name: "GET SHIPPINGS" },
   { code: "DELSHIPPING", name: "DELETE SHIPPING" },
+
+  // Announcements
+  { code: "CRTANNOUNCEMENT", name: "CREATE ANNOUNCEMENT" },
+  { code: "GETANNOUNCEMENT", name: "GET ANNOUNCEMENTS" },
+  { code: "SENDANNOUNCEMENT", name: "SEND ANNOUNCEMENT" },
+  { code: "RESENDANNOUNCEMENT", name: "RESEND ANNOUNCEMENT" },
+  { code: "DELANNOUNCEMENT", name: "DELETE ANNOUNCEMENT" },
 ];
 
 export interface IStaffRole extends Document {

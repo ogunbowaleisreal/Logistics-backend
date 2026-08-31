@@ -18,6 +18,7 @@ import privacyPolicyRoute from "./privacyPolicy.route";
 import termsAndConditionsRoute from "./termsAndConditions.route";
 import withdrawalRoute from "./withdrawal.route";
 import globalShippingZoneRoute from "./globalShippingZone.route";
+import announcementRoutes from "./announcements.routes";
 
 const router = Router();
 
@@ -25,6 +26,7 @@ router.use("/auth", businessAuthRoute);
 router.use("/dashboard", dashboardRoute);
 router.use("/profile", businessProfileRoute);
 router.use("/staff/auth", staffAuthRoute);
+router.use("/announcements", announcementRoutes);
 router.use("/staff", staffRoute);
 router.use("/roles", staffRoleRoute);
 router.use("/orders", orderRoute);
