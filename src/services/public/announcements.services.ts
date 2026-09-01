@@ -118,7 +118,7 @@ export class AnnouncementService {
         const announcement = await Announcement.create({
             ...data,
             creatorType: "admin",
-            createdByModel: "Admin",
+            createdByModel: "Admins",
             status: "pending",
         }) as any;
 

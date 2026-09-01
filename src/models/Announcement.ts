@@ -101,7 +101,7 @@ const AnnouncementSchema = new Schema<IAnnouncement>(
         },
         createdByModel: {
             type: String,
-            enum: ["Admin", "Staff", "Business"],
+            enum: ["Admins", "Staff", "Business"],
             required: true,
         },
         createdBy: {
