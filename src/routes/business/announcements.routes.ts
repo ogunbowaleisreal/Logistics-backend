@@ -4,6 +4,7 @@ import {
     getAnnouncements,
     sendAnnouncement,
     resendAnnouncement,
+    updateAnnouncement,
     deleteAnnouncement,
 } from "../../controllers/business/announcement.controller";
 import { staffRoleVerification } from "../../middlewares/authorization.middleware";
@@ -25,6 +26,7 @@ router
 
 router
     .route("/:announcementId")
+    .patch(staffRoleVerification("UPDANNOUNCEMENT"), updateAnnouncement)
     .delete(staffRoleVerification("DELANNOUNCEMENT"), deleteAnnouncement);
 
 export default router;

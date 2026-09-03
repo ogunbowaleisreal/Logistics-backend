@@ -480,6 +480,200 @@ export class AnnouncementService {
         };
     }
 
+    // ================= UPDATE (edit before send) =================
+
+    async updateAnnouncement(
+        announcementId: string,
+        data: Partial<{
+            title: string;
+            message: string;
+            channel: "email" | "sms" | "push" | "inapp";
+            audience:
+            | "all_businesses"
+            | "active_businesses"
+            | "suspended_businesses"
+            | "pending_businesses"
+            | "verified_email_businesses"
+            | "unverified_email_businesses"
+            | "kyc_verified_businesses"
+            | "customers"
+            | "specific"
+            | "specific_customers";
+            specificBusinesses: string[];
+            customerType: "sender" | "receiver" | "both";
+            specificCustomers: { orderId: string; type: "sender" | "receiver" }[];
+            announcementStartAt: Date;
+        }>,
+        requestingBusinessId?: string // set only when a business is editing — enforces ownership
+    ) {
+
+        const announcement = await Announcement.findById(announcementId);
+
+        if (!announcement) {
+            throw new Error("Announcement not found");
+        }
+
+        if (
+            requestingBusinessId &&
+            announcement.businessId?.toString() !== requestingBusinessId
+        ) {
+            throw new Error("You are not authorized to update this announcement");
+        }
+
+        if (announcement.status !== "pending") {
+            throw new Error(
+                `Cannot update an announcement that is already "${announcement.status}". Only pending announcements can be edited.`
+            );
+        }
+
+        const isBusinessAnnouncement = announcement.creatorType === "business";
+
+        // Merge incoming changes with existing values so we validate the
+        // resulting state, not just the diff.
+        const merged = {
+            channel: data.channel ?? announcement.channel,
+            audience: data.audience ?? announcement.audience,
+            customerType: data.customerType ?? announcement.customerType,
+            specificCustomers:
+                data.specificCustomers ??
+                announcement.specificCustomers?.map(c => ({
+                    orderId: c.orderId.toString(),
+                    type: c.type,
+                })),
+            specificBusinesses:
+                data.specificBusinesses ??
+                announcement.specificBusinesses?.map(b => b.toString()),
+        };
+
+        if (!IMPLEMENTED_CHANNELS.includes(merged.channel as any)) {
+            throw new Error(
+                `The "${merged.channel}" channel is not implemented yet`
+            );
+        }
+
+        if (
+            isBusinessAnnouncement &&
+            !BUSINESS_ALLOWED_AUDIENCES.includes(merged.audience as any)
+        ) {
+            throw new Error(
+                `Businesses can only target "customers" or "specific_customers"`
+            );
+        }
+
+        if (
+            merged.audience === "specific" &&
+            (!merged.specificBusinesses || !merged.specificBusinesses.length)
+        ) {
+            throw new Error(
+                "specificBusinesses is required when audience is specific"
+            );
+        }
+
+        if (merged.audience === "customers") {
+            if (!merged.customerType) {
+                throw new Error(
+                    "customerType (sender, receiver, or both) is required when audience is customers"
+                );
+            }
+            if (merged.channel === "email" && merged.customerType === "receiver") {
+                throw new Error(
+                    "Email announcements cannot target receiver-only customers — receivers have no email on file. Use SMS, or target senders instead."
+                );
+            }
+        }
+
+        if (merged.audience === "specific_customers") {
+
+            if (!merged.specificCustomers || !merged.specificCustomers.length) {
+                throw new Error(
+                    "specificCustomers is required when audience is specific_customers"
+                );
+            }
+
+            if (merged.channel === "email") {
+                const receiverEntries = merged.specificCustomers.filter(
+                    c => c.type === "receiver"
+                );
+                if (receiverEntries.length) {
+                    throw new Error(
+                        `Email announcements cannot include receiver-type entries — receivers have no email on file (order(s): ${receiverEntries
+                            .map(c => c.orderId)
+                            .join(", ")})`
+                    );
+                }
+            }
+
+            // Ownership check — same rule as create
+            const businessIdForCheck = announcement.businessId?.toString();
+            if (businessIdForCheck) {
+                const orderIds = merged.specificCustomers.map(c => c.orderId);
+                const ownedOrders = await Order.find({
+                    _id: { $in: orderIds },
+                    businessId: businessIdForCheck,
+                }).select("_id").lean();
+
+                const ownedIds = new Set(ownedOrders.map(o => o._id.toString()));
+                const foreignIds = orderIds.filter(id => !ownedIds.has(id.toString()));
+
+                if (foreignIds.length) {
+                    throw new Error(
+                        `The following order(s) do not belong to your business: ${foreignIds.join(", ")}`
+                    );
+                }
+            }
+        }
+
+        // Re-run the "is there anyone to actually send to" sanity check,
+        // same as on create, since channel/audience/targets may have changed.
+        if (merged.audience === "customers" || merged.audience === "specific_customers") {
+
+            const businessIdStr = announcement.businessId?.toString();
+
+            const recipients =
+                merged.audience === "customers"
+                    ? await this.getCustomerRecipients(
+                        merged.customerType as "sender" | "receiver" | "both",
+                        businessIdStr,
+                        merged.channel as "email" | "sms"
+                    )
+                    : await this.getSpecificCustomerRecipients(
+                        merged.specificCustomers as any,
+                        businessIdStr,
+                        merged.channel as "email" | "sms"
+                    );
+
+            const eligibleCount = recipients.filter(r =>
+                merged.channel === "email" ? !!r.email : !!r.phone
+            ).length;
+
+            if (!eligibleCount) {
+                throw new Error("No eligible recipients found for this audience");
+            }
+        }
+
+        // Apply changes — only fields that were actually passed in
+        if (data.title !== undefined) announcement.title = data.title;
+        if (data.message !== undefined) announcement.message = data.message;
+        if (data.channel !== undefined) announcement.channel = data.channel;
+        if (data.audience !== undefined) announcement.audience = data.audience as any;
+        if (data.customerType !== undefined) announcement.customerType = data.customerType;
+        if (data.specificCustomers !== undefined) {
+            announcement.specificCustomers = data.specificCustomers as any;
+        }
+        if (!isBusinessAnnouncement && data.specificBusinesses !== undefined) {
+            announcement.specificBusinesses = data.specificBusinesses.map(
+                id => new mongoose.Types.ObjectId(id)
+            ) as any;
+        }
+        if (data.announcementStartAt !== undefined) {
+            announcement.announcementStartAt = data.announcementStartAt;
+        }
+
+        await announcement.save();
+
+        return announcement;
+    }
+
     async resendAnnouncement(
         announcementId: string,
         requestingBusinessId?: string

@@ -70,6 +70,29 @@ export const sendAnnouncement = async (
     }
 };
 
+export const updateAnnouncement = async (
+    req: Request | any,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const businessId = req.staff?.businessId ?? req.business?.businessId;
+        const { announcementId } = req.params;
+
+        const announcement = await announcementService.updateAnnouncement(
+            announcementId,
+            req.body,
+            businessId,
+        );
+
+        return res
+            .status(200)
+            .json({ message: "Announcement updated successfully", data: announcement });
+    } catch (error: any) {
+        next(error);
+    }
+};
+
 export const resendAnnouncement = async (
     req: Request | any,
     res: Response,

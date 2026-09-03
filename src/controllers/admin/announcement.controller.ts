@@ -40,6 +40,26 @@ export const getAnnouncements = async (
     }
 };
 
+export const updateAnnouncement = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    const { announcementId } = req.params;
+
+    try {
+        const announcement = await announcementService.updateAnnouncement(
+            announcementId,
+            req.body,
+        );
+        return res
+            .status(200)
+            .json({ message: "Announcement updated successfully", data: announcement });
+    } catch (error: any) {
+        next(error);
+    }
+};
+
 export const sendAnnouncement = async (
     req: Request,
     res: Response,
