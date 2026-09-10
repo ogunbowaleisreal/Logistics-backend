@@ -10,7 +10,8 @@
     "start": "node dist/index.js",
     "migrate:seed-roles": "ts-node scripts/seedStandardRoles.ts",
     "dedupe:bankList": "ts-node scripts/dedupeBankList.ts",
-    "migratePermissons": "ts-node scripts/addPlatformConfigpermissions.ts"
+    "migratePermissons": "ts-node scripts/addPlatformConfigpermissions.ts",
+    "trigger:sms": "ts-node scripts/triggerSms.ts"
   },
   "keywords": [],
   "author": "Ibrahim Ayandiran(iam-phenomenal)",

@@ -5,38 +5,7 @@ const TERMII_SMS_URL = "https://api.ng.termii.com/api/sms/send";
 const BRAND_NAME = "LogisticsPadi";
 
 class TermiiService {
-  // private async send(to: string, message: string): Promise<void> {
-  //   const apiKey = process.env.TERMII_API_KEY;
 
-  //   if (!apiKey) {
-  //     logger.error("TERMII_API_KEY is not configured; skipping SMS send");
-  //     return;
-  //   }
-
-  //   try {
-  //     await axios.post(
-  //       TERMII_SMS_URL,
-  //       {
-  //         to: this.toInternationalFormat(to),
-  //         from: "BillPadi",
-  //         sms: message,
-  //         type: "plain",
-  //         api_key: apiKey,
-  //         channel: "generic",
-  //       },
-  //       {
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //         },
-  //       },
-  //     );
-  //   } catch (error: any) {
-  //     console.log(error)
-  //     logger.error(
-  //       `Termii SMS send failed for ${to}: ${error?.message || "Unknown error"}`,
-  //     );
-  //   }
-  // }
 
   // change this method's signature and catch block:
   private async send(to: string, message: string): Promise<boolean> {
@@ -52,7 +21,7 @@ class TermiiService {
         TERMII_SMS_URL,
         {
           to: this.toInternationalFormat(to),
-          from: "BillPadi",
+          from: "N-Alert",
           sms: message,
           type: "plain",
           api_key: apiKey,

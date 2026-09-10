@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { AnnouncementService } from "../../services/public/announcements.services"; // adjust path to your actual file location
+import { AnnouncementService } from "../../services/public/announcements.services"; //
 
 const announcementService = new AnnouncementService();
 
