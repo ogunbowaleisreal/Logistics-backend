@@ -28,6 +28,7 @@ export const Permissions = [
   { code: "SENDANNOUNCEMENT", name: "SEND ANNOUNCEMENT" },
   { code: "RESENDANNOUNCEMENT", name: "RESEND ANNOUNCEMENT" },
   { code: "DELANNOUNCEMENT", name: "DELETE ANNOUNCEMENT" },
+  { code: "UPDATEANNOUNCEMENT", name: "UPDATE ANNOUNCEMENT" },
 
   // Global Shipping Zones
   { code: "CRTGBLZONE", name: "CREATE GLOBAL SHIPPING ZONE" },
